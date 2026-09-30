@@ -407,26 +407,53 @@ class fileLoader_base(ABC):
         return self._acqTime
 
     @property
-    def sweepX(self):
-        """Get the X-Values for a sweep.
+    def sweepX(self) -> np.ndarray:
+        """Return the shared sweep time base in seconds.
 
-        Notes
-        -----
-        All sweeps are assumed to have the same x-values (seconds).
+        Every sweep uses column 0. This property does not read ``currentSweep``.
+
+        Returns:
+            Time values shared by the loaded sweeps.
         """
-        # return self._sweepX[:, self.currentSweep]
         return self._sweepX[:, 0]
 
-    @property
-    def sweepY(self):
-        """Get the Y values for the current sweep."""
-        return self._sweepY[:, self.currentSweep]
+    def get_sweep_y(self, sweep: int) -> np.ndarray:
+        """Return recorded Y values for one sweep.
+
+        Args:
+            sweep: Zero-based column of ``_sweepY``.
+
+        Returns:
+            Recorded values for ``sweep``. This does not read or change
+            ``currentSweep``.
+        """
+        return self._sweepY[:, sweep]
 
     @property
-    def sweepC(self):
-        """Get the DAC command for the current sweep."""
+    def sweepY(self) -> np.ndarray:
+        """Return recorded Y values for ``currentSweep``.
+
+        ``currentSweep`` is shared mutable loader state, not an argument.
+        A caller that already knows the sweep must call ``get_sweep_y``.
+        ``sweepC``, ``filteredDeriv``, and ``sweepY_filtered`` have this same
+        dependency.
+
+        Returns:
+            Recorded values for the loader's current sweep.
+        """
+        return self.get_sweep_y(self.currentSweep)
+
+    @property
+    def sweepC(self) -> np.ndarray:
+        """Return the DAC command for ``currentSweep``.
+
+        This follows the loader's current sweep, like ``sweepY``. It is not
+        the sweep a caller has selected elsewhere.
+
+        Returns:
+            DAC command for the current sweep, or zeros when no command was loaded.
+        """
         if self._sweepC is None:
-            # return np.zeros_like(self._sweepX[:, self.currentSweep])
             return np.zeros_like(self._sweepX[:, 0])
         return self._sweepC[:, self.currentSweep]
 
@@ -438,7 +465,13 @@ class fileLoader_base(ABC):
 
     @property
     def filteredDeriv(self) -> Optional[np.ndarray]:
-        """Get the filtered first derivative of sweepY."""
+        """Return the filtered derivative for ``currentSweep``.
+
+        This column follows the loader's current sweep, like ``sweepY``.
+
+        Returns:
+            Filtered derivative for the current sweep, or None before filtering.
+        """
         if self._filteredDeriv is not None:
             return self._filteredDeriv[:, self.currentSweep]
         else:
@@ -534,10 +567,18 @@ class fileLoader_base(ABC):
         return self._filteredDeriv
     
     @property
-    def sweepY_filtered(self) -> np.ndarray:
-        """Get a filtered version of sweepY."""
+    def sweepY_filtered(self) -> Optional[np.ndarray]:
+        """Return filtered Y values for ``currentSweep``.
+
+        This column follows the loader's current sweep, like ``sweepY``.
+        The full filtered recording remains ``_filteredY``.
+
+        Returns:
+            Filtered values for the current sweep, or None before filtering.
+        """
         if self._filteredY is not None:
             return self._filteredY[:, self.currentSweep]
+        return None
 
     @property
     def recordingFrequency(self) -> float:

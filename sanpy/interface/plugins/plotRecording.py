@@ -349,8 +349,23 @@ class plotRecording(sanpyPlugin):
         _vLayoutPlot.addWidget(mplToolbar)
         _hLayout.addLayout(_vLayoutPlot)
 
-    def replot(self, firstPlot=False):
-        """bAnalysis has been updated, replot"""
+    def _sweeps_to_plot(self) -> list[int]:
+        """Return the sweep indexes this plugin is showing.
+
+        Returns:
+            Every loaded sweep when the combo is ``All``, otherwise the one
+            selected sweep.
+        """
+        if self.sweepNumber == "All":
+            return list(range(self.ba.fileLoader.numSweeps))
+        return [self.sweepNumber]
+
+    def replot(self, firstPlot: bool = False) -> None:
+        """Redraw the selected sweeps without changing the loader's current sweep.
+
+        Args:
+            firstPlot: When False, restore the axes limits from before the redraw.
+        """
         logger.info(f"{self.ba}")
 
         if self.ba is None:
@@ -361,14 +376,8 @@ class plotRecording(sanpyPlugin):
         xCurrentOffset = 0
         yCurrentOffset = 0
 
-        # currentSweep = self.ba.fileLoader.currentSweep
-        #numSweeps = self.ba.fileLoader.numSweeps
-        sweepNumber = self.sweepNumber  # can be 'All'
-        logger.info(f'sweepNumber:{sweepNumber}')
-        if sweepNumber == 'All':
-            theseSweeps = list(range(self.ba.fileLoader.numSweeps))
-        else:
-            theseSweeps = [sweepNumber]
+        theseSweeps = self._sweeps_to_plot()
+        logger.info(f"sweepNumber:{self.sweepNumber}")
         numSweeps = len(theseSweeps)
 
         if not firstPlot:
@@ -389,10 +398,8 @@ class plotRecording(sanpyPlugin):
             self._plotList[humanName] = [None] * numSweeps
 
         for plotIdx, sweepIdx in enumerate(theseSweeps):
-            self.ba.fileLoader.setSweep(sweepIdx)
-
-            sweepX = self.getSweep("x")
-            sweepY = self.getSweep("y")
+            sweepX = self.ba.fileLoader.sweepX
+            sweepY = self.ba.fileLoader.get_sweep_y(sweepIdx)
 
             self.sweepX = sweepX
             self.sweepY = sweepY
@@ -481,15 +488,19 @@ class plotRecording(sanpyPlugin):
             self.axs.set_xlim(_xLimOrig)
             self.axs.set_ylim(_yLimOrig)
 
-        # self.ba.fileLoader.setSweep(currentSweep)
         self.static_canvas.draw_idle()
         plt.draw()
 
-    def setFullZoom(self):
+    def setFullZoom(self) -> None:
+        """Fit the axes to the sweeps this plugin is showing."""
+        sweep_x = self.ba.fileLoader.sweepX
+        y_columns = [
+            self.ba.fileLoader.get_sweep_y(sweep) for sweep in self._sweeps_to_plot()
+        ]
         xMin = 0
-        xMax = self.ba.fileLoader.sweepX[-1]
-        yMin = np.min(self.ba.fileLoader.sweepY)
-        yMax = np.max(self.ba.fileLoader.sweepY)
+        xMax = sweep_x[-1]
+        yMin = min(np.min(column) for column in y_columns)
+        yMax = max(np.max(column) for column in y_columns)
 
         self.axs.set_xlim([xMin, xMax])
         self.axs.set_ylim([yMin, yMax])

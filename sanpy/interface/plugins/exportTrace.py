@@ -30,17 +30,37 @@ class exportTrace(sanpyPlugin):
 
         self.plot()
 
-    def replot(self):
+    def _trace_xy(self) -> tuple[np.ndarray, np.ndarray] | tuple[None, None]:
+        """Return the time base and Y values for this export.
+
+        An integer plugin sweep selects that column. ``All`` keeps the loader
+        current sweep, because this export is one trace.
+
+        Returns:
+            Time in seconds and the matching Y values, or ``(None, None)``
+            when no recording is loaded.
+        """
+        if self.ba is None:
+            return None, None
+        sweep_x = self.ba.fileLoader.sweepX
+        if isinstance(self.sweepNumber, int):
+            sweep_y = self.ba.fileLoader.get_sweep_y(self.sweepNumber)
+        else:
+            sweep_y = self.ba.fileLoader.sweepY
+        return sweep_x, sweep_y
+
+    def replot(self) -> None:
+        """Refresh the exported trace for the plugin's selected sweep."""
         logger.info(f"sweepNumber: {self.sweepNumber}")
 
         if self.mainWidget is None:
             self.plot()
 
-        x = self.getSweep("x")  # get for current sweep
-        y = self.getSweep("y")
+        x, y = self._trace_xy()
         self.mainWidget.switchFile(self.ba, x, y)
 
-    def plot(self):
+    def plot(self) -> None:
+        """Build the export widget for the selected trace."""
         if self.ba is None:
             return
 
@@ -48,8 +68,7 @@ class exportTrace(sanpyPlugin):
 
         if self.myType == "vmFiltered":
             xyUnits = ("Time (sec)", "Vm (mV)")  # todo: pass xMin,xMax to constructor
-            x = self.getSweep("x")  # corresponds to sweepX
-            y = self.getSweep("y")  # corresponds to sweepY
+            x, y = self._trace_xy()
         elif self.myType == "dvdtFiltered":
             xyUnits = (
                 "Time (sec)",
