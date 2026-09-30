@@ -244,6 +244,8 @@ class fileLoader_base(ABC):
         self.loadFile()
 
         if not self._loadError:
+            for sweep in self._sweepList:
+                self._sweep_conditions.setdefault(sweep, "")
             self._finalizeFileMetadata()
 
         # check our work
@@ -707,10 +709,6 @@ class fileLoader_base(ABC):
         self._sweepList: List[int] = list(range(self._numSweeps))
 
         self._sweepLengthSec: float = self._sweepX[-1, 0]  # from 0 to last sample point
-
-        # assign sweep conditions (does not live in experimental metadata)
-        for _sweep in self._sweepList:
-            self._sweep_conditions[_sweep] = ""
 
         dtSeconds = self._sweepX[1, 0] - self._sweepX[0, 0]  # seconds per sample
         dtSeconds = float(dtSeconds)
