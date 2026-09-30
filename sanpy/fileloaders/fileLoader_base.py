@@ -213,6 +213,8 @@ class fileLoader_base(ABC):
 
         self._metaData = sanpy.metaData.MetaData()  # per file metadata
 
+        self._sweep_conditions = {}
+
         self._fileMetadata: Optional[FileMetadata] = None
         self._acqDate: str = ""
         self._acqTime: str = ""
@@ -705,6 +707,10 @@ class fileLoader_base(ABC):
 
         self._sweepLengthSec: float = self._sweepX[-1, 0]  # from 0 to last sample point
 
+        # assign sweep conditions (does not live in experimental metadata)
+        for _sweep in self._sweepList:
+            self._sweep_conditions[_sweep] = ""
+
         dtSeconds = self._sweepX[1, 0] - self._sweepX[0, 0]  # seconds per sample
         dtSeconds = float(dtSeconds)
         dtMilliseconds = dtSeconds * 1000
@@ -726,6 +732,36 @@ class fileLoader_base(ABC):
 
         if self._fileMetadata is not None:
             self._finalizeFileMetadata()
+
+    def setSweepCondition(self, sweep: int, condition: str) -> None:
+        """Set the condition string for a loaded sweep.
+
+        Args:
+            sweep: Sweep index that already has a condition entry.
+            condition: Condition label to store for that sweep.
+        """
+        if sweep not in self._sweep_conditions:
+            logger.warning(
+                f"Cannot set sweep condition; sweep {sweep} is not loaded in {self.filename}"
+            )
+            return
+        self._sweep_conditions[sweep] = condition
+
+    def getSweepCondition(self, sweep: int) -> str:
+        """Return the condition string for a loaded sweep.
+
+        Args:
+            sweep: Sweep index that already has a condition entry.
+
+        Returns:
+            The stored condition, or an empty string when the sweep is not loaded.
+        """
+        if sweep not in self._sweep_conditions:
+            logger.warning(
+                f"Cannot get sweep condition; sweep {sweep} is not loaded in {self.filename}"
+            )
+            return ""
+        return self._sweep_conditions[sweep]
 
 if __name__ == "__main__":
     d = getFileLoaders()

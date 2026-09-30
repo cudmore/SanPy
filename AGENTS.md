@@ -15,6 +15,10 @@ All Python code must use complete type annotations and Google-style docstrings.
 - Keep docstrings accurate and useful; do not add placeholder prose merely to
   satisfy formatting.
 
+## String formatting
+
+Construct Python strings with f-strings. Do not build them with `%` formatting.
+
 For SanPy Zarr work, keep imports explicit and package `__init__.py` files empty
 or minimal. Preserve existing ABF loading, HDF5 persistence, analysis, and GUI
 behavior unless a change is explicitly approved.
