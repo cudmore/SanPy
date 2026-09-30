@@ -31,6 +31,9 @@ class FileMetadataView(sanpyPlugin):
 
         self._valueLabels: dict[str, QtWidgets.QLabel] = {}
         form = QtWidgets.QFormLayout()
+        
+        form.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        form.setLabelAlignment(QtCore.Qt.AlignLeft)
         for metadata_field in fields(FileMetadata):
             display_name = str(
                 metadata_field.metadata.get("display_name", metadata_field.name)

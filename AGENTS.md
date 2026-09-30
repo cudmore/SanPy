@@ -40,6 +40,12 @@ The user normally performs interactive SanPy GUI and Qt WebEngine smoke tests
 on the local macOS development machine. Clearly report which checks were run
 and which remain for the user.
 
+A trivial GUI layout change, such as alignment, spacing, or wrapping, is not a
+user smoke test. Do not ask the user to visually confirm it, and do not add
+pytest checks for alignment, geometry, or placement. When a focused test
+already constructs the affected widget, run it to catch runtime errors. Do not
+propose the same layout change on a sibling widget unless the user asks.
+
 ## Changelog
 
 When updating `CHANGELOG.md`:
