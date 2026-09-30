@@ -216,7 +216,7 @@ def selection_to_spikes(
 class NicePoolPlugin(sanpyPlugin):
     """Display all detected spikes in the current file using NicePool."""
 
-    myHumanName = "NicePool"
+    myHumanName = "Plot Tool"
 
     def __init__(self, **kwargs: Any) -> None:
         """Create the plugin and its optional NicePool widget.
