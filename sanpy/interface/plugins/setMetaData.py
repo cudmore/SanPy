@@ -1,4 +1,4 @@
-"""Plugin for editing experimental metadata."""
+"""Plugin for editing experimental metadata and sweep conditions."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from sanpy.interface.plugins import sanpyPlugin
 
 
 class SetMetaData(sanpyPlugin):
-    """Edit schema-defined experimental metadata for the current analysis."""
+    """Edit experimental metadata and per-sweep conditions for the current analysis."""
 
     myHumanName = "Set Meta Data"
     showInMenu = False
@@ -25,12 +25,13 @@ class SetMetaData(sanpyPlugin):
         """
         super().__init__(**kwargs)
         self._widgetDict: dict[str, QtWidgets.QWidget] = {}
+        self._sweepConditionEdits: dict[int, QtWidgets.QLineEdit] = {}
         self._buildUI()
-        if self.ba is not None:
-            self.replot()
+        self.replot()
 
     def replot(self) -> None:
-        """Refresh controls from the current analysis metadata."""
+        """Refresh metadata editors and sweep-condition rows."""
+        self._rebuildSweepConditionRows()
         if self.ba is None:
             return
         for key, value in self.ba.metaData.items():
@@ -98,10 +99,52 @@ class SetMetaData(sanpyPlugin):
         widget.setFont(font)
         widget.setMinimumSize(5, font_size + int(font_size / 2))
 
+    def _rebuildSweepConditionRows(self) -> None:
+        """Rebuild sweep-condition editors for the selected recording."""
+        for condition_edit in self._sweepConditionEdits.values():
+            condition_edit.blockSignals(True)
+        while self._sweepConditionsForm.rowCount() > 0:
+            self._sweepConditionsForm.removeRow(0)
+        self._sweepConditionEdits.clear()
+
+        if self.ba is None or self.ba.fileLoader.sweepList is None:
+            self._sweepConditionsGroup.setEnabled(False)
+            return
+
+        self._sweepConditionsGroup.setEnabled(True)
+        for sweep in self.ba.fileLoader.sweepList:
+            condition_edit = QtWidgets.QLineEdit(
+                self.ba.fileLoader.getSweepCondition(sweep)
+            )
+            condition_edit.editingFinished.connect(
+                partial(self._setSweepCondition, sweep, condition_edit)
+            )
+            self._sweepConditionEdits[sweep] = condition_edit
+            self._sweepConditionsForm.addRow(str(sweep), condition_edit)
+
+    def _setSweepCondition(
+        self, sweep: int, condition_edit: QtWidgets.QLineEdit
+    ) -> None:
+        """Store an edited condition on the selected recording's loader.
+
+        Args:
+            sweep: Sweep index associated with the editor.
+            condition_edit: Editor containing the new condition value.
+        """
+        if self.ba is None:
+            return
+        self.ba.fileLoader.setSweepCondition(sweep, condition_edit.text())
+
     def _buildUI(self) -> None:
-        """Build one schema-driven editor row per metadata field."""
+        """Build the panel title, metadata editors, and sweep-condition group."""
         layout = self.getVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignTop)
+        title = QtWidgets.QLabel("Experimental Metadata")
+        title_font = title.font()
+        title_font.setPointSize(14)
+        title_font.setBold(True)
+        title.setFont(title_font)
+        layout.addWidget(title)
         definitions = sanpy.MetaData.getMetaDataDefinitions()
         for key, definition in definitions.items():
             row = QtWidgets.QHBoxLayout()
@@ -127,6 +170,11 @@ class SetMetaData(sanpyPlugin):
             self._widgetDict[key] = widget
             row.addWidget(widget, alignment=QtCore.Qt.AlignLeft)
             layout.addLayout(row)
+        self._sweepConditionsGroup = QtWidgets.QGroupBox("Sweep Conditions")
+        self._sweepConditionsForm = QtWidgets.QFormLayout(
+            self._sweepConditionsGroup
+        )
+        layout.addWidget(self._sweepConditionsGroup)
         layout.addStretch()
         for widget in self._widgetDict.values():
             self._setFontSize(widget)

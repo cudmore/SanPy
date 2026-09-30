@@ -22,6 +22,7 @@ def test_file_metadata_view_displays_complete_values(qtbot: Any) -> None:
     assert view._valueLabels["num_channels"].text() == "2"
     assert view._valueLabels["num_epochs"].text() == "5"
     assert view._valueLabels["user_list"].text() == "None"
+    assert not hasattr(view, "_sweepConditionEdits")
 
 
 def test_file_metadata_view_is_discoverable() -> None:

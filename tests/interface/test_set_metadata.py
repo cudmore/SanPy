@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from qtpy import QtCore, QtWidgets
 
+import sanpy
 from sanpy.interface.plugins.setMetaData import SetMetaData
 
 
@@ -23,6 +24,19 @@ def _display_value(model: Any, row_label: object, column_name: str) -> object:
     visual_row = list(model._data.index).index(row_label)
     column = list(model._data.columns).index(column_name)
     return model.data(model.index(visual_row, column))
+
+
+def test_set_metadata_shows_sweep_condition_editors(qtbot: Any) -> None:
+    """Show one sweep-condition editor for each sweep on the selected recording.
+
+    Args:
+        qtbot: Pytest-qt widget manager.
+    """
+    analysis = sanpy.bAnalysis("tests/data/2021_07_20_0010.abf")
+    plugin = SetMetaData(ba=analysis)
+    qtbot.addWidget(plugin)
+
+    assert list(plugin._sweepConditionEdits) == list(analysis.fileLoader.sweepList)
 
 
 def test_metadata_editors_update_the_same_analysis(
