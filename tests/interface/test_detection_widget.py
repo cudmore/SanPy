@@ -14,6 +14,95 @@ from sanpy.interface.util import sanpyCursors
 from sanpy.interface.window_state import WindowState
 
 
+def test_window_state_normalizes_empty_spike_selection() -> None:
+    """Represent every empty spike selection with the canonical ``None`` value."""
+    state = WindowState("recording.abf", 0, ())
+
+    assert state.spike_selection is None
+
+
+def test_file_switch_applies_one_complete_state_without_nested_request(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Apply a file click once with sweep zero and no selected spikes.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    previous_row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    previous_key = window.myAnalysisDir.get_file_key(previous_row)
+    window.request_state(WindowState(previous_key, 0, None))
+    row = window.myAnalysisDir.findFileRow("19114001.abf")
+    row_dict = window.myAnalysisDir.getRowDict(row)
+    file_key = window.myAnalysisDir.get_file_key(row)
+    state_requests = Mock()
+    state_changes = Mock()
+    window.myDetectionWidget.signalStateRequest.connect(state_requests)
+    window.signalStateChanged.connect(state_changes)
+
+    window.slot_fileTableClicked(row, row_dict, selectingAgain=False)
+
+    expected = WindowState(file_key, 0, None)
+    assert window.state == expected
+    assert window.myDetectionWidget.ba is window.myAnalysisDir.get_analysis_for_file_key(
+        file_key
+    )
+    assert window.myDetectionWidget.sweepNumber == 0
+    assert window.myDetectionWidget._selectedSpikeList == []
+    assert state_requests.call_count == 0
+    assert state_changes.call_count == 1
+    assert state_changes.call_args.args == (expected,)
+
+
+def test_applied_sweep_and_spike_state_do_not_request_nested_state(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Keep render-only sweep, clear, and zoom operations out of request flow.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    file_key = window.myAnalysisDir.get_file_key(row)
+    window.request_state(WindowState(file_key, 0, None))
+    state_requests = Mock()
+    state_changes = Mock()
+    window.myDetectionWidget.signalStateRequest.connect(state_requests)
+    window.signalStateChanged.connect(state_changes)
+
+    window.request_state(WindowState(file_key, 1, None))
+
+    assert window.state == WindowState(file_key, 1, None)
+    assert window.myDetectionWidget.sweepNumber == 1
+    assert window.myDetectionWidget._selectedSpikeList == []
+    assert state_requests.call_count == 0
+    assert state_changes.call_count == 1
+
+    state_requests.reset_mock()
+    state_changes.reset_mock()
+    window.request_state(WindowState(file_key, 8, (0,)), do_zoom=True)
+
+    expected = WindowState(file_key, 8, (0,))
+    assert window.state == expected
+    assert window.myDetectionWidget.sweepNumber == 8
+    assert window.myDetectionWidget._selectedSpikeList == [0]
+    assert state_requests.call_count == 0
+    assert state_changes.call_count == 1
+    assert state_changes.call_args.args == (expected,)
+
+
 def test_plot_range_signals_are_connected_once(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:

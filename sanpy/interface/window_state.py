@@ -18,3 +18,8 @@ class WindowState:
     file_key: str
     sweep: int
     spike_selection: tuple[int, ...] | None = None
+
+    def __post_init__(self) -> None:
+        """Normalize an empty spike selection to the canonical ``None`` value."""
+        if self.spike_selection == ():
+            object.__setattr__(self, "spike_selection", None)

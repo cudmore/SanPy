@@ -1,3 +1,5 @@
+"""Manage folder-backed collections of SanPy recording analyses."""
+
 # Acknowledgements:
 # Author: Robert H Cudmore
 # Date: 20210603
@@ -301,28 +303,24 @@ class analysisDir:
 
     def __init__(
         self,
-        path : str = None,
-        sanPyWindow : "sanpy.interface.SanPyWindow" = None,
-        fileLoaderDict : dict = None,
-        # autoLoad: bool = False,
+        path: str | None = None,
+        sanPyWindow: "sanpy.interface.SanPyWindow | None" = None,
+        fileLoaderDict: dict[str, object] | None = None,
+        autoLoad: bool = False,
         folderDepth: Optional[int] = None,
-    ):
+    ) -> None:
         """Load and manage a list of files in a folder path.
 
         Use this as the main pandasModel for file list myTableView.
 
         TODO: extend to link to folder in cloud (start with box and/or github)
 
-        Parameters
-        ----------
-        path (str):
-            Path to file or folder
-        sanPyWindow (sanpy.interface.SanPyWindow)
-            PyQt, used to signal progress on loading
-        fileLoaderDict (dict):
-            Dict with file extension keys (no dot)
-        folderDepth (int):
-            Folder depth to recurse if loading folder path.
+        Args:
+            path: Path to a recording or folder.
+            sanPyWindow: Optional window used to report loading progress.
+            fileLoaderDict: File-loader configuration keyed by extension.
+            autoLoad: Whether to load each recording while scanning a folder.
+            folderDepth: Folder depth to recurse when loading a folder.
 
         Notes
         -----
@@ -348,8 +346,7 @@ class analysisDir:
         self._fileLoaderDict = fileLoaderDict
         # dist with file extension keys
 
-        # self.autoLoad = autoLoad
-        # not used
+        self.autoLoad = autoLoad
 
         self.folderDepth = folderDepth
 
@@ -366,7 +363,7 @@ class analysisDir:
         self._df = self.loadHdf()
         if self._df is None:
             # did not load h5 file
-            self._df = self.loadFolder(loadData=False)
+            self._df = self.loadFolder(loadData=autoLoad)
             self._updateLoadedAnalyzed()
         elif self._fileLoaderDict is not None:
             logger.info(f'sync existing df with filePath: {self._filePath}')

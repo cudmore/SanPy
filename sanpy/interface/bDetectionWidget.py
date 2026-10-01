@@ -1267,22 +1267,24 @@ class bDetectionWidget(QtWidgets.QWidget):
         # always replot everything
         self.replotOverlays(oneIndex=idx)
 
-    def selectSweep(self,
-        sweepNumber : int,
-        startSec=None, stopSec=None,
-        doEmit=True, doReplot=True
-    ):
-        """
-        Parameters
-        ----------
-        sweepNumber : str or int
-            From ('All', 0, 1, 2, 3, ...)
-        startSec : float or None
-        stopSec : float or None
-        doEmit : bool
-            If True then emit signal signalSelectSweep
-        doReplot : bool
-            If True then call _replot()
+    def selectSweep(
+        self,
+        sweepNumber: int | str,
+        startSec: float | None = None,
+        stopSec: float | None = None,
+        doEmit: bool = True,
+        doReplot: bool = True,
+    ) -> None:
+        """Request or render a sweep selection.
+
+        Args:
+            sweepNumber: Zero-based sweep, or the legacy ``"All"`` value.
+            startSec: Requested visible start time. The toolbar range currently
+                takes precedence over this value.
+            stopSec: Requested visible stop time. The toolbar range currently
+                takes precedence over this value.
+            doEmit: Whether this is a user action that requests window state.
+            doReplot: Whether to redraw after applying a render-only change.
         """
 
         # 202401, always retain x start/stop
@@ -1290,7 +1292,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         stopSec = self.detectToolbarWidget._stopSec
 
         if sweepNumber == "":
-            logger.error(f'got unexpected swep number "{sweepNumber}" {type(sweepNumber)}')
+            logger.error(f'got unexpected sweep number "{sweepNumber}" {type(sweepNumber)}')
             return
 
         if sweepNumber == "All":
@@ -1311,17 +1313,11 @@ class bDetectionWidget(QtWidgets.QWidget):
             f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doReplot:{doReplot} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"'
         )
 
-        # if self._sweepNumber == sweepNumber:
-        #    logger.info(f'Already showing sweep:{sweepNumber}      RETURNING')
-        #    return
-
         # self._sweepNumber = sweepNumber
         self.ba.fileLoader.setSweep(sweepNumber)
 
-        # self.setAxisFull()
-
-        # cancel spike selection
-        self.selectSpike(None)
+        # Applying state must not request another state transition.
+        self.selectSpikeList([], doEmit=False)
 
         if doReplot:
             self._replot(startSec, stopSec)  # will set full axis
@@ -1354,97 +1350,60 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self._selectedSpikeList is not None:
             self.ba.setSpikeStat(self._selectedSpikeList, stat, value)
 
-    def selectSpike(self, spikeNumber: int, doZoom: bool = False, doEmit: bool = False):
-        """
-
-        Notes
-        -----
-        Will set the sweep if we are not looking at the sweep of spikeNumber
+    def selectSpike(
+        self,
+        spikeNumber: int | None,
+        doZoom: bool = False,
+        doEmit: bool = False,
+    ) -> None:
+        """Request or render one absolute spike selection.
 
         Args:
-            spikeNumber: absolute
-            doZoom:
-            doEmit: If True then emit signalSelectSpike signal
+            spikeNumber: Absolute spike number, or ``None`` to clear selection.
+            doZoom: Whether to zoom to the selected spike.
+            doEmit: Whether this is a user action that requests window state.
         """
-        # logger.info(f"spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}")
-        # logger.warning(f"  converting to spike list selection")
-
-        # # march 11, 2023
-
-        # if self._blockSlots:
-        #     return
-
-        # self._blockSlots = True
-
-        # if spikeNumber is None:
-        #     spikeList = []
-        # else:
-        #     spikeList = [spikeNumber]
-        # self.selectSpikeList(spikeList, doEmit=True)
-
-        # self._blockSlots = False
-
-        # return
-
-        # we will always use self.ba ('peakSec', 'peakVal')
         if self.ba is None:
             return
-        if self.ba.numSpikes == 0:
+
+        if spikeNumber is None:
+            if doEmit and isinstance(self.sweepNumber, int):
+                self._request_window_state(self.sweepNumber, None)
+            else:
+                self.selectSpikeList([], doEmit=False)
             return
 
-        spikeList = [spikeNumber]
+        if self.ba.numSpikes == 0:
+            return
+        if spikeNumber < 0 or spikeNumber >= self.ba.numSpikes:
+            logger.error(
+                f"Got spike {spikeNumber} but expecting range "
+                f"[0,{self.ba.numSpikes})"
+            )
+            return
 
-        # x = None
-        # y = None
+        spike_list = [spikeNumber]
+        sweep = int(self.ba.getSpikeStat(spike_list, "sweep")[0])
+        if doEmit:
+            self._request_window_state(
+                sweep,
+                (spikeNumber,),
+                do_zoom=doZoom,
+            )
+            return
 
-        # potentially move on to a new sweep (while implementing Thian data)
-        if spikeNumber is not None:
-            if spikeNumber < 0 or spikeNumber > self.ba.numSpikes - 1:
-                logger.error(
-                    f"Got spike {spikeNumber} but expecting range [0,{self.ba.numSpikes-1})"
-                )
-                return
+        if sweep != self.sweepNumber:
+            logger.info(
+                f"Switching to sweep {sweep} from sweep {self.sweepNumber}"
+            )
+            self.selectSweep(sweep, doEmit=False)
+            self._plotSweepControls.set_current_sweep(sweep)
 
-            sweep = self.ba.getSpikeStat(spikeList, "sweep")
-            sweep = sweep[0]  # just the first
-            if doEmit:
-                self._request_window_state(
-                    int(sweep),
-                    (int(spikeNumber),),
-                    do_zoom=doZoom,
-                )
-                return
-            if sweep != self.sweepNumber:
-                logger.info(
-                    f"!!! SWITCHING to sweep: {sweep} from self.sweepNumber:{self.sweepNumber}"
-                )
-                self.slot_selectSweep(sweep)
-
-            # our plot is of ONE SWEEP, we need to convert abs spike number to
-            # spike number within the sweep
-            logger.info(f"spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}")
-            sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
-
-            # removed mar 11
-            # sweepSpikeList = [sweepSpikeNumber]
-            # logger.info(f'  sweepSpikeNumber:{sweepSpikeNumber} {type(sweepSpikeNumber)}')
-
-            # spikeList = [sweepSpikeNumber]
-
-            # xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=sweep)
-            # xPlot = np.array(xPlot)
-            # yPlot = np.array(yPlot)
-            # try:
-            #     x = xPlot[sweepSpikeList]
-            #     y = yPlot[sweepSpikeList]
-            # except (IndexError) as e:
-            #     logger.error(f'{e}')
-
-        # removed mar 11 2023
-        # self.mySingleSpikeScatterPlot.setData(x=x, y=y)
+        logger.info(f"spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}")
+        sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
 
         # zoom to one selected spike
-        if spikeNumber is not None and doZoom:
+        if doZoom:
             thresholdSeconds = self.ba.getStat(
                 "thresholdSec", sweepNumber=self.sweepNumber
             )
@@ -1479,23 +1438,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
                 self.setAxis(startSec, stopSec)
 
-        if doEmit and spikeNumber is None and isinstance(self.sweepNumber, int):
-            self._request_window_state(self.sweepNumber, None)
-            return
-
-        # march 11, 2023
-        if self._blockSlots:
-            return
-
-        self._blockSlots = True
-
-        if spikeNumber is None:
-            spikeList = []
-        else:
-            spikeList = [spikeNumber]
-        self.selectSpikeList(spikeList, doEmit=True)
-
-        self._blockSlots = False
+        self.selectSpikeList(spike_list, doEmit=False)
 
     #202401
     def _selectSpikes(self, which):
