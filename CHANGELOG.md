@@ -28,6 +28,9 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 ### Changed
 
 - Cell type and sex are categorical statistics in plot menus.
+- A core install no longer includes PyQt5, pyqtgraph, qtawesome, QtPy, pyqtdarktheme-fork, or mplcursors. The desktop app is the `gui` extra: `uv sync --extra gui` or `pip install "sanpy-ephys[gui]"`.
+- A core install no longer includes matplotlib or seaborn. Install them with the `plot` extra, or with the `gui` extra for the desktop app. uv ignores pyabf's unused matplotlib requirement; pip still installs it.
+- A core install no longer includes requests. The unused GitHub folder loader now lives in `sandbox/bAnalysisDirWeb.py`.
 
 ## [0.2.9] - 2026-09-28
 

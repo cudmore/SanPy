@@ -26,7 +26,6 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -504,6 +503,8 @@ def plot_run(frame: pd.DataFrame, run: ModelRun) -> None:
         run: Parameter set used to label the figure and the current legend.
     """
 
+    import matplotlib.pyplot as plt
+
     amplitudes = run.amplitudes_ua_cm2
     colors = plt.colormaps["viridis"](np.linspace(0.0, 1.0, len(amplitudes)))
     fig, ax = plt.subplots()
@@ -575,6 +576,8 @@ def main() -> None:
         if _do_plot:
             plot_run(frame, run)
     if _do_plot:
+        import matplotlib.pyplot as plt
+
         plt.show()
 
 

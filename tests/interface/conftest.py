@@ -1,4 +1,4 @@
-"""Shared pytest configuration for SanPy tests."""
+"""Shared pytest fixtures for SanPy interface tests."""
 
 import pytest
 

@@ -48,8 +48,6 @@ import scipy.signal
 import scipy
 import tifffile
 
-import matplotlib.pyplot as plt
-
 import warnings
 
 import sanpy
@@ -59,6 +57,8 @@ logger = get_logger(__name__)
 
 class myMplPlot():
     def __init__(self, x, y):
+        import matplotlib.pyplot as plt
+
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111)
 
@@ -92,6 +92,8 @@ class myMplPlot():
         self.fig.canvas.flush_events()
 
 def test_mplPlot():
+    import matplotlib.pyplot as plt
+
     plt.ion()
 
     x = None  #np.arange(10)
@@ -180,6 +182,8 @@ def startStopFromDeriv(lineProfile, stdMult, doPlot=False, verbose=False):
 
     # plot
     if doPlot:
+        import matplotlib.pyplot as plt
+
         numSubplots = 1
         fig, axs = plt.subplots(numSubplots, 1, sharex=True)
         if numSubplots == 1:
@@ -432,6 +436,7 @@ def detectDiam(ba : sanpy.bAnalysis):
     return ddDict, dResultsDict
 
 def plotDiamFit(ba, ddDict, dResultsDict):
+    import matplotlib.pyplot as plt
 
     # get diameter and derivative from main kym analysis
     filteredDiam = ba.kymAnalysis.getResults('diameter_um_golay')

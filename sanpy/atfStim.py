@@ -21,7 +21,6 @@ import sys, math
 from math import exp
 import numpy as np
 import scipy.signal
-import matplotlib.pyplot as plt
 
 import sanpy
 
@@ -124,6 +123,8 @@ def _loadAtf(path):
 
 def plotData(data, fs=10000):
     """ """
+    import matplotlib.pyplot as plt
+
     # make a time axies
     t = np.arange(len(data)) / fs
 

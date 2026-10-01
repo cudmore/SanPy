@@ -28,16 +28,20 @@ NicePool provides linked interactive plots of detected spike statistics for the
 current recording. Selections are synchronized with the rest of SanPy without
 changing the recording zoom.
 
-During local development, build its browser assets and install the sibling
-adapter into SanPy's environment:
+During local development, install the SanPy GUI extra, build the browser
+assets, and install the sibling adapter. `uv sync` removes that editable
+install, so run the last command again after every sync. The browser test
+runs only when `SANPY_RUN_NICEPOOL_WEBENGINE_TEST=1`.
 
 ```bash
-cd ../cs_project/mapmanager-web-components
-npm run build --workspace @mapmanager/nicepool-pyqt5-frontend
+uv sync --locked --extra gui
 
-cd ../../sanpy-zarr
+(cd ../cs_project/mapmanager-web-components && npm run build --workspace @mapmanager/nicepool-pyqt5-frontend)
+
 uv pip install --python .venv/bin/python --editable \
   ../cs_project/mapmanager-web-components/integrations/nicepool-pyqt5
+
+SANPY_RUN_NICEPOOL_WEBENGINE_TEST=1 uv run pytest tests/interface/test_nicepool_plugin.py
 ```
 
 ### Plot Recording

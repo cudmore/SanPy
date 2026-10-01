@@ -14,15 +14,17 @@ SanPy version + platform + full Git commit
 
 ## Shared build design
 
-Application dependencies are declared in `[project.dependencies]` in
-`pyproject.toml`. PyInstaller and its hooks are declared in the `packaging`
-dependency group. `uv.lock` records the exact cross-platform dependency
-resolution and must be regenerated with `uv lock`; never edit it manually.
+Core dependencies are declared in `[project.dependencies]` in
+`pyproject.toml`. The desktop app also installs the `gui` extra from
+`[project.optional-dependencies]`. PyInstaller and its hooks are declared in
+the `packaging` dependency group. `uv.lock` records the exact cross-platform
+dependency resolution and must be regenerated with `uv lock`; never edit it
+manually.
 
 Each platform maintains its own virtual environment and output directories
 under `packaging/macos/` or `packaging/windows/`. The build scripts synchronize
-those environments with `uv sync --locked`, which fails if `uv.lock` is stale
-instead of silently changing it.
+those environments with `uv sync --locked --extra gui`, which fails if
+`uv.lock` is stale instead of silently changing it.
 
 Each platform stores a build under its installed SanPy version:
 
@@ -239,9 +241,12 @@ platform tools can affect the final binary.
 
 Dependencies use exact pins. To change a package such as pandas:
 
-1. Edit that package's existing entry in `[project.dependencies]` in
-   `pyproject.toml`, for example changing `pandas==<old>` to
-   `pandas==<new>`. Do not add a second entry for the same package.
+1. Edit that package's existing entry in `pyproject.toml`. Core packages
+   belong in `[project.dependencies]`. Matplotlib and seaborn belong in both
+   the `plot` extra and the `gui` extra. Qt packages for the desktop app
+   belong in the `gui` extra. For example, change `pandas==<old>` to
+   `pandas==<new>` in `[project.dependencies]`. Do not add a second entry
+   for the same package.
 2. From the repository root, regenerate the shared lock:
 
    ```bash
@@ -259,7 +264,7 @@ Dependencies use exact pins. To change a package such as pandas:
 4. Commit `pyproject.toml` and `uv.lock` together. The build scripts require a
    clean Git tree and use the committed lock.
 5. Put that commit on each build computer and run the normal platform build.
-   `uv sync --locked` recreates the environment from the updated lock.
+   `uv sync --locked --extra gui` recreates the environment from the updated lock.
 6. Run the application smoke tests on both platforms before distributing the
    change.
 

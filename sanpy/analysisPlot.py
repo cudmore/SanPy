@@ -3,8 +3,6 @@ from typing import Union, Dict, List, Tuple, Optional
 
 import numpy as np
 import scipy.signal
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 import sanpy
 
@@ -144,6 +142,8 @@ class bAnalysisPlot:
         return d.copy()
 
     def _makeFig(self, plotStyle=None):
+        import matplotlib.pyplot as plt
+
         if plotStyle is None:
             plotStyle = self.getDefaultPlotStyle()
 
@@ -204,6 +204,8 @@ class bAnalysisPlot:
         Return:
             fig and axs
         """
+
+        import matplotlib.pyplot as plt
 
         #
         # make a 2-panel figure
@@ -290,6 +292,8 @@ class bAnalysisPlot:
     def plotStat(self, xStat: str, yStat: str, hue: Optional[str] = None, ax=None):
         # ax : Optional["matplotlib.axes._subplots.AxesSubplot"] = None):
 
+        import seaborn as sns
+
         legend = False
 
         if ax is None:
@@ -302,6 +306,7 @@ class bAnalysisPlot:
 
     def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
         """Plot a given spike parameter."""
+        import matplotlib.pyplot as plt
         if stat == "peak":
             yStatName = "peakVal"
             yStatLabel = "Spike Peak (mV)"
@@ -343,6 +348,7 @@ class bAnalysisPlot:
 
     def plotISI(ba, ax=None):
         """Plot the inter-spike-interval (sec) between each spike threshold"""
+        import matplotlib.pyplot as plt
         #
         # pull
         spikeTimes_sec = [x / ba.dataPointsPerMs / 1000 for x in ba.spikeTimes]
@@ -377,6 +383,8 @@ class bAnalysisPlot:
             xPlot
             yPlot
         """
+
+        import matplotlib.pyplot as plt
 
         """
         if ax is None:
@@ -484,6 +492,8 @@ class bAnalysisPlot:
         return xPlot, yPlot
 
     def plotPhasePlot(self, oneSpikeNumber=None, ax=None):
+        import matplotlib.pyplot as plt
+
         if ax is None:
             grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
@@ -503,6 +513,8 @@ class bAnalysisPlot:
 
 
 def test_plot(path):
+    import matplotlib.pyplot as plt
+
     print("=== test_plot() path:", path)
     ba = sanpy.bAnalysis(path)
 

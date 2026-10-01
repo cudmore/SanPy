@@ -77,6 +77,7 @@ print('machine', machine)
     uv sync `
         --project $RepoRoot `
         --locked `
+        --extra gui `
         --no-dev `
         --group packaging `
         --python $PythonVersion `

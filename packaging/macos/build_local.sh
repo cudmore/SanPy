@@ -52,6 +52,7 @@ echo "==> syncing locked build environment"
 UV_PROJECT_ENVIRONMENT="${VENV}" uv sync \
   --project "${REPO_ROOT}" \
   --locked \
+  --extra gui \
   --no-dev \
   --group packaging \
   --python "${PYTHON_VERSION}" \

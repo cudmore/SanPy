@@ -1,5 +1,5 @@
 
-[![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![tests](https://github.com/cudmore/SanPy/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/cudmore/SanPy/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/cudmore/SanPy/branch/master/graph/badge.svg?token=L7L3FB04IP)](https://codecov.io/gh/cudmore/SanPy)
 [![OS](https://img.shields.io/badge/OS-Linux|Windows|macOS-blue.svg)]()

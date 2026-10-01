@@ -95,7 +95,7 @@ def test_external_analysis_files_are_ignored(
 def test_user_file_template_contains_no_python_extensions() -> None:
     """Keep executable extension directories out of new user folders."""
     template = (
-        Path(__file__).resolve().parents[1]
+        Path(__file__).resolve().parents[2]
         / "sanpy"
         / "_userFiles"
         / "SanPy-User-Files"

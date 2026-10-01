@@ -78,11 +78,15 @@ def test_import_sanpy_does_not_load_gui_or_pyplot() -> None:
     check_code = """
 import sys
 import sanpy
+import sanpy.analysisPlot
+import sanpy.atfStim
+import sanpy.kymAnalysis
+import sanpy.models.myStochHH_v2
 
 for module_name in sys.modules:
     assert not module_name.startswith((
         'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'qdarktheme', 'qtpy',
-        'pyqtgraph', 'sanpy.interface', 'matplotlib.pyplot',
+        'pyqtgraph', 'sanpy.interface', 'matplotlib', 'seaborn',
     )), module_name
 """
     subprocess.run(

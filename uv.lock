@@ -15,6 +15,11 @@ required-markers = [
 [manifest]
 constraints = [{ name = "pyqt5-qt5", marker = "sys_platform == 'win32'", specifier = "==5.15.2" }]
 
+[[manifest.dependency-metadata]]
+name = "pyabf"
+version = "2.3.8"
+requires-dist = ["numpy"]
+
 [[package]]
 name = "altgraph"
 version = "0.17.5"
@@ -1436,9 +1441,7 @@ name = "pyabf"
 version = "2.3.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "matplotlib" },
     { name = "numpy" },
-    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/08/8c/60694c3129f22766e69e413c8172a263a46f363a99498da63bda411cfe28/pyabf-2.3.8.tar.gz", hash = "sha256:4a4cf5701149eed75adc4dc8ea975c61c43c1678e5bcf468426140ec52302109", size = 44207, upload-time = "2023-08-02T23:21:56.906Z" }
 wheels = [
@@ -1924,26 +1927,33 @@ source = { editable = "." }
 dependencies = [
     { name = "h5py" },
     { name = "jsonschema" },
-    { name = "matplotlib" },
-    { name = "mplcursors" },
     { name = "numcodecs" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "platformdirs" },
     { name = "pyabf" },
     { name = "pyarrow" },
+    { name = "scikit-image" },
+    { name = "scipy" },
+    { name = "tables" },
+    { name = "tifffile" },
+    { name = "zarr" },
+]
+
+[package.optional-dependencies]
+gui = [
+    { name = "matplotlib" },
+    { name = "mplcursors" },
     { name = "pyqt5" },
     { name = "pyqtdarktheme-fork" },
     { name = "pyqtgraph" },
     { name = "qtawesome" },
     { name = "qtpy" },
-    { name = "requests" },
-    { name = "scikit-image" },
-    { name = "scipy" },
     { name = "seaborn" },
-    { name = "tables" },
-    { name = "tifffile" },
-    { name = "zarr" },
+]
+plot = [
+    { name = "matplotlib" },
+    { name = "seaborn" },
 ]
 
 [package.dev-dependencies]
@@ -1967,6 +1977,8 @@ packaging = [
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
+]
+test-gui = [
     { name = "pytest-qt" },
 ]
 
@@ -1974,27 +1986,29 @@ test = [
 requires-dist = [
     { name = "h5py", specifier = ">=3.12,<4" },
     { name = "jsonschema", specifier = ">=4.26,<5" },
-    { name = "matplotlib", specifier = ">=3.9,<4" },
-    { name = "mplcursors", specifier = ">=0.6,<1" },
+    { name = "matplotlib", marker = "extra == 'gui'", specifier = ">=3.9,<4" },
+    { name = "matplotlib", marker = "extra == 'plot'", specifier = ">=3.9,<4" },
+    { name = "mplcursors", marker = "extra == 'gui'", specifier = ">=0.6,<1" },
     { name = "numcodecs", specifier = ">=0.16,<0.17" },
     { name = "numpy", specifier = ">=2.1,<3" },
     { name = "pandas", specifier = ">=2.3,<2.4" },
     { name = "platformdirs", specifier = ">=4.3,<5" },
     { name = "pyabf", specifier = "==2.3.8" },
     { name = "pyarrow", specifier = ">=19,<24" },
-    { name = "pyqt5", specifier = "==5.15.11" },
-    { name = "pyqtdarktheme-fork", specifier = "==2.3.6" },
-    { name = "pyqtgraph", specifier = ">=0.13.7,<1" },
-    { name = "qtawesome", specifier = ">=1.4.2,<2" },
-    { name = "qtpy", specifier = ">=2.4,<3" },
-    { name = "requests", specifier = ">=2.32,<3" },
+    { name = "pyqt5", marker = "extra == 'gui'", specifier = "==5.15.11" },
+    { name = "pyqtdarktheme-fork", marker = "extra == 'gui'", specifier = "==2.3.6" },
+    { name = "pyqtgraph", marker = "extra == 'gui'", specifier = ">=0.13.7,<1" },
+    { name = "qtawesome", marker = "extra == 'gui'", specifier = ">=1.4.2,<2" },
+    { name = "qtpy", marker = "extra == 'gui'", specifier = ">=2.4,<3" },
     { name = "scikit-image", specifier = ">=0.25,<1" },
     { name = "scipy", specifier = ">=1.15,<2" },
-    { name = "seaborn", specifier = ">=0.13,<1" },
+    { name = "seaborn", marker = "extra == 'gui'", specifier = ">=0.13,<1" },
+    { name = "seaborn", marker = "extra == 'plot'", specifier = ">=0.13,<1" },
     { name = "tables", specifier = ">=3.10,<4" },
     { name = "tifffile", specifier = ">=2025.1,<2027" },
     { name = "zarr", specifier = ">=3.1,<4" },
 ]
+provides-extras = ["plot", "gui"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2017,8 +2031,8 @@ packaging = [
 test = [
     { name = "pytest", specifier = ">=8,<10" },
     { name = "pytest-cov", specifier = ">=5,<8" },
-    { name = "pytest-qt", specifier = ">=4,<5" },
 ]
+test-gui = [{ name = "pytest-qt", specifier = ">=4,<5" }]
 
 [[package]]
 name = "scikit-image"
