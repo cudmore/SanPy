@@ -5,11 +5,12 @@ from __future__ import annotations
 from datetime import date
 from enum import Enum
 import math
-from typing import Any, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Mapping, Sequence
 
-from mkdocs.config.defaults import MkDocsConfig
-from mkdocs.structure.files import Files
-from mkdocs.structure.pages import Page
+if TYPE_CHECKING:
+    from mkdocs.config.defaults import MkDocsConfig
+    from mkdocs.structure.files import Files
+    from mkdocs.structure.pages import Page
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
