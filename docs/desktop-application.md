@@ -1,4 +1,4 @@
-The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs. You can [download](../download) the desktop appication or [build from source](../install).
+The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs. You can [download](download.md) the desktop appication or [build from source](install.md).
 
 ## Opening a file or folder of raw data
 
@@ -8,7 +8,7 @@ Alternatively, open an entire folder of raw data files with the `File - Open Fol
 
 Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV).
 
-Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, [plugins](../plugins) can be used to inspect the analysis results.
+Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, [plugins](plugins.md) can be used to inspect the analysis results.
 
 <IMG SRC="../img/sanpy-app.png" width=700>
 
@@ -16,7 +16,7 @@ Once spikes are detected, the analysis results are overlaid over the plots of th
 
 <IMG = SRC="../img/desktop-main-window/file-list.png" width=700>
 
-A list of files in a loaded folder, each row is a file and columns are information on the file including a subset of the [detection parameters](../methods/#detection-parameters) and [analysis results](../methods/#analysis-results-full). The file list table can be toggled on and off with the `View - File Panel` menu or keyboard `f`. 
+A list of files in a loaded folder, each row is a file and columns are information on the file including a subset of the [detection parameters](methods.md#detection-parameters) and [analysis results](methods.md#analysis-results-full). The file list table can be toggled on and off with the `View - File Panel` menu or keyboard `f`. 
 
  - **L** - Indicates if the file is loaded. Use the right-click menu `Unload Data` to unload a loaded file. This can save memory.
  - **A** - Indicates if the file has been analyzed.
@@ -50,7 +50,7 @@ The detection panel has subcategories to detect spikes and to control the displa
 
 ### Detection
 
-Set detection parameters, finer control of all detection parameters is provided with the [Detection Parameters Plugin](../plugins/#detection-parameters).
+Set detection parameters, finer control of all detection parameters is provided with the [Detection Parameters Plugin](plugins.md#detection-parameters).
 
 - **Presets** - A popup to set a pre-defined set of detection parameters.
 - **Detect dV/dt** - Detect spikes with the specified value in the first derivative (dV/dt). The first derivative can be plotted with menu `View - Derivative`.
@@ -58,10 +58,10 @@ Set detection parameters, finer control of all detection parameters is provided 
 
 <!--
 - **From(s) To(s)** - **depreciated** Displays the current x-axis zoom and allows it to be set. Use Click+drag with the mouse to visually zoom in on the recording. Use keyboard 'enter' or 'return' to set a recording to full zoom.
-- **Spikes/Freq/Errors** - Once analyzed, displays the number of detected spikes, the mean instantaneous frequency between spikes, and the number of errors encountered during spike detection. View all spike analysis results with the [Summary Spikes](../plugins/#summary-spikes) plugin and all errors with the [Summary Error](../plugins/#summary-error) plugins.
+- **Spikes/Freq/Errors** - Once analyzed, displays the number of detected spikes, the mean instantaneous frequency between spikes, and the number of errors encountered during spike detection. View all spike analysis results with the [Summary Spikes](plugins.md#summary-spikes) plugin and all errors with the [Summary Error](plugins.md#summary-error) plugins.
 -->
 
-- **Export Spike Report** - Export all analysis for the selected file to a CSV file. This file includes all [detection parameters](../methods/#detection-parameters) and [analysis results](../methods/#analysis-results-full).
+- **Export Spike Report** - Export all analysis for the selected file to a CSV file. This file includes all [detection parameters](methods.md#detection-parameters) and [analysis results](methods.md#analysis-results-full).
 
 ### Display
 
@@ -113,7 +113,7 @@ Click+drag with the mouse to zoom in on the time-axis.
 <p style="clear: both;">
 </p>
 
-A number of analysis results can be overlaid using the [Plot Options](#plot-options) checkboxes  in the [detection](#detection) panel. For a full list of analysis results, see [Methods - Analysis Results](../methods/#analysis-results-full)
+A number of analysis results can be overlaid using the [Plot Options](#plot-options) checkboxes in the [detection](#detection) panel. For a full list of analysis results, see [Methods - Analysis Results](methods.md#analysis-results-full).
 
  - Global Threshold - Plot the spike threshold in the 'Full Recording' plot.
  - Threshold (dV/dt) - Plot the spike threshold in the 'Derivative' plot (red circle)
@@ -157,7 +157,7 @@ A number of analysis results can be overlaid using the [Plot Options](#plot-opti
  - **Load Recent ...** - Load recently loaded folders.
  - **Save Folder Analysis ...** - Save all the analysis for the loaded folder.
  - **Save Preferences** - Save the SanPy preferences. This includes mostly information about the GUI like window position and opened plugins.
- - **Show Log** - Show the SanPy log. A log is kept as a user interacts with SanPy. This is useful to send to the developers if there are problems. The logs can also be viewed with the [SanPy Log Plugin](../plugins/#sanpy-log).
+ - **Show Log** - Show the SanPy log. A log is kept as a user interacts with SanPy. This is useful to send to the developers if there are problems. The logs can also be viewed with the [SanPy Log Plugin](plugins.md#sanpy-log).
 
 <!-- move byond the pervious image. My generation X comes through !!! -->
 <p style="clear: both;">
@@ -189,7 +189,7 @@ A menu that allows different pieces of the interface to be shown or hidden.
 
 <IMG = SRC="../img/desktop-main-window/plugins-menu.png" width=175 align="left">
 
-A menu to open a SanPy [plugin](../plugins). Plugins opened with this menu will be displayed in their own window.
+A menu to open a SanPy [plugin](plugins.md). Plugins opened with this menu will be displayed in their own window.
 
 To open a plugin within the main SanPy window, use the `View - Plugins` menu to show the plugins dock and then right-click to select a plugin to display.
 
@@ -201,11 +201,11 @@ All open plugins can be saved and re-opened with the next run of SanPy by saving
 
 ## Plugins
 
-There is a dedicated [plugin](../plugins) documentaion page. Here we want to highlight a few key plugins.
+There is a dedicated [plugin](plugins.md) documentaion page. Here we want to highlight a few key plugins.
 
-### [Plot Scatter](../plugins#plot-scatter)
+### [Plot Scatter](plugins.md#plot-scatter)
 
-The `plot scatter` plugin is designed to plot any [analysis results](../methods#analysis-results-full). Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or sweep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface `Detection Panel - Set Spikes`.
+The `plot scatter` plugin is designed to plot any [analysis results](methods.md#analysis-results-full). Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or sweep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface `Detection Panel - Set Spikes`.
 
 <img src="../img/plugins/scatter-plot.png" width="600" align="right">
 
@@ -213,7 +213,7 @@ The `plot scatter` plugin is designed to plot any [analysis results](../methods#
 <p style="clear: both;">
 </p>
 
-### [Plot FI](../plugins#plot-fi)
+### [Plot FI](plugins.md#plot-fi)
 
 The `plot fi` plugin is designed to visualize the raw data and analysis of a current-clamp experiment where a range of hyperpolarizing and depolarizing current steps are delivered.
 
@@ -223,7 +223,7 @@ The `plot fi` plugin is designed to visualize the raw data and analysis of a cur
 <p style="clear: both;">
 </p>
 
-### [Summarize Results](../plugins/#summarize-results)
+### [Summarize Results](plugins.md#summarize-results)
 
 The `summarize results` plugin shows a number of different tables to review the analysis results. Here, we focus on errors that occured during spike detection. Each row represents an error in an individual spike. Selecting the error will select the spike in the main interface. This should be used in a curation feedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable. Alternatively, you can set a tag in individual spikes to 'reject' them.
 
@@ -240,4 +240,3 @@ When the SanPy desktop application is first run, it creates
 and example recordings. Loading executable Python extensions from this folder
 is currently disabled. Developer extension examples remain available in the
 source repository under `examples/user_extensions`.
-

@@ -324,7 +324,7 @@ brew install pngquant
 Compress all png in folder - REPLACES FILES
 
 ```
-pngquant --ext .png --force docs/docs/img/*.png
+pngquant --ext .png --force docs/img/*.png
 ```
 
 ## Big Sur

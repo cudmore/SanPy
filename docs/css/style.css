@@ -1,0 +1,14 @@
+/* Indentation for nested mkdocstrings items. */
+div.doc-contents:not(.first) {
+  padding-left: 25px;
+  border-left: 4px solid rgba(230, 230, 230);
+  margin-bottom: 80px;
+}
+
+.md-button--myred {
+  background: rgba(154, 30, 30, 1);
+}
+
+.md-button--myred:not([disabled]):hover {
+  background: rgba(154, 30, 30, 0.8);
+}

@@ -25,16 +25,16 @@ Finally, run the plugins to genarate Figure 3 a/b
 11. Select the `Plugins - Plot FI` menu, this will generate panel (b)
 
 Screen shot of the main GUI.
-![Figure 3](../img/figure-3/main-gui.png)
+![Figure 3](img/figure-3/main-gui.png)
 
 Right click the dvdt plot and select `Set dvdt Threshold`.
 <IMG SRC="../img/figure-3/set-dvdt-threshold.png" width=200>
 
 Figure 3a, the `Plot Recording` plugin.
-![Figure 3a](../img/figure-3/plot-recording-plugin.png)
+![Figure 3a](img/figure-3/plot-recording-plugin.png)
 
 Figure 3b, the `Plot FI` plugin.
-![Figure 3a](../img/figure-3/plot-fi-plugin.png)
+![Figure 3a](img/figure-3/plot-fi-plugin.png)
 
 ## Loading a folder, detect spikes in multiple files, and run the Plot Tool (pool) plugin
 
@@ -74,4 +74,3 @@ Please note, this will not be the same exact data but the plots will be similar.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/jaiFOsq3kGM?si=3DyejqH8C2wieaNp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 We are working on a recipe, check back soon!
-

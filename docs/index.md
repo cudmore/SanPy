@@ -6,20 +6,20 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 ## Key features:
 
-- Easy to use [desktop application](desktop-application) with a growing number of built in [plugins](plugins).
+- Easy to use [desktop application](desktop-application.md) with a growing number of built in [plugins](plugins.md).
 
-- An [API](api/overview) for full control of all aspects of file loading and analysis all from your own Python scripts.
+- An [API](api/overview.md) for full control of all aspects of file loading and analysis all from your own Python scripts.
 
 - An extensible [plugin](api/writing-a-plugin.md) architecture providing a wide range of pre-built plugins. We invite the community to build their own.
 
 - An extensible [file loader](api/writing-a-file-loader.md) architecture so any type of raw data can be opened. We provide file loaders for Molecular Devices (Axon Instruments) abf and atf file formats (using pyAbf), as well as general purpose comma-seperated-value files (csv).
 
-- A rich range of [analysis results](methods/#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis. Like the plugin and file loading architecures, SanPy also provide a software architecute to add [new analysis](api/writing-new-analysis.md) measurements.
+- A rich range of [analysis results](methods.md#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis. Like the plugin and file loading architecures, SanPy also provide a software architecute to add [new analysis](api/writing-new-analysis.md) measurements.
 
-## [Desktop Application](desktop-application)
+## [Desktop Application](desktop-application.md)
 <IMG SRC="img/sanpy-pyqt-1.png" width=700>
 
-## [Plugins](plugins)
+## [Plugins](plugins.md)
 <IMG SRC="img/sanpy-plugin-overview.png" width=700>
 
 <!-- <table>

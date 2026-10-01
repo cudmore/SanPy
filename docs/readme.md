@@ -1,44 +1,38 @@
-## SanPy-Docs
+## SanPy documentation
 
-This documentation should be available at
+This documentation is available at
 
-https://cudmore.github.io/SanPy-Docs/
+https://cudmore.github.io/SanPy/
 
 The main SanPy code repository is at
 
 https://github.com/cudmore/sanpy
 
-### install
+### Install documentation dependencies
 
-```
-pip install mkdocs
-pip install mkdocs-material
-pip install mkdocs-jupyter # to have mkdocs show jupyter notebooks
-```
+Run from the repository root:
 
-Dec 2022, need this now
-```
-pip install "mkdocstrings[python]"
+```bash
+uv sync --locked --no-dev --group docs
 ```
 
-### serve local
+### Serve locally
 
-```
-mkdocs serve
-```
-
-### To update docs from command line
-
-```
-mkdocs gh-deploy
+```bash
+uv run --group docs mkdocs serve
 ```
 
-Remember, this does not update the main repo, to do that
+The schema tables on the Methods page are generated during each fresh MkDocs
+build from the SanPy detection-parameter and analysis-result registries.
 
+### Build locally
+
+```bash
+uv run --group docs mkdocs build
 ```
-git commit -am 'new commit'
-git push
-```
+
+Pushes to `master` build and publish the site through the documentation GitHub
+Actions workflow. Pull requests build the site without publishing it.
 
 # using mkdocs docstring
 
@@ -49,10 +43,10 @@ Tweeking the layout is here: https://mkdocstrings.github.io/handlers/python/
 ## for each source file, like sanpy/bAnalysis.py
 
 - add it to toc in mkdocs.yml
-- make file in `docs/docs/bAnalysis.md` with:
+- make a file in `docs/api/bAnalysis.md` with:
 
 ```
-# docs/docs/bAnalysis.md
+# docs/api/bAnalysis.md
 ::: sanpy.bAnalysis
 ```
 

@@ -42,6 +42,7 @@ data/kymograph/tif_file_backend_state.csv
 # mkdocs
 docs/site
 docs/.cache/
+/site/
 
 # client-server for flask-vue
 flask-vue/server/flask_env

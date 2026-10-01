@@ -1,6 +1,6 @@
 This page describes how to install SanPy from the command-line.
 
-If you want to download and run SanPy as a pre-built desktop application, please see our easy to follow [download sanpy](../download) page.
+If you want to download and run SanPy as a pre-built desktop application, please see our easy to follow [download SanPy](download.md) page.
 
 ## Install from the command line
 
