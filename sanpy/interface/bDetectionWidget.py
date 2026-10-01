@@ -4101,19 +4101,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mousePositionLabel.setText(labelStr)
         self.mousePositionLabel.repaint()
 
-    # def slot_setSpikeStat(self, setDict : dict):
-    #     """Respond to changes from setSpikeStack plugin.
-
-    #     Notes
-    #     -----
-    #     setSpikeStatEvent = {}
-    #     setSpikeStatEvent['spikeList'] = self.getSelectedSpikes()
-    #     setSpikeStatEvent['colStr'] = colStr
-    #     setSpikeStatEvent['value'] = value
-    #     """
-    #     logger.info(setDict)
-    #     self.detectionWidget.slot_setSpikeStat(setDict)
-
     def slot_selectSweep(self, sweep: int):
         """Fake slot, not ising in emit/connect."""
         
