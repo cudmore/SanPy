@@ -2454,9 +2454,8 @@ class bAnalysis:
                 self.spikeClips.append(currentClip)
                 self.spikeClips_x2.append(
                     self.spikeClips_x
-                )  # a 2D version to make pyqtgraph multiline happy
+                )
             else:
-                # pass
                 if verbose:
                     logger.warning(
                         f"Did not add clip for spike index: {idx} at time: {spikeTime} len(currentClip): {len(currentClip)} != numPointsInClip: {numPointsInClip}"
