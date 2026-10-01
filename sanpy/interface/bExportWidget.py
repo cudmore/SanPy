@@ -11,10 +11,6 @@ from matplotlib.backends import backend_qtagg
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
-# from SanPy import bAnalysis
-# from SanPy import bAnalysisPlot
-# import bAnalysis
-# import bAnalysisPlot
 import sanpy
 from sanpy import bAnalysis
 from sanpy.interface._mpl import _make_navigation_toolbar

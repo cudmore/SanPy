@@ -4,8 +4,6 @@ import numpy as np
 
 import sanpy
 
-# from sanpy.analysisPlot import bAnalysisPlot
-
 from sanpy.fileloaders.fileLoader_abf import fileLoader_abf
 from sanpy.fileloaders.fileLoader_base import fileLoader_base
 # from sanpy.fileloaders.fileLoader_csv import fileLoader_csv
@@ -23,13 +21,6 @@ def test_fileLoader_tif():
 
     logger.info(f'tifFile: {tifFile}')
 
-    # test plot
-    # ap = bAnalysisPlot(tifFile)
-    # ap.plotRaw()
-
-    # import matplotlib.pyplot as plt
-    # plt.show()
-
 def _old_test_fileLoader_csv():
     # path = 'data/19114001.csv'
     # path = 'data/2021_07_20_0010.csv'
@@ -46,18 +37,6 @@ def _old_test_fileLoader_csv():
     # logger.info(f'csvFile: {csvFile}')
 
     csvFile.setSweep(0)
-
-    # logger.info(f'dataPointsPerMs: {csvFile.dataPointsPerMs}')
-    # logger.info(f'sweepX: {csvFile.sweepX.shape}')
-    # logger.info(f'sweepY: {csvFile.sweepY.shape}')
-    # logger.info(f'sweepC: {csvFile.sweepC.shape}')
-
-    # test plot
-    # ap = bAnalysisPlot(csvFile)
-    # ap.plotRaw()
-
-    # import matplotlib.pyplot as plt
-    # plt.show()
 
 def test_fileLoader_abf():
     # path = 'data/19114001.abf'
@@ -77,15 +56,6 @@ def test_fileLoader_abf():
 
     _filteredDeriv = abfFile.filteredDeriv
     assert _filteredDeriv.shape == abfFile.sweepX.shape
-
-    # print(abfFile)
-
-    # test plot
-    # ap = bAnalysisPlot(abfFile)
-    # ap.plotRaw()
-
-    # import matplotlib.pyplot as plt
-    # plt.show()
 
     # utility to export an abf as csv (use once)
     if 0:
