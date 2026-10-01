@@ -152,6 +152,22 @@ def test_nicepool_pool_plugin_uses_the_folder_pool() -> None:
     analysis_dir.pool_spike_dataframe.assert_called_once_with()
 
 
+def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
+    """Map SanPy spikes to pooled row IDs for the current recording."""
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._current_file_number = 4
+    plugin._row_id_to_spike = {"4:2": 2, "4:3": 3, "5:2": 2}
+    plugin._selectedSpikeList = [3, 2]
+
+    plugin.selectSpikeList()
+
+    plugin._nicepool.set_selection.assert_called_once_with(
+        "4:3",
+        ["4:3", "4:2"],
+    )
+
+
 def test_nicepool_pool_without_a_folder_has_no_results() -> None:
     """Do not fall back to the current file when no folder is open."""
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
@@ -205,6 +221,7 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     analysis.fileLoader.numEpochs = 1
     analysis.fileLoader.numSweeps = 1
     analysis.isAnalyzed.return_value = True
+    analysis.getSpikeStat.return_value = [0]
     analysis.asDataFrame.return_value = pd.DataFrame(
         {
             "file": ["cell.abf", "cell.abf"],
