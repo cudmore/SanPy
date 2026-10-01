@@ -25,6 +25,7 @@ import sanpy
 from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy.interface.bScatterPlotWidget2 import myStatListWidget
 from sanpy.interface.plugins import sanpyPlugin
+from sanpy.interface.window_state import WindowState
 
 
 def encodePlotAxis(
@@ -1076,17 +1077,14 @@ class plotScatter(sanpyPlugin):
             
             #self.setSelectedSpikes(selectedSpikeList)
             self.setSelectedSpikes(actualSpikeList)
-            sDict = {
-                "spikeList": self.getSelectedSpikes(),
-                "doZoom": False,  # never zoom on multiple spike selection
-                "ba": self.ba,
-            }
-            logger.info(f'{self._myClassName()} -->> emit signalSelectSpikeList')
-            logger.info(f"spikeList: {sDict['spikeList']}")
-            
-            self._blockSlots = True
-            self.signalSelectSpikeList.emit(sDict)
-            self._blockSlots = False
+            selected = tuple(int(spike) for spike in self.getSelectedSpikes())
+            window = self.getSanPyWindow()
+            state = None if window is None else window.state
+            if state is not None and selected:
+                sweep = int(self.ba.getSpikeStat([selected[0]], "sweep")[0])
+                self.request_window_state(
+                    WindowState(state.file_key, sweep, selected)
+                )
 
     def toolbarHasSelection(self):
         """Return true if either ['zoom rect', 'pan/zoom'] are selected

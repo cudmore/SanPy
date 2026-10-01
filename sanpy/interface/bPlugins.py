@@ -71,7 +71,6 @@ class bPlugins:
             "sanpyPlugin",
             "myWidget",
             "ResponseType",
-            "SpikeSelectEvent",
             "basePlotTool",
             "NavigationToolbar2QT",
             "myStatListWidget",

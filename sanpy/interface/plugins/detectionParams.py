@@ -17,10 +17,6 @@ logger = get_logger(__name__)
 class detectionParams(sanpyPlugin):
     """
     Plugin to display overview of detection parameters for analysis.
-
-    Uses:
-        QTableView: sanpy.interface.bErrorTable.errorTableView()
-        QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
     """
 
     myHumanName = "Detection Parameters"

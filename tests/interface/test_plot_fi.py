@@ -13,6 +13,7 @@ from qtpy import QtCore, QtWidgets
 
 from sanpy.interface.plugins.plotFi import getStatFi, plotFi
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
+from sanpy.interface.window_state import WindowState
 
 
 def test_plot_fi_uses_horizontal_splitter(qtbot: Any) -> None:
@@ -22,6 +23,33 @@ def test_plot_fi_uses_horizontal_splitter(qtbot: Any) -> None:
 
     assert plugin._mainSplitter.orientation() == QtCore.Qt.Horizontal
     assert plugin._mainSplitter.count() == 2
+
+
+def test_plot_fi_only_raw_artist_requests_spike_state(qtbot: Any) -> None:
+    """Map a raw FI point to its spike while ignoring aggregate artists.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    raw_artist = object()
+    plugin._raw_artist = raw_artist
+    plugin._raw_spike_rows = pd.DataFrame(
+        {"spikeNumber": [11, 12], "sweep": [2, 3]}
+    )
+    plugin._sanPyWindow = SimpleNamespace(
+        state=WindowState("cell.abf", 0, None)
+    )
+    plugin.request_window_state = Mock()
+
+    plugin._on_raw_pick(SimpleNamespace(artist=object(), ind=[0]))
+    plugin.request_window_state.assert_not_called()
+
+    plugin._on_raw_pick(SimpleNamespace(artist=raw_artist, ind=[1]))
+    requested = plugin.request_window_state.call_args.args[0]
+    assert requested == WindowState("cell.abf", 3, (12,))
 
 
 def test_get_stat_fi_aligns_results_by_sweep() -> None:

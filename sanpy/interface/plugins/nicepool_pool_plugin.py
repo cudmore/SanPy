@@ -26,9 +26,9 @@ class NicePoolPoolPlugin(NicePoolPlugin):
         analysis_dir = None if window is None else window.myAnalysisDir
         if analysis_dir is None:
             return None
-        if self.ba is not None:
-            for row_index, loaded in analysis_dir.getDataFrame()["_ba"].items():
-                if loaded is self.ba:
-                    self._current_file_number = int(row_index)
-                    break
+        state = None if window is None else window.state
+        if state is not None:
+            self._current_file_number = analysis_dir.get_row_for_file_key(
+                state.file_key
+            )
         return analysis_dir.pool_spike_dataframe()

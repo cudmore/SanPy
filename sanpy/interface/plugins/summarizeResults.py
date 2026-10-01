@@ -7,6 +7,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
+from sanpy.interface.window_state import WindowState
 from sanpy.bExport import bExport
 from sanpy.interface.plugins import sanpyPlugin
 # from sanpy.interface.plugins import ResponseType
@@ -98,10 +99,28 @@ class SummarizeResults(sanpyPlugin):
         # connect clicks in error table to signal main sanpy_app with slot_selectSpike()
         logger.warning("mar 11 FIX SPIKE SELECTION")
         if self.getSanPyWindow() is not None:
-            fnPtr = self.getSanPyWindow().slot_selectSpike
-            self.myErrorTable.signalSelectSpike.connect(fnPtr)
+            self.myErrorTable.signalSelectSpike.connect(self._request_spike)
 
         self._buildingInterface = False
+
+    def _request_spike(self, spike_number: int, do_zoom: bool) -> None:
+        """Request selection of one error-table spike.
+
+        Args:
+            spike_number: Absolute spike number selected in the report.
+            do_zoom: Whether the main trace should zoom to the spike.
+        """
+        if self.ba is None:
+            return
+        window = self.getSanPyWindow()
+        state = None if window is None else window.state
+        if state is None:
+            return
+        sweep = int(self.ba.getSpikeStat([spike_number], "sweep")[0])
+        self.request_window_state(
+            WindowState(state.file_key, sweep, (spike_number,)),
+            do_zoom=do_zoom,
+        )
 
     def _on_radio_clicked(self, radioButton):
         """Respond to user click in radio buttons.

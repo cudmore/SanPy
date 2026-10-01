@@ -11,6 +11,7 @@ import pytest
 from qtpy import QtCore, QtGui, QtWidgets
 
 from sanpy.interface.util import sanpyCursors
+from sanpy.interface.window_state import WindowState
 
 
 def test_plot_range_signals_are_connected_once(
@@ -39,6 +40,29 @@ def test_plot_range_signals_are_connected_once(
     assert plot_item.receivers(widget.vmPlot.sigXRangeChanged) == 1
     assert plot_item.receivers(widget.vmPlot.sigYRangeChanged) == 1
 
+
+def test_invalid_spike_still_applies_valid_file_and_sweep(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Discard a bad spike without rejecting its valid file and sweep.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    file_key = window.myAnalysisDir.get_file_key(row)
+
+    window.request_state(WindowState(file_key, 1, (10_000_000,)))
+
+    assert window.state == WindowState(file_key, 1, None)
+    assert window.myDetectionWidget.sweepNumber == 1
+    assert "Ignoring invalid spike selection" in window.statusBar.currentMessage()
 
 def test_theme_switch_updates_existing_recording_plots(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
@@ -189,7 +213,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert widget._leftPanelPlugin.getHumanName() == "File Metadata"
     assert widget._detectionPanelWidget.isHidden() is True
     with pytest.raises(TypeError):
-        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+        window.signalStateChanged.disconnect(plugin.slot_window_state)
 
     file_plugin = widget._leftPanelPlugin
     meta_button.click()
@@ -201,7 +225,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert widget._leftPanelPlugin.getHumanName() == "Set Meta Data"
     assert widget._detectionPanelWidget.isHidden() is True
     with pytest.raises(TypeError):
-        window.signalSelectSpikeList.disconnect(file_plugin.slot_selectSpikeList)
+        window.signalStateChanged.disconnect(file_plugin.slot_window_state)
 
     meta_plugin = widget._leftPanelPlugin
     meta_button.click()
@@ -210,7 +234,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert widget._leftPanelContainer.isHidden() is True
     assert widget._leftToolbar.isHidden() is False
     with pytest.raises(TypeError):
-        window.signalSelectSpikeList.disconnect(meta_plugin.slot_selectSpikeList)
+        window.signalStateChanged.disconnect(meta_plugin.slot_window_state)
     with pytest.raises(TypeError):
         plugin.signalDetect.disconnect(window.slot_detect)
 

@@ -251,6 +251,18 @@ class bTableView(QtWidgets.QTableView):
         else:
             logger.warning(f"Did not find file {filename} in {df['File'].tolist()}")
 
+    def select_row_silently(self, real_row: int) -> None:
+        """Select a source row without emitting the file-click signal.
+
+        Args:
+            real_row: Dataframe index identifying the recording row.
+        """
+        indexes = list(self.model()._data.index)
+        if real_row not in indexes:
+            return
+        self.selectRow(indexes.index(real_row))
+        self.lastSeletedRow = real_row
+
     def _onLeftClick(self, realRow):
         rowDict = self.model().myGetRowDict(realRow)
 

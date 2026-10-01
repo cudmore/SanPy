@@ -135,38 +135,31 @@ _sanpyColumns = {
     },
 }
 
-def _fixRelPath(folderPath, dfTable: pd.DataFrame, fileList: List[str]):
-    """Was not assigning relPath on initial load (no hd5 file).
+def _normalized_file_key(folder_path: str, file_path: str) -> str:
+    """Return a portable file identity relative to an analysis directory.
 
-    We need a path relative to location of loaded folder.
-    This allows a folder of files and analysis to be moved (to a different machine)
+    Args:
+        folder_path: Root directory owned by the analysis directory.
+        file_path: Absolute or root-relative recording path.
+
+    Returns:
+        Normalized POSIX-style relative path.
+
+    Raises:
+        ValueError: If ``file_path`` is outside ``folder_path``.
     """
-
-    # print('fileList:', fileList)
-    # pprint(dfTable[['File', 'relPath']])
-
-    # if dfTable is None:
-    #     logger.error('no dfTable')
-
-    n = len(dfTable)
-
-    logger.info(f"Checking path for {n} file(s)")
-
-    for rowIdx in range(n):
-        file = dfTable.loc[rowIdx, "File"]
-        relPath = dfTable.loc[rowIdx, "relPath"]
-
-        # 20220422 why was this here?
-        # if relPath:
-        #    continue
-
-        # print(rowIdx, file, relPath)
-        for filePath in fileList:
-            if filePath.find(file) != -1:
-                logger.info(
-                    f"    _fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}"
-                )
-                dfTable.loc[rowIdx, "relPath"] = filePath
+    root = os.path.realpath(folder_path)
+    windows_path = pathlib.PureWindowsPath(file_path)
+    if os.name != "nt" and windows_path.is_absolute():
+        raise ValueError(f'File "{file_path}" is outside analysis directory "{root}"')
+    candidate = file_path.replace("\\", os.sep)
+    if not os.path.isabs(candidate):
+        candidate = os.path.join(root, candidate)
+    candidate = os.path.realpath(candidate)
+    relative = os.path.relpath(candidate, root)
+    if relative == os.pardir or relative.startswith(f"{os.pardir}{os.sep}"):
+        raise ValueError(f'File "{file_path}" is outside analysis directory "{root}"')
+    return pathlib.PurePath(relative).as_posix()
 
 
 class bAnalysisDirWeb:
@@ -328,8 +321,6 @@ class analysisDir:
             PyQt, used to signal progress on loading
         fileLoaderDict (dict):
             Dict with file extension keys (no dot)
-        autoLoad (bool):
-            If True then 
         folderDepth (int):
             Folder depth to recurse if loading folder path.
 
@@ -375,7 +366,7 @@ class analysisDir:
         self._df = self.loadHdf()
         if self._df is None:
             # did not load h5 file
-            self._df = self.loadFolder(loadData=autoLoad)
+            self._df = self.loadFolder(loadData=False)
             self._updateLoadedAnalyzed()
         elif self._fileLoaderDict is not None:
             logger.info(f'sync existing df with filePath: {self._filePath}')
@@ -383,7 +374,88 @@ class analysisDir:
 
         #
         self._checkColumns()
+        self._normalize_file_keys()
         self._updateLoadedAnalyzed()
+
+    def _normalize_file_keys(self) -> None:
+        """Normalize and validate every recording key in the file table.
+
+        Raises:
+            ValueError: If a key is missing, outside the directory, or duplicated.
+        """
+        keys: list[str] = []
+        available_paths: list[str] | None = None
+        for row_index in self._df.index:
+            value = self._df.at[row_index, "relPath"]
+            if not isinstance(value, str) or not value:
+                value = str(self._df.at[row_index, "File"])
+            try:
+                key = _normalized_file_key(self.path, value)
+            except ValueError:
+                if available_paths is None:
+                    available_paths = self.getFileList()
+                filename = pathlib.PureWindowsPath(value).name
+                matches = [
+                    path
+                    for path in available_paths
+                    if os.path.basename(path) == filename
+                ]
+                if len(matches) != 1:
+                    raise ValueError(
+                        f'Cannot uniquely resolve legacy recording path "{value}"'
+                    ) from None
+                key = _normalized_file_key(self.path, matches[0])
+            self._df.at[row_index, "relPath"] = key
+            keys.append(key)
+        duplicates = sorted({key for key in keys if keys.count(key) > 1})
+        if duplicates:
+            raise ValueError(f"Duplicate analysis file keys: {duplicates}")
+
+    def get_file_key(self, row_idx: int) -> str:
+        """Return the stable file key for one table row.
+
+        Args:
+            row_idx: File-table row index.
+
+        Returns:
+            Normalized path relative to the analysis directory.
+        """
+        return str(self._df.at[row_idx, "relPath"])
+
+    def get_row_for_file_key(self, file_key: str) -> int | None:
+        """Return the table row for a normalized file key.
+
+        Args:
+            file_key: Recording identity relative to the analysis directory.
+
+        Returns:
+            Matching row index, or ``None`` when the key is unknown.
+        """
+        try:
+            normalized = _normalized_file_key(self.path, file_key)
+        except ValueError:
+            return None
+        rows = self._df.index[self._df["relPath"] == normalized].tolist()
+        return int(rows[0]) if rows else None
+
+    def get_analysis_for_file_key(
+        self,
+        file_key: str,
+        allow_auto_load: bool = True,
+    ) -> Optional[sanpy.bAnalysis]:
+        """Resolve and optionally load an analysis by stable file key.
+
+        Args:
+            file_key: Recording identity relative to the analysis directory.
+            allow_auto_load: Whether the recording may be loaded on demand.
+
+        Returns:
+            Resolved analysis, or ``None`` when the key is unknown or cannot load.
+        """
+        row_index = self.get_row_for_file_key(file_key)
+        if row_index is None:
+            return None
+        return self.getAnalysis(row_index, allowAutoLoad=allow_auto_load)
 
     @property
     def theseFileTypes(self):
@@ -1092,17 +1164,7 @@ class analysisDir:
             rowDict[k] = v
 
         # remove the path to the folder we have loaded
-        relPath = path.replace(self.path, "")
-        
-        if relPath.startswith("/"):
-            # so we can use os.path.join()
-            relPath = relPath[1:]
-        # added 20230505 working with johnson in 1313 to fix windows bug ???
-        if relPath.startswith("\\"):
-            # so we can use os.path.join()
-            relPath = relPath[1:]
-
-        rowDict["relPath"] = relPath
+        rowDict["relPath"] = _normalized_file_key(self.path, path)
 
         return ba, rowDict
 
@@ -1293,6 +1355,7 @@ class analysisDir:
             # Copy so file_number and row_id stay on the pooled frame only.
             one_df = one_df.copy()
             one_df["file_number"] = int(row_idx)
+            one_df["file_key"] = self.get_file_key(int(row_idx))
             self.signalWindow(f'Adding "{ba.fileLoader.filename}"')
             frames.append(one_df)
         if not frames:
@@ -1327,4 +1390,3 @@ class analysisDir:
                 headerList.append(headerDict)
         #
         return headerList
-

@@ -17,6 +17,7 @@ import pyqtgraph as pg
 
 import sanpy
 import sanpy.interface
+from sanpy.interface.window_state import WindowState as _WindowState
 from sanpy.interface._mpl import _make_navigation_toolbar
 
 from sanpy.sanpyLogger import get_logger
@@ -31,26 +32,6 @@ class ResponseType(enum.Enum):
     analysisChange = "Analysis Change"
     selectSpike = "Select Spike"
     setAxis = "Set Axis"
-
-
-class SpikeSelectEvent:
-    """Class that encapsulates a spike(s) selection event."""
-
-    def __init__(
-        self, spikeList: List[int] = [], ba: sanpy.bAnalysis = None, isAlt: bool = False
-    ):
-        self._spikeList = spikeList
-        self._ba = ba
-        self._isAlt = isAlt
-
-    def getSpikeList(self):
-        return self._spikeList
-
-    def getAnalysis(self):
-        return self._ba
-
-    def getDoZoom(self):
-        return self._isAlt
 
 
 class sanpyPlugin(QtWidgets.QWidget):
@@ -101,19 +82,16 @@ class sanpyPlugin(QtWidgets.QWidget):
     ----------
     signalCloseWindow : QtCore.pyqtSignal
         Signal emitted when the plugin window is closed.
-    signalSelectSpikeList : QtCore.pyqtSignal
-        Signal emitted when spikes are selected in the plugin.
+    signalStateRequest : QtCore.pyqtSignal
+        Signal emitted by explicitly interactive plugins requesting new state.
     ba
     """
 
     signalCloseWindow = QtCore.pyqtSignal(object)
     """Emit signal on window close."""
 
-    # signalSelectSpike = QtCore.pyqtSignal(object)
-    """Emit signal on spike selection."""
-
-    signalSelectSpikeList = QtCore.pyqtSignal(object)
-    """Emit signal on spike selection."""
+    signalStateRequest = QtCore.pyqtSignal(object, bool)
+    """Request a complete window state and optional one-shot zoom."""
 
     signalDetect = QtCore.pyqtSignal(object)
     """Emit signal on spike selection."""
@@ -416,18 +394,13 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         app = self.getSanPyWindow()
         if app is not None:
-            # receive spike selection
-            app.signalSelectSpikeList.connect(self.slot_selectSpikeList)
+            app.signalStateChanged.connect(self.slot_window_state)
             
             # receive update analysis (both file change and detect)
             app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
             self.signalUpdateAnalysis.connect(app.slot_updateAnalysis)
 
-            app.signalSwitchFile.connect(self.slot_switchFile)
             app.signalMetaDataChanged.connect(self.slot_metaDataChanged)
-
-            # recieve set sweep
-            app.signalSelectSweep.connect(self.slot_setSweep)
             
             # recieve set x axis
             app.signalSetXAxis.connect(self.slot_set_x_axis)
@@ -435,7 +408,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             # emit when we spike detect (used in detectionParams plugin)
             self.signalDetect.connect(app.slot_detect)
 
-            self.signalSelectSpikeList.connect(app.slot_selectSpikeList)
+            self.signalStateRequest.connect(app.request_state)
             
         sanPyWindow = self.getSanPyWindow()
         if sanPyWindow is not None:
@@ -461,15 +434,13 @@ class sanpyPlugin(QtWidgets.QWidget):
         app = self.getSanPyWindow()
         if app is not None:
             # Keep this list aligned with _installSignalSlot.
-            app.signalSelectSpikeList.disconnect(self.slot_selectSpikeList)
+            app.signalStateChanged.disconnect(self.slot_window_state)
             app.signalUpdateAnalysis.disconnect(self.slot_updateAnalysis)
             self.signalUpdateAnalysis.disconnect(app.slot_updateAnalysis)
-            app.signalSwitchFile.disconnect(self.slot_switchFile)
             app.signalMetaDataChanged.disconnect(self.slot_metaDataChanged)
-            app.signalSelectSweep.disconnect(self.slot_setSweep)
             app.signalSetXAxis.disconnect(self.slot_set_x_axis)
             self.signalDetect.disconnect(app.slot_detect)
-            self.signalSelectSpikeList.disconnect(app.slot_selectSpikeList)
+            self.signalStateRequest.disconnect(app.request_state)
             self.signalCloseWindow.disconnect(app.slot_closeWindow)
 
     def toggleResponseOptions(self, thisOption: ResponseType, newValue: bool = None):
@@ -503,10 +474,6 @@ class sanpyPlugin(QtWidgets.QWidget):
         """Derived class adds code to replot."""
         pass
 
-    def _old_selectSpike(self, sDict=None):
-        """Derived class adds code to select spike from sDict."""
-        pass
-
     def selectSpikeList(self):
         """Derived class adds code to select spike from sDict.
 
@@ -532,7 +499,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         On 'ctrl+c' will copy-to-clipboard.
 
-        On 'esc' emits signalSelectSpikeList.
+        Escape is left to explicitly interactive derived plugins.
 
         Args:
             event: PyQt or Matplotlib key event.
@@ -573,21 +540,7 @@ class sanpyPlugin(QtWidgets.QWidget):
                 event.accept()
                 return None
         elif key == QtCore.Qt.Key_Escape or text == "esc" or text == "escape":
-            # single spike
-            # sDict = {
-            #     'spikeNumber': None,
-            #     'doZoom': False,
-            #     'ba': self.ba,
-
-            # }
-            # self.signalSelectSpike.emit(sDict)
-            # spike list
-            sDict = {
-                "spikeList": [],
-                "doZoom": False,
-                "ba": self.ba,
-            }
-            self.signalSelectSpikeList.emit(sDict)
+            pass
         elif key == QtCore.Qt.Key_T or text == "t":
             self.toggleTopToobar()
         elif text == "":
@@ -730,10 +683,6 @@ class sanpyPlugin(QtWidgets.QWidget):
         # does not work
         # self.static_canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
-        # pick_event assumes 'picker=5' in any .plot()
-        # does this need to be a member? I think so?
-        self._cid = self.static_canvas.mpl_connect("pick_event", self.spike_pick_event)
-
         self.mplToolbar = self._makeMplToolbar(self.static_canvas)
 
         # layout = QtWidgets.QVBoxLayout()
@@ -800,14 +749,59 @@ class sanpyPlugin(QtWidgets.QWidget):
             f"got {len(event.ind)} candidates, first is spike:{spikeNumber} doZoom:{doZoom}"
         )
 
-        # propagate a signal to parent
-        # TODO: use class SpikeSelectEvent()
-        sDict = {
-            "spikeList": [spikeNumber],
-            "doZoom": doZoom,
-            "ba": self.ba,
-        }
-        self.signalSelectSpikeList.emit(sDict)
+        logger.debug(f"Ignoring generic plugin pick for spike {spikeNumber}")
+
+    def request_window_state(
+        self,
+        state: _WindowState,
+        do_zoom: bool = False,
+    ) -> None:
+        """Submit a state request from an explicitly interactive plugin.
+
+        Args:
+            state: Complete state requested by the plugin.
+            do_zoom: Whether to zoom the main trace to the primary spike.
+        """
+        self.signalStateRequest.emit(state, do_zoom)
+
+    def slot_window_state(self, state: _WindowState) -> None:
+        """Apply one completed window transition to this plugin.
+
+        Args:
+            state: State already validated and rendered by the main window.
+        """
+        window = self.getSanPyWindow()
+        analysis_dir = None if window is None else window.myAnalysisDir
+        if analysis_dir is None:
+            return
+        ba = analysis_dir.get_analysis_for_file_key(state.file_key)
+        if ba is None:
+            return
+
+        file_changed = self.ba is not ba
+        responds_to_sweep = self._getResponseOption(self.responseTypes.setSweep)
+        previous_sweep = self._sweepNumber
+        sweep_changed = responds_to_sweep and previous_sweep != state.sweep
+        if file_changed:
+            self.slot_switchFile(ba, replot=False)
+            if not responds_to_sweep:
+                self._sweepNumber = previous_sweep
+        if responds_to_sweep:
+            self._sweepNumber = state.sweep
+        self._selectedSpikeList = (
+            [] if state.spike_selection is None else list(state.spike_selection)
+        )
+        self.selectedSpike = (
+            self._selectedSpikeList[0] if self._selectedSpikeList else None
+        )
+        self._updateTopToolbar()
+
+        should_replot = file_changed or (
+            sweep_changed
+        )
+        if should_replot:
+            self.replot()
+        self.selectSpikeList()
 
     def closeEvent(self, event):
         """Called when window is closed.
@@ -941,43 +935,6 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._updateTopToolbar()
 
         self.replot()
-
-    def slot_selectSpikeList(self, eDict: dict):
-        """Respond to spike selection.
-
-        TODO: convert dict to class spikeSelection
-        """
-
-        if self._blockSlots:
-            return
-    
-        logger.info(f"{self._myClassName()} num spikes:{len(eDict['spikeList'])}")
-
-        # don't respond if we are showing a different ba (bAnalysis)
-        ba = eDict["ba"]
-        if self.ba != ba:
-            return
-
-        spikeList = eDict["spikeList"]
-        self._selectedSpikeList = spikeList  # [] on no selection
-
-        self.selectSpikeList()
-
-    def old_slot_selectSpike(self, eDict):
-        """Respond to spike selection."""
-
-        # don't respond if user/code has turned this off
-        if not self._getResponseOption(self.responseTypes.selectSpike):
-            return
-
-        # don't respond if we are showing a different ba (bAnalysis)
-        ba = eDict["ba"]
-        if self.ba != ba:
-            return
-
-        self.selectedSpike = eDict["spikeNumber"]
-
-        self.old_selectSpike(eDict)
 
     def slot_set_x_axis(self, startStopList: List[float]):
         """Respond to changes in x-axis.

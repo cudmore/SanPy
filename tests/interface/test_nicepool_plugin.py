@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -18,8 +19,10 @@ from sanpy.interface.plugins.nicepool_plugin import (
     _preset_required_columns,
     prepare_nicepool_data,
     selection_to_spikes,
+    selection_to_window_state,
 )
 from sanpy.interface.plugins.nicepool_pool_plugin import NicePoolPoolPlugin
+from sanpy.interface.window_state import WindowState
 
 
 def test_named_presets_are_dataset_aware_override_definitions() -> None:
@@ -101,8 +104,9 @@ def test_selection_to_spikes_puts_primary_first_and_deduplicates() -> None:
         "selectedRowIds": ["2", "3", "unknown"],
     }
 
-    spikes = selection_to_spikes(selection, {"2": 2, "3": 3})
+    primary, spikes = selection_to_spikes(selection, {"2": 2, "3": 3})
 
+    assert primary == "3"
     assert spikes == [3, 2]
 
 
@@ -132,10 +136,11 @@ def test_nicepool_pool_plugin_uses_the_folder_pool() -> None:
     other = MagicMock()
     pooled = pd.DataFrame({"spikeNumber": [1], "row_id": ["1:1"]})
     analysis_dir = MagicMock()
-    analysis_dir.getDataFrame.return_value = pd.DataFrame({"_ba": [other, current]})
+    analysis_dir.get_row_for_file_key.return_value = 1
     analysis_dir.pool_spike_dataframe.return_value = pooled
     window = MagicMock()
     window.myAnalysisDir = analysis_dir
+    window.state = WindowState("current.abf", 0, None)
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
     plugin._current_file_number = None
     plugin._ba = current
@@ -161,7 +166,36 @@ def test_nicepool_pool_without_a_folder_has_no_results() -> None:
 
 def test_selection_to_spikes_rejects_malformed_payload() -> None:
     """Treat malformed browser selection data as an empty selection."""
-    assert selection_to_spikes([], {"2": 2}) == []
+    assert selection_to_spikes([], {"2": 2}) == (None, [])
+
+
+def test_pool_primary_row_requests_its_file_and_drops_other_files() -> None:
+    """Build one cross-file transition from the explicit NicePool primary row."""
+    selected_analysis = MagicMock()
+    selected_analysis.getSpikeStat.return_value = [4]
+    analysis_dir = MagicMock()
+    analysis_dir.get_analysis_for_file_key.return_value = selected_analysis
+    selection = {
+        "primaryRowId": "second:8",
+        "selectedRowIds": ["first:2", "second:9", "second:8"],
+    }
+
+    state = selection_to_window_state(
+        selection,
+        {"first:2": 2, "second:8": 8, "second:9": 9},
+        {
+            "first:2": "first.abf",
+            "second:8": "nested/second.abf",
+            "second:9": "nested/second.abf",
+        },
+        analysis_dir,
+        WindowState("first.abf", 0, None),
+    )
+
+    assert state == WindowState("nested/second.abf", 4, (8, 9))
+    analysis_dir.get_analysis_for_file_key.assert_called_once_with(
+        "nested/second.abf"
+    )
 
 
 @pytest.mark.skipif(
@@ -194,7 +228,13 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     assert plugin.size().height() == 800
     assert plugin._nicepool is not None
     data_resets = QSignalSpy(plugin._nicepool.data_reset)
-    emitted_selections = QSignalSpy(plugin.signalSelectSpikeList)
+    analysis_dir = MagicMock()
+    analysis_dir.get_analysis_for_file_key.return_value = analysis
+    plugin._sanPyWindow = SimpleNamespace(
+        state=WindowState("cell.abf", 0, None),
+        myAnalysisDir=analysis_dir,
+    )
+    emitted_selections = QSignalSpy(plugin.signalStateRequest)
     errors = QSignalSpy(plugin._nicepool.error_occurred)
 
     plugin.show()
@@ -248,8 +288,7 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     plugin._nicepool.web_view.page().runJavaScript(script)
     qtbot.waitUntil(lambda: len(emitted_selections) == 1, timeout=5_000)
 
-    event = emitted_selections[0][0]
-    assert event["spikeList"] == [2, 3]
-    assert event["doZoom"] is False
-    assert event["ba"] is analysis
+    state = emitted_selections[0][0]
+    assert state == WindowState("cell.abf", 0, (2, 3))
+    assert emitted_selections[0][1] is False
     assert len(errors) == 0

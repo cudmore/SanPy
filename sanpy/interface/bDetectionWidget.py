@@ -22,6 +22,7 @@ import sanpy.interface
 from sanpy.bExport import bExport
 from sanpy.interface.plot_options_widget import PlotOptionsWidget
 from sanpy.interface.sanpy_info_widget import SanPyInfoWidget
+from sanpy.interface.window_state import WindowState
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -226,10 +227,9 @@ class _LeftToolbar(QtWidgets.QWidget):
 
 
 class bDetectionWidget(QtWidgets.QWidget):
-    signalSelectSpike = QtCore.pyqtSignal(object)  # spike number, doZoom
-    signalSelectSpikeList = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalDetect = QtCore.pyqtSignal(object)  # ba
-    signalSelectSweep = QtCore.pyqtSignal(object)  # sweepNumber
+    signalStateRequest = QtCore.pyqtSignal(object, bool)
+    """Request a complete window state and optional one-shot zoom."""
     # signalUpdateKymographROI = QtCore.pyqtSignal([])  # list of [left, top, right, bottom] in image pixels
 
     def __init__(
@@ -999,14 +999,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             logger.info(
                 f"self.sweepNumber:{self.sweepNumber} sweepSpikeNumber:{sweepSpikeNumber} absIndex:{absSpikeNumber}"
             )
-            eDict = {
-                "spikeNumber": absSpikeNumber,
-                "doZoom": False,
-                "ba": self.ba,
-            }
-            logger.info(f"    {eDict}")
-
-            self.signalSelectSpike.emit(eDict)
+            self.selectSpike(absSpikeNumber, doZoom=False, doEmit=True)
 
         """
         for p in points:
@@ -1310,6 +1303,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         ):
             return
 
+        if doEmit:
+            self._request_window_state(int(sweepNumber), None)
+            return
+
         logger.info(
             f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doReplot:{doReplot} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"'
         )
@@ -1329,9 +1326,27 @@ class bDetectionWidget(QtWidgets.QWidget):
         if doReplot:
             self._replot(startSec, stopSec)  # will set full axis
 
-        if doEmit:
-            logger.info(f' -->> emit signalSelectSweep {sweepNumber}')
-            self.signalSelectSweep.emit(sweepNumber)
+    def _request_window_state(
+        self,
+        sweep: int,
+        spikes: tuple[int, ...] | None,
+        do_zoom: bool = False,
+    ) -> None:
+        """Request a state change from the owning SanPy window.
+
+        Args:
+            sweep: Concrete zero-based sweep to display.
+            spikes: Absolute spike numbers, or ``None`` to clear selection.
+            do_zoom: Whether to zoom to the primary spike.
+        """
+        window = self.myMainWindow
+        state = None if window is None else window.state
+        if state is None:
+            return
+        self.signalStateRequest.emit(
+            WindowState(state.file_key, sweep, spikes),
+            do_zoom,
+        )
 
     def setSpikeStat(self, stat: str = "condition", value: str = "xxx"):
         """Set the selected spikes."""
@@ -1392,6 +1407,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 
             sweep = self.ba.getSpikeStat(spikeList, "sweep")
             sweep = sweep[0]  # just the first
+            if doEmit:
+                self._request_window_state(
+                    int(sweep),
+                    (int(spikeNumber),),
+                    do_zoom=doZoom,
+                )
+                return
             if sweep != self.sweepNumber:
                 logger.info(
                     f"!!! SWITCHING to sweep: {sweep} from self.sweepNumber:{self.sweepNumber}"
@@ -1457,14 +1479,9 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
                 self.setAxis(startSec, stopSec)
 
-        if doEmit:
-            eDict = {
-                "spikeNumber": spikeNumber,
-                "doZoom": doZoom,
-                "ba": self.ba,
-            }
-            logger.info(f"  -->> emit signalSelectSpike")
-            self.signalSelectSpike.emit(eDict)
+        if doEmit and spikeNumber is None and isinstance(self.sweepNumber, int):
+            self._request_window_state(self.sweepNumber, None)
+            return
 
         # march 11, 2023
         if self._blockSlots:
@@ -1530,6 +1547,16 @@ class bDetectionWidget(QtWidgets.QWidget):
         spikeList is absolute but we are only plotting a subset (for one sweep).
         """
 
+        if doEmit:
+            if isinstance(self.sweepNumber, int):
+                requested = tuple(int(spike) for spike in spikeList) or None
+                self._request_window_state(
+                    self.sweepNumber,
+                    requested,
+                    do_zoom=doZoom,
+                )
+            return
+
         x = None
         y = None
         markerList_pg = None
@@ -1580,19 +1607,45 @@ class bDetectionWidget(QtWidgets.QWidget):
         if markerList_pg is not None:
             self.mySpikeListScatterPlot.setSymbol(markerList_pg)
 
-        # TODO: I don't think anybody is listening to this
-        if doEmit:
-            if self._blockSlots:
-                return
-            self._blockSlots = True
-            eDict = {
-                "spikeList": spikeList,
-                "doZoom": doZoom,
-                "ba": self.ba,
-            }
-            logger.info(f"  -->> emit signalSelectSpikeList eDict")
-            self.signalSelectSpikeList.emit(eDict)
-            self._blockSlots = False
+
+    def apply_window_state(
+        self,
+        ba: "sanpy.bAnalysis",
+        table_row_dict: dict[str, object],
+        state: WindowState,
+        do_zoom: bool = False,
+    ) -> bool:
+        """Apply a validated window state with at most one trace redraw.
+
+        Args:
+            ba: Analysis resolved for ``state.file_key``.
+            table_row_dict: File-table values for the selected recording.
+            state: Validated state to render.
+            do_zoom: Whether to zoom to the primary spike after rendering.
+
+        Returns:
+            True when the state was rendered, otherwise False.
+        """
+        spikes = [] if state.spike_selection is None else list(state.spike_selection)
+        if self.ba is not ba:
+            switched = self.slot_switchFile(
+                ba,
+                table_row_dict,
+                sweep=state.sweep,
+                spike_list=spikes,
+                do_zoom=do_zoom,
+            )
+            return switched is not False
+
+        sweep_changed = self.sweepNumber != state.sweep
+        if sweep_changed:
+            self.selectSweep(state.sweep, doEmit=False, doReplot=True)
+        self._plotSweepControls.set_current_sweep(state.sweep)
+        self.detectToolbarWidget.apply_selection(state.sweep, spikes)
+        self.selectSpikeList(spikes, doZoom=do_zoom, doEmit=False)
+        if do_zoom and spikes:
+            self.selectSpike(spikes[0], doZoom=True, doEmit=False)
+        return True
 
     # def _old_refreshClips(self, xMin=None, xMax=None):
     #     if not self.clipPlot.isVisible():
@@ -2193,12 +2246,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # detection widget toolbar
         self.detectToolbarWidget = myDetectToolbarWidget2(self)
-        self.signalSelectSweep.connect(self.detectToolbarWidget.slot_selectSweep)
-        self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
-        self.signalSelectSpikeList.connect(
-            self.detectToolbarWidget.slot_selectSpikeList
-        )
-
         self._detectionPanelWidget = QtWidgets.QWidget(self)
         detection_layout = QtWidgets.QVBoxLayout(self._detectionPanelWidget)
         detection_layout.setContentsMargins(0, 0, 0, 0)
@@ -2216,9 +2263,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         vBoxLayoutForPlot.addWidget(self._build_raw_plot_toggle_bar())
         self._plotSweepControls = _SweepSelectionWidget(self)
         self._plotSweepControls.sweepSelected.connect(self.slot_selectSweep)
-        self.signalSelectSweep.connect(
-            self._plotSweepControls.set_current_sweep
-        )
         vBoxLayoutForPlot.addWidget(self._plotSweepControls)
 
         # for publication, don't do kymographs
@@ -2779,51 +2823,22 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.selectSweep(sweep)
         self.detectToolbarWidget.slot_selectSweep(sweep)
 
-    def slot_selectSpike(self, sDict):
-        _str = '\n'
-        for k,v in sDict.items():
-            _str += f'          {k}:{v}\n'
-        _str = _str[:-1]
-        logger.info(_str)
-
-        spikeNumber = sDict["spikeNumber"]
-        doZoom = sDict["doZoom"]
-
-        # march 11, 2023 was this
-        # this will set the correct sweep
-        self.selectSpike(spikeNumber, doZoom=doZoom)
-
-        if spikeNumber is None:
-            spikeList = []
-        else:
-            spikeList = [spikeNumber]
-
-        spikeListDict = {"spikeList": spikeList, "doZoom": doZoom}
-        self.slot_selectSpikeList(spikeListDict)
-
-    def slot_selectSpikeList(self, sDict):
-        # print('detectionWidget.slotSelectSpike() sDict:', sDict)
-        spikeList = sDict["spikeList"]
-        doZoom = sDict["doZoom"]
-        self.selectSpikeList(spikeList, doZoom=doZoom, doEmit=True)
-
-        # mar 11
-        # if spikeList == []:
-        #     spikeNumber = 0
-        # else:
-        #     spikeNumber = spikeList[0]
-        # self.selectSpike(spikeNumber, doZoom=doZoom)
-
     def slot_switchFile(
         self,
         ba: Optional["sanpy.bAnalysis"] = None,
         tableRowDict: Optional[dict[str, object]] = None,
+        sweep: int = 0,
+        spike_list: Optional[list[int]] = None,
+        do_zoom: bool = False,
     ) -> Optional[bool]:
         """Switch the plots and controls to a newly selected recording.
 
         Args:
             ba: Analysis for the selected recording.
             tableRowDict: File-table values for the selected recording.
+            sweep: Concrete sweep to display after switching files.
+            spike_list: Absolute spikes to select after the redraw.
+            do_zoom: Whether to zoom to the primary selected spike.
 
         Returns:
             False when the analysis has a load error, otherwise None.
@@ -2849,7 +2864,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget.slot_selectFile(tableRowDict)
             self._plotSweepControls.set_sweeps(
                 self.ba.fileLoader.numSweeps,
-                current_sweep=0,
+                current_sweep=sweep,
             )
 
         if startSec == "" or stopSec == "" or np.isnan(startSec) or np.isnan(stopSec):
@@ -2859,12 +2874,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         # cancel spike selection
         self.selectSpikeList([])
 
-        # set sweep to 0
-        self.selectSweep(0, doEmit=False, doReplot=False)
+        self.selectSweep(sweep, doEmit=False, doReplot=False)
 
         self._replot(startSec, stopSec)
 
         self.setAxisFull()
+
+        selected = [] if spike_list is None else spike_list
+        self.detectToolbarWidget.apply_selection(sweep, selected)
+        self.selectSpikeList(selected, doZoom=do_zoom, doEmit=False)
+        if do_zoom and selected:
+            self.selectSpike(selected[0], doZoom=True, doEmit=False)
 
         # update cursor position
         self._sanpyCursors._showInView()
@@ -3944,9 +3964,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.sweepControls.sweepSelected.connect(
             self.detectionWidget.slot_selectSweep
         )
-        self.detectionWidget.signalSelectSweep.connect(
-            self.sweepControls.set_current_sweep
-        )
         # Preserve these attributes for existing internal callers.
         self.previousSweepButton = self.sweepControls.previous_button
         self.sweepComboBox = self.sweepControls.combo_box
@@ -4113,50 +4130,19 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # self.spikeNumber.setMaximum(+1e6)
         # self.spikeNumber.setValue(0)
 
-    def slot_selectSpike(self, sDict):
-        logger.info(f"detectiontoolbar widget: sDict:{sDict}")
-        spikeNumber = sDict["spikeNumber"]
-        # don't respond to a list of spikes
-        if isinstance(spikeNumber, list):
-            return
-        # arbitrarily chosing spike 0 when no spike selection
-        # spin boxes can not have 'no value'
-        if spikeNumber is None:
-            spikeNumber = 0
+    def apply_selection(self, sweep: int, spikes: list[int]) -> None:
+        """Synchronize toolbar controls to an applied window selection.
 
-        # convert absolute to sweep
-        # sweepSpike = self.detectionWidget.ba.getSweepSpikeFromAbsolute(spikeNumber, self.detectionWidget.sweepNumber)
-
+        Args:
+            sweep: Concrete zero-based sweep displayed by the window.
+            spikes: Absolute selected spike numbers in primary-first order.
         """
-        print('    !!!! self.detectionWidget.sweepNumber:', self.detectionWidget.sweepNumber)
-        print('    !!!! spikeNumber:', spikeNumber)
-        print('    !!!! sweepSpike:', sweepSpike)
-        """
-
-        # need to blockSignal or else this emits to callback
+        self.sweepControls.set_current_sweep(sweep)
+        spike_number = spikes[0] if spikes else 0
         self.spikeNumber.blockSignals(True)
-        self.spikeNumber.setValue(spikeNumber)
+        self.spikeNumber.setValue(spike_number)
         self.spikeNumber.blockSignals(False)
-
         self.spikeNumber.update()
-
-    def slot_selectSpikeList(self, sDict):
-        logger.warning(f"mar 1, added and converting to select 1st spike")
-        # print('detectionWidget.slotSelectSpike() sDict:', sDict)
-        spikeList = sDict["spikeList"]
-        doZoom = sDict["doZoom"]
-
-        # mar 11, detection toolbar does not select multiple spikes
-        # self.selectSpikeList(spikeList, doZoom=doZoom)
-
-        # mar 11
-        if spikeList == []:
-            spikeNumber = 0
-        else:
-            spikeNumber = spikeList[0]
-        sDict = {"spikeNumber": spikeNumber}
-        # self.selectSpike(spikeNumber, doZoom=doZoom)
-        self.slot_selectSpike(sDict)
 
     def slot_selectFile(self, rowDict: dict[str, object]) -> None:
         """Refresh toolbar controls for a newly selected recording.

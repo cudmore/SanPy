@@ -12,7 +12,8 @@ class errorTableView(QtWidgets.QTableView):
     Display a per spike error table (one row per spike eror)
     """
 
-    signalSelectSpike = QtCore.Signal(object)  # spike number, doZoom
+    signalSelectSpike = QtCore.Signal(int, bool)
+    """Emit an absolute spike number and one-shot zoom request."""
 
     def __init__(self, parent=None):
         super(errorTableView, self).__init__(parent)
@@ -142,14 +143,7 @@ class errorTableView(QtWidgets.QTableView):
                 return
         spikeNumber = int(spikeNumber)
 
-        dDict = {
-            "spikeNumber": spikeNumber,
-            "doZoom": doZoom,
-        }
-        logger.info(f"  -->> emit signalSelectSpike with dDict")
-        logger.info(dDict)
-
-        # self._blockSlots = True
-        self.signalSelectSpike.emit(dDict)
+        logger.info(f"Selecting spike {spikeNumber}, doZoom:{doZoom}")
+        self.signalSelectSpike.emit(spikeNumber, doZoom)
 
         # self._blockSlots = False

@@ -14,6 +14,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
+from sanpy.interface.window_state import WindowState
 logger = get_logger(__name__)
 
 
@@ -38,23 +39,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSetXAxis = QtCore.Signal(object)
     """Emit set axis."""
 
-    signalSwitchFile = QtCore.Signal(object, object)
-    """Emit on switch file."""
-
-    signalSelectSweep = QtCore.Signal(object)  # (ba, sweepNumber)
-    """Emit set sweep."""
+    signalStateChanged = QtCore.Signal(object)
+    """Emit one fully applied :class:`WindowState`."""
 
     signalUpdateAnalysis = QtCore.Signal(object)
     """Emit on detect."""
 
     signalMetaDataChanged = QtCore.Signal(object)
     """Emit after experimental metadata is stored on an analysis."""
-
-    signalSelectSpike = QtCore.Signal(object)
-    """Emit spike selection."""
-
-    signalSelectSpikeList = QtCore.Signal(object)
-    """Emit spike list selection."""
 
     def __init__(
         self,
@@ -112,6 +104,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         
         self.myAnalysisDir = None
+        self._state: WindowState | None = None
         # lastPath = self.configDict.getMostRecentFolder()
 
         # 20231229 turning off loading last path
@@ -420,22 +413,76 @@ class SanPyWindow(QtWidgets.QMainWindow):
         height = myRect.height()
         return left, top, width, height
 
-    def selectSpike(self, spikeNumber, doZoom=False):
-        eDict = {
-            "spikeNumber": spikeNumber,
-            "doZoom": doZoom,
-            "ba": self.get_bAnalysis(),
-        }
-        self.signalSelectSpike.emit(eDict)
+    @property
+    def state(self) -> WindowState | None:
+        """Return the last fully applied window state.
 
-    def selectSpikeList(self, spikeList: List[int], doZoom: bool = False):
-        eDict = {
-            "spikeList": spikeList,
-            "doZoom": doZoom,
-            "ba": self.get_bAnalysis(),
-        }
-        logger.info(f'-->> emit signalSelectSpikeList {eDict}')
-        self.signalSelectSpikeList.emit(eDict)
+        Returns:
+            Current state, or ``None`` before a recording is loaded.
+        """
+        return self._state
+
+    def request_state(self, state: WindowState, do_zoom: bool = False) -> None:
+        """Validate and atomically apply a requested window state.
+
+        Invalid spikes are reported and discarded while a valid file and sweep
+        still apply.
+
+        Args:
+            state: Complete requested file, sweep, and spike state.
+            do_zoom: Whether to zoom the trace to the primary selected spike.
+        """
+        if self.myAnalysisDir is None:
+            self.slot_updateStatus(
+                "Cannot select a recording without an analysis directory."
+            )
+            return
+        row = self.myAnalysisDir.get_row_for_file_key(state.file_key)
+        ba = self.myAnalysisDir.get_analysis_for_file_key(state.file_key)
+        if row is None or ba is None:
+            message = f'Unknown or unloadable recording: "{state.file_key}"'
+            logger.error(message)
+            self.slot_updateStatus(message)
+            return
+        if state.sweep < 0 or state.sweep >= ba.fileLoader.numSweeps:
+            message = f"Invalid sweep {state.sweep} for {state.file_key}"
+            logger.error(message)
+            self.slot_updateStatus(message)
+            return
+
+        warning_message: str | None = None
+        spikes = state.spike_selection
+        if spikes is not None:
+            invalid = [
+                spike for spike in spikes if spike < 0 or spike >= ba.numSpikes
+            ]
+            if invalid:
+                warning_message = (
+                    f"Ignoring invalid spike selection {invalid} for {state.file_key}"
+                )
+                logger.error(warning_message)
+                spikes = None
+                do_zoom = False
+
+        applied = WindowState(state.file_key, state.sweep, spikes)
+        row_dict = self.myAnalysisDir.getRowDict(row)
+        applied_ok = self.myDetectionWidget.apply_window_state(
+            ba,
+            row_dict,
+            applied,
+            do_zoom=do_zoom,
+        )
+        if not applied_ok:
+            message = f'Unable to display recording: "{state.file_key}"'
+            logger.error(message)
+            self.slot_updateStatus(message)
+            return
+        self._state = applied
+        if self.isFileList():
+            self._fileListWidget.getTableView().select_row_silently(row)
+        self.signalStateChanged.emit(applied)
+        if warning_message is not None:
+            self.slot_updateStatus(warning_message)
 
     def mySignal(self, this, data=None):
         """Receive signals from children widgets.
@@ -453,7 +500,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.warning('\n\nTODO: GET RID OF "select spike"\n\n')
             spikeNumber = data["spikeNumber"]
             doZoom = data["isShift"]
-            self.selectSpike(spikeNumber, doZoom=doZoom)
+            if self._state is not None:
+                spikes = None if spikeNumber is None else (int(spikeNumber),)
+                sweep = self._state.sweep
+                ba = self.get_bAnalysis()
+                if spikes is not None and ba is not None:
+                    sweep = int(ba.getSpikeStat([spikes[0]], "sweep")[0])
+                self.request_state(
+                    WindowState(self._state.file_key, sweep, spikes),
+                    do_zoom=doZoom,
+                )
             # self.signalSelectSpike.emit(data)
 
         elif this == "set x axis":
@@ -480,8 +536,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
             )  # emits to scatter plot ONLY
 
         elif this == "cancel all selections":
-            self.selectSpike(None)
-            self.selectSpikeList([])
+            if self._state is not None:
+                self.request_state(
+                    WindowState(self._state.file_key, self._state.sweep, None)
+                )
 
         else:
             logger.warning(f'Did not understand this: "{this}"')
@@ -576,7 +634,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             ba = self.myAnalysisDir.getAnalysis(row)  # if None then problem loading
 
             if ba is not None:
-                self.signalSwitchFile.emit(ba, rowDict)
+                file_key = self.myAnalysisDir.get_file_key(row)
+                self.request_state(WindowState(file_key, 0, None))
                 if selectingAgain:
                     pass
                 else:
@@ -960,16 +1019,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         _mainVLayout.addWidget(self.myDetectionWidget)
 
         # myDetectionWidget listens to self
-        self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
-        self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike)
-        self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList)
         self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis)
         self.signalMetaDataChanged.connect(self.slot_metaDataChanged)
 
         # self listens to myDetectionWidget
-        self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike)
-        self.myDetectionWidget.signalSelectSpikeList.connect(self.slot_selectSpikeList)
-        self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep)
+        self.myDetectionWidget.signalStateRequest.connect(self.request_state)
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 
         # (2) detection widget as a dock
@@ -1403,35 +1457,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
         self.myModel.myApplyMetaData(ba, key, value)
 
-    def slot_selectSpike(self, sDict):
-        spikeNumber = sDict["spikeNumber"]
-        doZoom = sDict["doZoom"]
-        self.selectSpike(spikeNumber, doZoom)
-
-    def slot_selectSpikeList(self, sDict):
-        spikeList = sDict["spikeList"]
-        doZoom = sDict["doZoom"]
-        self.selectSpikeList(spikeList, doZoom)
-
     def selectSweep_external(self, sweep : int):
         """Programatically select a sweep.
         """
-        # self.myDetectionWidget.selectSweep(sweep)
-        self.myDetectionWidget.slot_selectSweep(sweep)
-
-    def slot_selectSweep(self, sweepNumber : int):
-        """Set view to new sweep.
-
-        Parameters
-        ----------
-        ba : sanpy.bAnalysis
-        sweepNumber : int
-        """
-
-        # if ba is None:
-        #     ba = self.self.get_bAnalysis()
-
-        self.signalSelectSweep.emit(sweepNumber)
+        if self._state is not None:
+            self.request_state(WindowState(self._state.file_key, sweep, None))
 
     def saveFilesTable(self):
         """Save the folder HDF5 file, raising if the save does not complete."""

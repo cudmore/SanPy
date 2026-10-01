@@ -26,6 +26,7 @@ from sanpy.interface.plugins import (
     ResponseType,
 )  # to toggle response to set sweeps, etc
 from sanpy.interface.plugins import myStatListWidget
+from sanpy.interface.window_state import WindowState
 
 
 def getStatFi(
@@ -155,6 +156,8 @@ class plotFi(sanpyPlugin):
         self.setDefaultPlot()
 
         self.df_fi = None
+        self._raw_artist = None
+        self._raw_spike_rows: pd.DataFrame | None = None
         
         self._buildUI()
 
@@ -163,6 +166,40 @@ class plotFi(sanpyPlugin):
         self._selectInTable("Spike frequency (Hz)")
 
         self.replot()
+
+        self.static_canvas.mpl_connect("pick_event", self._on_raw_pick)
+
+    def _on_raw_pick(self, event: object) -> None:
+        """Select the spike represented by one picked raw FI point.
+
+        Args:
+            event: Matplotlib pick event for the raw spike artist.
+        """
+        if (
+            getattr(event, "artist", None) is not self._raw_artist
+            or self._raw_spike_rows is None
+        ):
+            return
+        indices = getattr(event, "ind", ())
+        if len(indices) < 1:
+            return
+        plot_index = int(indices[0])
+        if plot_index < 0 or plot_index >= len(self._raw_spike_rows):
+            logger.error(f"Invalid Plot FI point index: {plot_index}")
+            return
+        row = self._raw_spike_rows.iloc[plot_index]
+        spike = int(row["spikeNumber"])
+        sweep = int(row["sweep"])
+        window = self.getSanPyWindow()
+        state = None if window is None else window.state
+        if state is None:
+            return
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        do_zoom = modifiers == QtCore.Qt.ShiftModifier
+        self.request_window_state(
+            WindowState(state.file_key, sweep, (spike,)),
+            do_zoom=do_zoom,
+        )
 
     def setDefaultPlot(self) -> None:
         """Reset Plot FI to its default display options."""
@@ -494,6 +531,8 @@ class plotFi(sanpyPlugin):
 
         # always clear the axis
         self.axs.clear()
+        self._raw_artist = None
+        self._raw_spike_rows = None
 
         self.axs.autoscale(enable=True, axis="y", tight=None)
 
@@ -532,13 +571,15 @@ class plotFi(sanpyPlugin):
         if plotRaw:
             # reduce to only spikes for given epochNumber
             # sns.scatterplot(x='epochLevel', y=stat, data=dfEpoch, ax=_ax)
-            self.axs.scatter(
+            self._raw_spike_rows = dfEpoch.reset_index(drop=True)
+            self._raw_artist = self.axs.scatter(
                 "epochLevel",
                 yStat,
-                data=dfEpoch,
+                data=self._raw_spike_rows,
                 marker="o",
                 c="#aaaaaa",
                 label=yHumanStat,
+                picker=True,
             )
 
         #

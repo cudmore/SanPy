@@ -11,6 +11,7 @@ from PyQt5 import QtWidgets
 import sanpy
 from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
+from sanpy.interface.window_state import WindowState
 from sanpy.sanpyLogger import get_logger
 
 
@@ -185,7 +186,7 @@ def prepare_nicepool_data(
 def selection_to_spikes(
     selection: object,
     row_id_to_spike: Mapping[str, int],
-) -> list[int]:
+) -> tuple[str | None, list[int]]:
     """Convert a NicePool selection to primary-first SanPy spike numbers.
 
     Args:
@@ -193,10 +194,10 @@ def selection_to_spikes(
         row_id_to_spike: Current mapping from NicePool row IDs to spike numbers.
 
     Returns:
-        Known selected spike numbers with the primary spike first.
+        Primary row ID and known selected spike numbers with the primary first.
     """
     if not isinstance(selection, Mapping):
-        return []
+        return None, []
     primary = selection.get("primaryRowId")
     selected = selection.get("selectedRowIds")
     row_ids: list[object] = []
@@ -210,7 +211,58 @@ def selection_to_spikes(
         spike = row_id_to_spike.get(str(row_id))
         if spike is not None and spike not in spikes:
             spikes.append(spike)
-    return spikes
+    primary_id = str(primary) if primary is not None else None
+    return primary_id, spikes
+
+
+def selection_to_window_state(
+    selection: object,
+    row_id_to_spike: Mapping[str, int],
+    row_id_to_file_key: Mapping[str, str],
+    analysis_dir: sanpy.analysisDir,
+    current_state: WindowState,
+) -> WindowState | None:
+    """Convert a NicePool selection into one file-scoped window state.
+
+    Args:
+        selection: NicePool selection payload received from Qt WebChannel.
+        row_id_to_spike: Current mapping from row IDs to absolute spikes.
+        row_id_to_file_key: Current mapping from row IDs to recording keys.
+        analysis_dir: Analysis directory providing keyed analysis lookup.
+        current_state: State used for single-file rows and empty selections.
+
+    Returns:
+        Requested state, or ``None`` for an invalid selection or recording.
+    """
+    if not isinstance(selection, Mapping):
+        return None
+    primary_id, _spikes = selection_to_spikes(selection, row_id_to_spike)
+    if primary_id is None:
+        return None
+    file_key = row_id_to_file_key.get(primary_id, current_state.file_key)
+    ba = analysis_dir.get_analysis_for_file_key(file_key)
+    if ba is None:
+        return None
+
+    selected_ids = selection.get("selectedRowIds", [])
+    ordered_ids = [primary_id]
+    if isinstance(selected_ids, Sequence) and not isinstance(
+        selected_ids, (str, bytes)
+    ):
+        ordered_ids.extend(str(row_id) for row_id in selected_ids)
+    selected_spikes: list[int] = []
+    for row_id in ordered_ids:
+        spike = row_id_to_spike.get(row_id)
+        if spike is None or row_id_to_file_key.get(row_id, file_key) != file_key:
+            continue
+        if spike not in selected_spikes:
+            selected_spikes.append(spike)
+
+    spike_selection = tuple(selected_spikes) or None
+    sweep = current_state.sweep
+    if spike_selection is not None:
+        sweep = int(ba.getSpikeStat([spike_selection[0]], "sweep")[0])
+    return WindowState(file_key, sweep, spike_selection)
 
 
 class NicePoolPlugin(sanpyPlugin):
@@ -231,6 +283,7 @@ class NicePoolPlugin(sanpyPlugin):
         self.toggleTopToobar(False, show_response_options=False)
 
         self._row_id_to_spike: dict[str, int] = {}
+        self._row_id_to_file_key: dict[str, str] = {}
         self._current_file_number: int | None = None
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
@@ -286,14 +339,19 @@ class NicePoolPlugin(sanpyPlugin):
         if self.ba is None:
             return
         logger.info(f"NicePool selection: {selection}")
-        spikes = selection_to_spikes(selection, self._row_id_to_spike)
-        logger.info(f"Spikes: {spikes}")
-        event = {"spikeList": spikes, "doZoom": False, "ba": self.ba}
-        self._blockSlots = True
-        try:
-            self.signalSelectSpikeList.emit(event)
-        finally:
-            self._blockSlots = False
+        window = self.getSanPyWindow()
+        current_state = None if window is None else window.state
+        if current_state is None:
+            return
+        state = selection_to_window_state(
+            selection,
+            self._row_id_to_spike,
+            self._row_id_to_file_key,
+            window.myAnalysisDir,
+            current_state,
+        )
+        if state is not None:
+            self.request_window_state(state)
 
     def _spike_results(self) -> pd.DataFrame | None:
         """Return spike results for the current file.
@@ -302,6 +360,7 @@ class NicePoolPlugin(sanpyPlugin):
             The current analysis table, or ``None`` when it has no spikes.
         """
         self._current_file_number = None
+        self._row_id_to_file_key = {}
         if self.ba is None or not self.ba.isAnalyzed():
             return None
         return self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
@@ -338,11 +397,27 @@ class NicePoolPlugin(sanpyPlugin):
                         projected["row_id"], projected["spikeNumber"], strict=True
                     )
                 }
+                if "file_key" in dataframe.columns:
+                    self._row_id_to_file_key = {
+                        str(row_id): str(file_key)
+                        for row_id, file_key in zip(
+                            dataframe.loc[projected.index, "row_id"],
+                            dataframe.loc[projected.index, "file_key"],
+                            strict=True,
+                        )
+                    }
             else:
                 row_id_column = "spikeNumber"
                 self._row_id_to_spike = {
                     str(spike): int(spike) for spike in projected["spikeNumber"]
                 }
+                window = self.getSanPyWindow()
+                state = None if window is None else window.state
+                if state is not None:
+                    self._row_id_to_file_key = {
+                        str(spike): state.file_key
+                        for spike in projected["spikeNumber"]
+                    }
             compatible_presets = [
                 preset
                 for preset in _NAMED_PRESETS

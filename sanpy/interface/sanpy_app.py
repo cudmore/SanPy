@@ -21,6 +21,7 @@ from typing import Union, Dict, List, Tuple
 # PyInstaller sets MPLCONFIGDIR to a throwaway temp dir; persist the font cache.
 # Import platformdirs here, not sanpy (matplotlib).
 from platformdirs import user_cache_dir
+from sanpy.interface.window_state import WindowState
 
 
 def _configure_matplotlib_cache():
@@ -729,8 +730,19 @@ class SanPyApp(QtWidgets.QApplication):
                     foundWindow.selectSweep_external(sweep)
 
                 if spikeNumber is not None:
-                    # foundWindow.slot_selectSpike(sDict)
-                    foundWindow.selectSpike(spikeNumber, doZoom=False)
+                    state = foundWindow.state
+                    analysis = foundWindow.get_bAnalysis()
+                    if state is not None and analysis is not None:
+                        spike_sweep = int(
+                            analysis.getSpikeStat([spikeNumber], "sweep")[0]
+                        )
+                        foundWindow.request_state(
+                            WindowState(
+                                state.file_key,
+                                spike_sweep,
+                                (spikeNumber,),
+                            )
+                        )
 
         # add to recent opened windows
         if path is not None:

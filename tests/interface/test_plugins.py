@@ -175,13 +175,14 @@ def test_plugins(qtbot, qapp):
 
             # select an empty list
             logger.info('   selecting empy spike list')
-            _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[]}
-            _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+            _newPlugin.setSelectedSpikes([])
+            _newPlugin.selectSpikeList()
 
             # select a list
-            _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[1,10,15]}
-            logger.info(f'   selecting spikes {_selectSpikesDict}')
-            _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+            selected_spikes = [1, 10, 15]
+            logger.info(f'   selecting spikes {selected_spikes}')
+            _newPlugin.setSelectedSpikes(selected_spikes)
+            _newPlugin.selectSpikeList()
 
             # TODO: test switch file
             # switch to csv ba with no spikes

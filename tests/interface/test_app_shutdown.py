@@ -346,9 +346,6 @@ def test_failed_file_selection_is_not_broadcast() -> None:
         startSec=None,
         stopSec=None,
         myAnalysisDir=SimpleNamespace(getAnalysis=lambda row: None),
-        signalSwitchFile=SimpleNamespace(
-            emit=lambda *args: emitted.append(args)
-        ),
         slot_updateStatus=lambda message: statuses.append(message),
     )
     row = {

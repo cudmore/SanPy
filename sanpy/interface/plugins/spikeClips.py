@@ -202,14 +202,14 @@ class spikeClips(sanpyPlugin):
         # logger.info('')
 
         # don't replot until we set our detectionClass
-        replot = False
-        super().slot_switchFile(ba, rowDict, replot=replot)
+        super().slot_switchFile(ba, rowDict, replot=False)
 
         if self.ba is not None and self.ba.isAnalyzed():
             self.preClipWidth_ms = self.ba.getDetectionDict()["preSpikeClipWidth_ms"]
             self.postClipWidth_ms = self.ba.getDetectionDict()["postSpikeClipWidth_ms"]
 
-        self.replot()
+        if replot:
+            self.replot()
 
     def on_radio(self):
         """

@@ -17,6 +17,7 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Spike clips are taken from the filtered recording of the file being analyzed.
 - Plot Recording reads the sweeps it shows without changing the detection view's current sweep.
 - Export Trace uses its selected sweep. All still follows the detection view.
+- Spike selections now apply file, sweep, and spikes as one validated window state. Plot Tool (Pool) can switch recordings from its primary row, and Plot FI raw points select their source spikes.
 
 ### Added
 
