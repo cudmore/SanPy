@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -198,12 +197,9 @@ def test_pool_primary_row_requests_its_file_and_drops_other_files() -> None:
     )
 
 
-@pytest.mark.skipif(
-    os.environ.get("SANPY_RUN_NICEPOOL_WEBENGINE_TEST") != "1",
-    reason="set SANPY_RUN_NICEPOOL_WEBENGINE_TEST=1 on a macOS development host",
-)
 def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     """Synchronize selections in both directions without requesting zoom."""
+    pytest.importorskip("nicepool_pyqt5")
     analysis = MagicMock()
     analysis.fileLoader.filename = "cell.abf"
     analysis.fileLoader.numEpochs = 1
@@ -226,7 +222,7 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     qtbot.addWidget(plugin)
     assert plugin.size().width() == 1200
     assert plugin.size().height() == 800
-    assert plugin._nicepool is not None
+    assert plugin._nicepool is not None, plugin._status_label.text()
     data_resets = QSignalSpy(plugin._nicepool.data_reset)
     analysis_dir = MagicMock()
     analysis_dir.get_analysis_for_file_key.return_value = analysis

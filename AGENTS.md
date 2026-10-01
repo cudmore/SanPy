@@ -23,9 +23,14 @@ For SanPy Zarr work, keep imports explicit and package `__init__.py` files empty
 or minimal. Preserve existing ABF loading, HDF5 persistence, analysis, and GUI
 behavior unless a change is explicitly approved.
 
-Work as a senior developer: verify facts from code, tests, or authoritative APIs
-rather than guessing. Always ask and never guess. When a decision is not already
-settled by the request, the code, or an existing project rule, stop and ask.
+Work as a senior developer. Behavior is what the program executes: conditions,
+control flow, assignments, and the values those read. State a fact about
+behavior from that code. Comments, docstrings, skip reasons, assertion
+messages, logs, markdown, and changelog entries are claims. Repeat a claim as a
+fact only after the executable code agrees. When a claim and the code disagree,
+report what the code does. Always ask and never guess. When a decision is not
+already settled by the request, executable behavior, or an existing project
+rule, stop and ask.
 Every question must include one senior-developer recommendation and why it is
 the one to take.
 

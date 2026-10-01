@@ -8,7 +8,7 @@
 
 ## SanPy is software for whole-cell current clamp analysis
 
-SanPy is designed to analyze action potentials and extract a number of parameters including spike time, voltage threshold, half-widths, interval statistics, and lots more.
+SanPy is designed to analyze action potentials and extract a number of features including spike time, voltage threshold, half-widths, interval statistics, and lots more.
 
 SanPy is optimized for a wide range of whole-cell current-clamp recordings including cardiac myocytes and neurons.
 

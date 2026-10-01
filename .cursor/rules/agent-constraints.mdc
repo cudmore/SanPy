@@ -1,11 +1,17 @@
 ---
-description: Ask never guess; recommend with every question; keep edits narrow
+description: Ask never guess; behavior is source of truth; keep edits narrow
 alwaysApply: true
 ---
 
 # Agent constraints
 
-Always ask and never guess. When a decision is not already settled by the request, the code, or an existing project rule, stop and ask. Every question must include one senior-developer recommendation and why it is the one to take.
+Always ask and never guess. When a decision is not already settled by the request, executable behavior, or an existing project rule, stop and ask. Every question must include one senior-developer recommendation and why it is the one to take.
+
+# Source of truth
+
+Behavior is what the program executes: conditions, control flow, assignments, and the values those read. State a fact about behavior from that code.
+
+Comments, docstrings, skip reasons, assertion messages, logs, markdown, and changelog entries are claims. Repeat a claim as a fact only after the executable code agrees. When a claim and the code disagree, report what the code does.
 
 - Do not offer a menu of next steps. State the recommended option and why.
 - Do not implement until the user agrees, unless they already said to do it.

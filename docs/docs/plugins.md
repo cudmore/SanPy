@@ -30,8 +30,8 @@ changing the recording zoom.
 
 During local development, install the SanPy GUI extra, build the browser
 assets, and install the sibling adapter. `uv sync` removes that editable
-install, so run the last command again after every sync. The browser test
-runs only when `SANPY_RUN_NICEPOOL_WEBENGINE_TEST=1`.
+install, so run the last command again after every sync. `uv run pytest`
+includes the browser test when `nicepool_pyqt5` is installed.
 
 ```bash
 uv sync --locked --extra gui
@@ -41,7 +41,7 @@ uv sync --locked --extra gui
 uv pip install --python .venv/bin/python --editable \
   ../cs_project/mapmanager-web-components/integrations/nicepool-pyqt5
 
-SANPY_RUN_NICEPOOL_WEBENGINE_TEST=1 uv run pytest tests/interface/test_nicepool_plugin.py
+uv run pytest tests/interface/test_nicepool_plugin.py
 ```
 
 ### Plot Recording
