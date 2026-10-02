@@ -28,5 +28,15 @@ detected thresholds and peaks.
 uv run python examples/load_and_analyze.py
 ```
 
+## Load a folder of recordings
+
+`load_folder.py` opens the bundled folder catalog without eagerly loading every
+recording, prints selected file metadata, and loads the saved analysis for
+`stochastic-hh.sanpy` on demand.
+
+```bash
+uv run python examples/load_folder.py
+```
+
 The other directories under `examples/` contain specialized material such as
 manuscript figures, legacy scripts, and user-extension examples.

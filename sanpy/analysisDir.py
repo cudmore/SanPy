@@ -227,7 +227,12 @@ def stripSantanaTif(fileList : List[str]) -> List[str]:
     return retList
 
 class analysisDir:
-    """Class to manage a list of files loaded from a folder.
+    """Manage a folder-backed collection of SanPy recordings and analyses.
+
+    The file table is loaded from the folder's SanPy HDF5 database when one is
+    present. Otherwise, the folder is scanned for supported recording files.
+    Recordings can be loaded eagerly with ``autoLoad=True`` or on demand with
+    ``get_analysis_for_file_key()`` or ``getAnalysis()``.
     """
 
     sanpyColumns = _sanpyColumns
@@ -237,28 +242,24 @@ class analysisDir:
         self,
         path: str | None = None,
         sanPyWindow: "sanpy.interface.SanPyWindow | None" = None,
-        fileLoaderDict: dict[str, object] | None = None,
+        fileLoaderDict: dict[str, dict[str, object]] | None = None,
         autoLoad: bool = False,
         folderDepth: Optional[int] = None,
     ) -> None:
-        """Load and manage a list of files in a folder path.
-
-        Use this as the main pandasModel for file list myTableView.
-
-        TODO: extend to link to folder in cloud (start with box and/or github)
+        """Load a folder catalog and optionally load its recordings.
 
         Args:
             path: Path to a recording or folder.
             sanPyWindow: Optional window used to report loading progress.
-            fileLoaderDict: File-loader configuration keyed by extension.
+            fileLoaderDict: File-loader definitions keyed by extension. SanPy's
+                registered loaders are used when omitted.
             autoLoad: Whether to load each recording while scanning a folder.
-            folderDepth: Folder depth to recurse when loading a folder.
+            folderDepth: Maximum folder depth to scan. Use ``1`` for only the
+                selected folder or ``None`` for unlimited recursion.
 
-        Notes
-        -----
-        - Some functions are so self can mimic a pandas dataframe used by pandasModel.
-            (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
-        - 202312 adding filepath to load just one file
+        Note:
+            Passing a recording path creates a one-file collection rooted in that
+            recording's parent folder.
         """
 
         self._filePath = None
@@ -276,7 +277,6 @@ class analysisDir:
         # used to signal on building initial db
 
         self._fileLoaderDict = fileLoaderDict
-        # dist with file extension keys
 
         self.autoLoad = autoLoad
 
@@ -387,11 +387,16 @@ class analysisDir:
         return self.getAnalysis(row_index, allowAutoLoad=allow_auto_load)
 
     @property
-    def theseFileTypes(self):
-        """Get list of file extensions we will load.
+    def theseFileTypes(self) -> list[str]:
+        """Return the recording extensions available for folder scanning.
+
+        Returns:
+            Extensions from the caller-supplied loader definitions, or from
+            SanPy's registered loaders when no definitions were supplied.
         """
-        if self._fileLoaderDict is not None:
-            return list(self._fileLoaderDict.keys())
+        if self._fileLoaderDict is None:
+            return list(sanpy.fileloaders.getFileLoaders().keys())
+        return list(self._fileLoaderDict.keys())
 
     def findFileRow(self, filename):
         """Find the row index of a file in the file table.
@@ -423,11 +428,11 @@ class analysisDir:
         else:
             return self._df.loc[self._iterIdx]["_ba"]
 
-    def __str__(self):
-        """Get a string representation of the analysisDir.
+    def __str__(self) -> str:
+        """Return a concise folder summary.
         
         Returns:
-            A string representation of the analysisDir.
+            Summary containing the number of files and their total duration.
         """
         totalDurSec = self._df["Dur(s)"].sum()
         theStr = f"analysisDir Num Files: {len(self)} Total Dur(s): {totalDurSec}"
@@ -442,24 +447,20 @@ class analysisDir:
         """
         return self._isDirty
 
-    def __len__(self):
-        """Get the number of files in the analysisDir.
-        
-        Same as numFiles().
+    def __len__(self) -> int:
+        """Return the number of files in the collection.
 
         Returns:
-            The number of files in the analysisDir.
+            Number of file-table rows.
         """
         return len(self._df)
 
     @property
-    def numFiles(self):
-        """Get the number of files in the analysisDir.
-        
-        Same as __len__().
+    def numFiles(self) -> int:
+        """Return the number of files in the collection.
 
         Returns:
-            The number of files in the analysisDir.
+            Number of file-table rows.
         """
         return len(self._df)
 
@@ -512,7 +513,12 @@ class analysisDir:
         # return list of column names
         return list(self.sanpyColumns.keys())
 
-    def copy(self):
+    def copy(self) -> pd.DataFrame:
+        """Return an independent copy of the folder's file table.
+
+        Returns:
+            Copy of the file table, including recording metadata and status.
+        """
         return self._df.copy()
 
     def sort_values(self, Ncol, order):
@@ -538,8 +544,13 @@ class analysisDir:
         # logger.info(f'{colName} {type(type)}, type:{type} {isBool}')
         return isBool
 
-    def getDataFrame(self):
-        """Get the underlying pandas DataFrame."""
+    def getDataFrame(self) -> pd.DataFrame:
+        """Return the mutable file table used by this collection.
+
+        Returns:
+            Internal file table. Use ``copy()`` when mutations should not affect
+            the collection.
+        """
         return self._df
 
     def copyToClipboard(self):
