@@ -339,8 +339,14 @@ class fileLoader_base(ABC):
         """Get the current sweep."""
         return self._currentSweep
 
-    def setSweep(self, currentSweep: int):
-        """Set the current sweep."""
+    def setSweep(self, currentSweep: int) -> None:
+        """Set the zero-based sweep used by sweep-dependent properties.
+
+        Args:
+            currentSweep: Sweep index to select. Indices above the last sweep are
+                logged as errors and leave the current sweep unchanged. Negative
+                indices are stored and follow NumPy's negative-index behavior.
+        """
         if currentSweep > self.numSweeps - 1:
             logger.error(f"max sweep is {self.numSweeps-1}, got {currentSweep}")
             return
@@ -348,7 +354,13 @@ class fileLoader_base(ABC):
 
     @property
     def recordingMode(self) -> recordingModes:
-        """Return the recording mode as the compatibility enum."""
+        """Return the recording mode as the compatibility enum.
+
+        Examples:
+            Get the human-readable mode, such as ``"I-Clamp"``:
+
+            ``mode = loader.recordingMode.value``
+        """
         if self._fileMetadata is not None:
             return recordingModes(self._fileMetadata.mode)
         return self._recordingMode
@@ -369,7 +381,8 @@ class fileLoader_base(ABC):
         return self._sweepLabelY
 
     @property
-    def recordingDur(self):
+    def recordingDur(self) -> Optional[float]:
+        """Return the duration of one sweep in seconds."""
         return self._sweepLengthSec
 
     @property

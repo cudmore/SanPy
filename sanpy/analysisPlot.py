@@ -1,5 +1,6 @@
-import sys
-from typing import Union, Dict, List, Tuple, Optional
+"""Matplotlib helpers for plotting SanPy recordings and analysis results."""
+
+from typing import Any, Optional, TYPE_CHECKING
 
 import numpy as np
 import scipy.signal
@@ -7,6 +8,10 @@ import scipy.signal
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 logger = get_logger(__name__)
 
@@ -114,25 +119,32 @@ def old_getHalfWidths(ba):
 
 
 class bAnalysisPlot:
-    """
-    Class to plot results of [sanpy.bAnalysis][sanpy.bAnalysis] spike detection.
+    """Plot a recording and its spike-detection results with Matplotlib.
 
+    Attributes:
+        ba: Analysis whose recording and results will be plotted.
+
+    Examples:
+        Plot detected spike thresholds and peaks:
+
+        ``axes = bAnalysisPlot(analysis).plotSpikes(plotThreshold=True, plotPeak=True)``
     """
 
-    def __init__(self, ba=None):
-        """
+    def __init__(self, ba: sanpy.bAnalysis) -> None:
+        """Initialize a plotter for an analysis.
+
         Args:
-            ba: [sanpy.bAnalysis][sanpy.bAnalysis] object
+            ba: Loaded SanPy analysis to plot.
         """
         self._ba = ba
 
     @property
-    def ba(self):
-        """Get underlying bAnalysis object."""
+    def ba(self) -> sanpy.bAnalysis:
+        """Return the analysis being plotted."""
         return self._ba
 
-    def getDefaultPlotStyle(self):
-        """Get dictionary with default plot style."""
+    def getDefaultPlotStyle(self) -> dict[str, Any]:
+        """Return a new dictionary containing the default plot style."""
         d = {
             "linewidth": 1,
             "color": "k",
@@ -141,7 +153,18 @@ class bAnalysisPlot:
         }
         return d.copy()
 
-    def _makeFig(self, plotStyle=None):
+    def _makeFig(
+        self, plotStyle: Optional[dict[str, Any]] = None
+    ) -> tuple["Figure", "Axes"]:
+        """Create a single-panel Matplotlib figure.
+
+        Args:
+            plotStyle: Plot appearance values. The default style is used when
+                omitted.
+
+        Returns:
+            The new figure and its axes.
+        """
         import matplotlib.pyplot as plt
 
         if plotStyle is None:
@@ -159,20 +182,27 @@ class bAnalysisPlot:
 
         return fig, ax
 
-    def plotRaw(self, plotStyle=None, ax=None):
-        """
-        Plot raw recording
+    def plotRaw(
+        self,
+        plotStyle: Optional[dict[str, Any]] = None,
+        ax: Optional["Axes"] = None,
+    ) -> "Axes":
+        """Plot the active sweep's raw recording.
 
         Args:
-            plotStye (float):
-            ax (xxx):
+            plotStyle: Plot appearance values. The default style is used when
+                omitted.
+            ax: Existing Matplotlib axes. New axes are created when omitted.
+
+        Returns:
+            Axes containing the plotted recording.
         """
 
         if plotStyle is None:
             plotStyle = self.getDefaultPlotStyle()
 
         if ax is None:
-            _fig, _ax = self._makeFig()
+            _fig, _ax = self._makeFig(plotStyle)
             _fig.suptitle(f"{self._ba.fileLoader.filepath}")
         else:
             _ax = ax
@@ -231,56 +261,72 @@ class bAnalysisPlot:
 
     def plotSpikes(
         self,
-        plotThreshold=False,
-        plotPeak=False,
-        plotStyle=None,
+        plotThreshold: bool = False,
+        plotPeak: bool = False,
+        plotStyle: Optional[dict[str, Any]] = None,
         hue: Optional[str] = "condition",
         markerSize: Optional[int] = 4,
-        ax=None,
-    ):
-        """Plot Vm with spike analysis overlaid as symbols
+        ax: Optional["Axes"] = None,
+    ) -> "Axes":
+        """Plot the active voltage sweep with detected spikes overlaid.
+
+        Run ``bAnalysis.spikeDetect()`` before requesting threshold or peak
+        overlays.
 
         Args:
-            plotThreshold
-            plotPeak
-            plotStyle (dict): xxx
-            markerSize
-            ax (xxx): If specified will plot into a MatPlotLib axes
+            plotThreshold: Whether to mark detected spike thresholds.
+            plotPeak: Whether to mark detected spike peaks.
+            plotStyle: Plot appearance values. The default style is used when
+                omitted.
+            hue: Reserved for backward compatibility and currently unused.
+            markerSize: Matplotlib marker size for thresholds and peaks.
+            ax: Existing Matplotlib axes. New axes are created when omitted.
 
-        Returns
-            fig
-            ax
+        Returns:
+            Axes containing the recording and requested analysis overlays.
         """
-
-        legend = False
-
         if plotStyle is None:
             plotStyle = self.getDefaultPlotStyle()
 
         if ax is None:
-            fig, ax = self._makeFig()
+            fig, ax = self._makeFig(plotStyle)
             fig.suptitle(self.ba.getFileName())
         # plot vm
-        self.plotRaw(ax=ax)
+        self.plotRaw(plotStyle=plotStyle, ax=ax)
+
+        current_sweep = self.ba.fileLoader.currentSweep
 
         # plot spike times
         if plotThreshold:
-            thresholdSec = self.ba.getStat("thresholdSec")  # x
-            thresholdVal = self.ba.getStat("thresholdVal")  # y
+            thresholdSec = self.ba.getStat(
+                "thresholdSec", sweepNumber=current_sweep
+            )
+            thresholdVal = self.ba.getStat(
+                "thresholdVal", sweepNumber=current_sweep
+            )
 
-            ax.plot(thresholdSec, thresholdVal, "pr", markersize=markerSize)
-            df = self.ba.spikeDict.asDataFrame()  # regenerates, can be expensive
-            # logger.info(f'df hue unique is: {df[hue].unique()}')
-            # sns.scatterplot(x='thresholdSec', y='thresholdVal', hue=hue, data=df, ax=ax, legend=legend)
+            ax.plot(
+                thresholdSec,
+                thresholdVal,
+                "pr",
+                markersize=markerSize,
+                label="Threshold",
+            )
 
         # plot the peak
         if plotPeak:
-            peakPnt = self.ba.getStat("peakPnt")
+            peakPnt = self.ba.getStat("peakPnt", sweepNumber=current_sweep)
             # don't use this for Ca++ concentration
             # peakVal = self.ba.getStat('peakVal')
             peakVal = self.ba.fileLoader.sweepY[peakPnt]
             peakSec = [self.ba.fileLoader.pnt2Sec_(x) for x in peakPnt]
-            ax.plot(peakSec, peakVal, "oc", markersize=markerSize)
+            ax.plot(
+                peakSec,
+                peakVal,
+                "oc",
+                markersize=markerSize,
+                label="Peak",
+            )
 
         xUnits = self.ba.fileLoader.get_xUnits()
         yUnits = self.ba.fileLoader.get_yUnits()

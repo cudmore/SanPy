@@ -1,29 +1,4 @@
-"""
-The bDetection class provides an interface to get and set detection paramers.
-
-Example
--------
-
-```python
-import sanpy
-
-# grab the presets for 'SA Node' cells
-dDict = sanpy.bDetection().getDetectionDict('SA Node')
-ba.spikeDetect(dDict)
-
-# tweek individual parameters
-dDict['dvdtThreshold'] = 50
-
-# load a recording
-myPath = 'data/19114001.abf'
-ba = sanpy.bAnalysis(myPath)
-
-# perform spike detection
-ba.spikeDetect(dDict)
-
-# browse results
-```
-"""
+"""Manage SanPy spike-detection parameters and presets."""
 from http.client import RemoteDisconnected
 import os
 import numbers
@@ -142,12 +117,12 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     theDict[key][
         "allowNone"
     ] = True  # To do, have 2x entry points to bAnalysis detect, never set this to nan
-    theDict[key]["units"] = "dVdt"
+    theDict[key]["units"] = "mV/ms"
     theDict[key]["humanName"] = "dV/dt Threshold"
     theDict[key]["errors"] = ""
     theDict[key][
         "description"
-    ] = "dV/dt threshold for a spike, will be backed up to dvdt_percentOfMax and have xxx error when this fails"
+    ] = "Minimum dV/dt used to detect a spike threshold"
 
     key = "mvThreshold"
     theDict[key] = {}
@@ -673,10 +648,11 @@ class bDetection(object):
             #             f"did not find item.name:{item.name} in _detectionPreset {self._detectionPreset.keys()}"
             #         )
 
-    def getDetectionPresetList(self):
-        """Get list of names of detection type.
+    def getDetectionPresetList(self) -> list[str]:
+        """Return the names of all loaded detection presets.
 
-        Used to make a list in popup in interface/ and interface/plugins
+        Returns:
+            Bundled and user-defined preset names.
         """
         return list(self._detectionPreset.keys())
     
@@ -857,35 +833,27 @@ class bDetection(object):
 
         return retDict
 
-    def getDetectionDict(self, detectionType: str, allParameter=True):
-        """Get a full detection dict.
+    def getDetectionDict(
+        self, detectionType: str, allParameter: bool = True
+    ) -> dict[str, Any]:
+        """Return an independent detection-parameter dictionary for a preset.
 
-        Presets like 'SA Node' only over-ride a subset of the defaults, thus need to merge.
-        User saved detection parameters will have all keys.
+        All presets are completed with default parameter values when they are
+        loaded, so callers can safely adjust the returned dictionary before
+        passing it to ``bAnalysis.spikeDetect()``.
 
         Args:
-            detectionType : detection type key, like 'SA Node'
+            detectionType: Preset name, such as ``"SA Node"``.
+            allParameter: Retained for compatibility. Presets always contain all
+                detection parameters.
+
+        Returns:
+            A copy of the requested preset's detection parameters.
+
+        Raises:
+            KeyError: If ``detectionType`` is not a loaded preset name.
         """
-        return self._detectionPreset[detectionType]
-    
-        try:
-            if allParameter:
-                dDict = {}
-
-                # master template to get all default values
-                for k, v in self._dDict.items():
-                    dDict[k] = v["currentValue"]
-
-                # use specified detection type to get over-written values
-                detectionTypeKey = self._detectionEnum(detectionType).name
-                oneType = self._detectionPreset[detectionTypeKey]
-                for k, v in oneType.items():
-                    dDict[k] = v
-            return dDict
-        except KeyError as e:
-            logger.error(f'Did not find detectionType:"{detectionType}"')
-        except ValueError as e:
-            logger.error(f'Did not find detectionType:"{detectionType}"')
+        return copy.deepcopy(self._detectionPreset[detectionType])
 
     def getValue(self, detectionType: str, key):
         """Get current value from key. Valid keys are defined in getDefaultDetection().

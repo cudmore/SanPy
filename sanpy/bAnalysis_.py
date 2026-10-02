@@ -5,6 +5,7 @@ import time
 import datetime
 import copy
 import json
+import io
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
@@ -38,26 +39,17 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bAnalysis:
-    """
-    The bAnalysis class represents a whole-cell recording and provides functions for analysis.
+    """Represent a loaded recording and its analysis results.
 
-    A bAnalysis object can be created in a number of ways:
-    (i) From a file path including .abf and .csv
-    (ii) From a pandas DataFrame when loading from a h5 file.
-    (iii) From a byteStream abf when working in the cloud.
-
-    Once loaded, a number of operations can be performed including:
-    Spike detection, Error checking, Plotting, and Saving.
+    Use ``bAnalysis`` to load a supported recording, run spike detection, and
+    inspect or save the resulting analysis.
 
     Examples:
+        Load a recording and print a concise summary:
 
-    ```python
-    path = 'data/19114001.abf'
-    ba = bAnalysis(path)
-    dDict = sanpy.bDetection().getDetectionDict('SA Node')
-    ba.spikeDetect(dDict)
-    print(ba)
-    ```
+        >>> import sanpy
+        >>> analysis = sanpy.bAnalysis("recording.abf")
+        >>> print(analysis)
     """
 
     # def getNewUuid():
@@ -65,23 +57,27 @@ class bAnalysis:
 
     def __init__(
         self,
-        filepath: str = None,
-        byteStream=None,
+        filepath: Optional[str] = None,
+        byteStream: Optional[io.BytesIO] = None,
         loadData: bool = True,
-        fileLoaderDict: dict = None,
-        stimulusFileFolder: str = None,
+        fileLoaderDict: Optional[dict[str, dict[str, object]]] = None,
+        stimulusFileFolder: Optional[str] = None,
         verbose: bool = False,
-    ):
-        """
+    ) -> None:
+        """Initialize an analysis from a recording file.
+
         Args:
-            filepath (str): Path to either .abf or .csv with time/mV columns.
-            byteStream (io.BytesIO): Binary stream for use in the cloud.
-            loadData: If true, load raw data, otherwise just load header
-            fileLoaderDict (dict)
-                If None then fetch from sanpy.fileloaders.getFileLoaders()
-                Do this if running in a script.
-                If running an SanPy app, we pass the dict
-            stimulusFileFolder:
+            filepath: Path to a recording supported by a registered file loader.
+            byteStream: Reserved for compatibility and currently unused.
+            loadData: Whether to build filtered data after the recording loads.
+            fileLoaderDict: File-loader definitions keyed by file extension. When
+                omitted, SanPy discovers the available loaders.
+            stimulusFileFolder: Reserved for compatibility and currently unused.
+            verbose: Whether to log additional loading information.
+
+        Note:
+            Missing files and unsupported extensions set ``loadError`` to ``True``
+            instead of raising a loading exception.
         """
 
         """
@@ -235,8 +231,12 @@ class bAnalysis:
         return self._kymAnalysis
     
     @property
-    def fileLoader(self) -> "sanpy.fileLoader_base":
-        """ """
+    def fileLoader(self) -> Optional[sanpy.fileloaders.fileLoader_base]:
+        """Return the loader containing recording data and file metadata.
+
+        Returns:
+            The recording's file loader, or ``None`` when loading failed.
+        """
         return self._fileLoader
 
     def getFileName(self):
@@ -547,10 +547,11 @@ class bAnalysis:
         return self._detectionDirty
 
     @property
-    def numSpikes(self):
-        """Get the total number of detected spikes (all sweeps).
+    def numSpikes(self) -> int:
+        """Return the total number of detected spikes across all sweeps.
 
-        See getNumSpikes(sweep)
+        Returns:
+            Number of detected spikes.
         """
         return len(self.spikeDict)  # spikeDict has all spikes for all sweeps
 
@@ -1513,13 +1514,13 @@ class bAnalysis:
         #
         return spikeTimes0, spikeErrorList
 
-    def spikeDetect(self, detectionDict: dict):
-        """Run spike detection for all sweeps.
-
-        Each spike is a row and has 'sweep'
+    def spikeDetect(self, detectionDict: dict[str, object]) -> None:
+        """Run spike detection across every loaded sweep.
 
         Args:
-            detectionDict: From sanpy.bDetection
+            detectionDict: Complete detection parameters, typically returned by
+                ``sanpy.bDetection().getDetectionDict()`` and optionally adjusted
+                by the caller.
         """
 
         rememberSweep = (
