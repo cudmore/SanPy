@@ -1,0 +1,3 @@
+{"version": 0.1}
+relative_path,filename,parent_folder,grandparent_folder,great_grandparent_folder,Date,Cell ID,Region,Condition,Repeat,Note,Animal ID,Cell Type,Accept,_analyzed,msPerLine,umPerPixel,numChannels,imageHeight,imageWidth,numLineScans,pixelsPerLine,numRois,roiLabels,error
+rosie-kymograph.tif,rosie-kymograph.tif,,,,SanPy,SanPy rosie-kymograph,,Control,0,,,,1,1,2.0,0.15,0,0,0,0,0,0,[],
