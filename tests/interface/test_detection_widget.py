@@ -10,6 +10,7 @@ import pyqtgraph as pg
 import pytest
 from qtpy import QtCore, QtGui, QtWidgets
 
+import sanpy
 from sanpy.interface.util import sanpyCursors
 from sanpy.interface.window_state import WindowState
 
@@ -31,10 +32,9 @@ def test_file_switch_applies_one_complete_state_without_nested_request(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     previous_row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
     previous_key = window.myAnalysisDir.get_file_key(previous_row)
     window.request_state(WindowState(previous_key, 0, None))
@@ -70,13 +70,15 @@ def test_applied_sweep_and_spike_state_do_not_request_nested_state(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
     file_key = window.myAnalysisDir.get_file_key(row)
     window.request_state(WindowState(file_key, 0, None))
+    analysis = window.myAnalysisDir.get_analysis_for_file_key(file_key)
+    assert analysis is not None
+    analysis.spikeDetect(sanpy.bDetection().getDetectionDict("Fast Neuron"))
     state_requests = Mock()
     state_changes = Mock()
     window.myDetectionWidget.signalStateRequest.connect(state_requests)
@@ -113,10 +115,9 @@ def test_plot_range_signals_are_connected_once(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
     plot_item = widget.vmPlot.getPlotItem()
 
@@ -124,8 +125,12 @@ def test_plot_range_signals_are_connected_once(
     assert plot_item.receivers(widget.vmPlot.sigYRangeChanged) == 1
 
     # Replot two recordings; receiver counts must remain unchanged.
-    window.selectFileListRow(3)
-    window.selectFileListRow(2)
+    first_row = window.myAnalysisDir.findFileRow("19114001.abf")
+    second_row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    assert first_row is not None
+    assert second_row is not None
+    window.selectFileListRow(first_row)
+    window.selectFileListRow(second_row)
     assert plot_item.receivers(widget.vmPlot.sigXRangeChanged) == 1
     assert plot_item.receivers(widget.vmPlot.sigYRangeChanged) == 1
 
@@ -140,10 +145,9 @@ def test_invalid_spike_still_applies_valid_file_and_sweep(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
     file_key = window.myAnalysisDir.get_file_key(row)
 
@@ -163,10 +167,9 @@ def test_theme_switch_updates_existing_recording_plots(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
     original_theme = qapp.useDarkStyle
     full_recording_pen = widget.vmPlotGlobal_.opts["pen"]
@@ -204,10 +207,9 @@ def test_raw_plot_buttons_share_view_menu_state(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
     button = widget._viewToggleButtons[("rawDataPanels", "Derivative")][0]
     first_button = button.parentWidget().layout().itemAt(0).widget()
@@ -236,10 +238,9 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
     toolbar_button = widget._leftToolbar._panel_buttons["Detection Panel"]
     file_button = widget._leftToolbar._panel_buttons["File Metadata Panel"]
@@ -373,10 +374,9 @@ def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
     reset_axis = Mock()
     widget._resetAxisButton.clicked.disconnect()
@@ -408,10 +408,12 @@ def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    window.selectFileListRow(2)
+    row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    assert row is not None
+    window.selectFileListRow(row)
     widget = window.myDetectionWidget
     widget.vmPlot.setXRange(0.1, 0.2, padding=0)
     expected_x_range = widget.vmPlot.viewRange()[0]
@@ -468,10 +470,12 @@ def test_full_recording_fits_y_axis_on_load_and_sweep_change(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    window.selectFileListRow(2)
+    row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    assert row is not None
+    window.selectFileListRow(row)
     widget = window.myDetectionWidget
     qtbot.wait(1)
 
@@ -500,7 +504,7 @@ def test_plugins_button_reuses_existing_plugin_tabs(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
     widget = window.myDetectionWidget
@@ -569,10 +573,9 @@ def test_raw_plot_column_expands_with_central_widget(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
 
     splitter_index = widget.myHBoxLayout_detect.indexOf(widget._leftPanelSplitter)
@@ -592,10 +595,9 @@ def test_full_recording_and_derivative_scatter_overlays_start_off(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
 
     expected = {
@@ -624,10 +626,9 @@ def test_vm_plot_options_button_toggles_vm_overlays(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = Path(__file__).resolve().parents[2] / "data"
+    data_path = Path(__file__).resolve().parents[1] / "data"
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
     widget = window.myDetectionWidget
 
     toolbar_titles = [

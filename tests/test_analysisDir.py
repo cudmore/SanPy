@@ -1,29 +1,35 @@
-import os
+"""Tests for constructing an ``analysisDir`` from stable test data."""
+
+from pathlib import Path
 
 import sanpy
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
 
-def test_dir():
-	path = os.path.join('data')
-	autoLoad = False
-	ad = sanpy.analysisDir(path=path, autoLoad=autoLoad, folderDepth=1)
 
-	assert ad is not None
-	# logger.info(f'loaded analysis dir')
-	# print(ad)
+def test_dir(test_data_dir: Path) -> None:
+    """Discover supported recordings in the test data directory.
 
-	for rowIdx,a in enumerate(ad):
-		ba = ad.getAnalysis(rowIdx)
-		print(ba)
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    directory = sanpy.analysisDir(
+        path=str(test_data_dir), autoLoad=False, folderDepth=1
+    )
 
-def test_file():
-	filePath = os.path.join('data', '2021_07_20_0010.abf')
-	autoLoad = False
-	ad = sanpy.analysisDir(path=filePath, autoLoad=autoLoad, folderDepth=1)
+    assert len(directory) > 0
+    for row_index, _row in enumerate(directory):
+        assert directory.getAnalysis(row_index) is not None
 
-	assert ad is not None
-	
-if __name__ == '__main__':
-	test_dir()
-	test_file()
+
+def test_file(test_data_dir: Path) -> None:
+    """Construct an ``analysisDir`` for one ABF file.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    file_path = test_data_dir / "2021_07_20_0010.abf"
+
+    directory = sanpy.analysisDir(
+        path=str(file_path), autoLoad=False, folderDepth=1
+    )
+
+    assert len(directory) == 1

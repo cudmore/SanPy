@@ -1,57 +1,57 @@
-"""
-Test bAnalysis.py
+"""Tests for loading, detecting, and reading results from ``bAnalysis``."""
 
-Run this file with
+from pathlib import Path
 
-```
-python -m unittest sanpy/tests/test_analysis.py
-```
-"""
-
-import os, shutil, tempfile
-import unittest
+import pytest
 
 import sanpy
 
-import logging
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__, level=logging.DEBUG)
 
-class Test_Analysis(unittest.TestCase):
-    # this patter is wierd to me?
-    path = 'data/19114001.abf'
-    # path = 'data/19114001.csv'
-    #path = 'data/rosie-kymograph.tif'
-    ba = sanpy.bAnalysis(path)
-    expectedNumSpikes = 103
-    expectedNumErrors = 102  # 69
+@pytest.fixture(scope="module")
+def detected_analysis(test_data_dir: Path) -> sanpy.bAnalysis:
+    """Load and analyze the stable single-sweep ABF fixture.
 
-    def test_0_load(self):
-        logger.info('RUNNING')
+    Args:
+        test_data_dir: Stable test-only data directory.
 
-        self.assertFalse(self.ba.loadError)
-        self.assertIsNotNone(self.ba.fileLoader.sweepX)
-        self.assertIsNotNone(self.ba.fileLoader.sweepY)
-        self.assertEqual(len(self.ba.fileLoader.sweepX), len(self.ba.fileLoader.sweepY))
+    Returns:
+        Analysis containing SA Node detection results.
+    """
+    analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
+    detection = sanpy.bDetection().getDetectionDict("SA Node")
+    analysis.spikeDetect(detection)
+    return analysis
 
-    def test_1_detect(self):
-        logger.info('RUNNING')
-        # grab detection parameters
-        # see: sanpy.bDetection.detectionPresets.cakymograph
-        bd = sanpy.bDetection()  # gets default
-        dDict = bd.getDetectionDict('SA Node')
-        # detect
-        self.ba.spikeDetect(dDict)
 
-        self.assertEqual(self.ba.numSpikes, self.expectedNumSpikes) # expecting 102 spikes
+def test_load(test_data_dir: Path) -> None:
+    """Load a stable ABF fixture and expose matching time and voltage arrays.
 
-        self.assertEqual(len(self.ba.dfError), self.expectedNumErrors) # expecting 69 errors
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
 
-    def test_2_stats(self):
-        logger.info('RUNNING')
-        thresholdSec = self.ba.getStat('thresholdSec')
+    assert not analysis.loadError
+    assert analysis.fileLoader is not None
+    assert analysis.fileLoader.sweepX is not None
+    assert analysis.fileLoader.sweepY is not None
+    assert len(analysis.fileLoader.sweepX) == len(analysis.fileLoader.sweepY)
 
-        self.assertEqual(len(thresholdSec), self.expectedNumSpikes) # expecting 102 spikes
 
-if __name__ == '__main__':
-    unittest.main()
+def test_detect(detected_analysis: sanpy.bAnalysis) -> None:
+    """Detect the expected spikes and detection errors.
+
+    Args:
+        detected_analysis: Analysis prepared with the SA Node preset.
+    """
+    assert detected_analysis.numSpikes == 103
+    assert len(detected_analysis.dfError) == 102
+
+
+def test_stats(detected_analysis: sanpy.bAnalysis) -> None:
+    """Return one threshold-time statistic for every detected spike.
+
+    Args:
+        detected_analysis: Analysis prepared with the SA Node preset.
+    """
+    assert len(detected_analysis.getStat("thresholdSec")) == 103

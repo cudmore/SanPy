@@ -232,14 +232,14 @@ def test_export_saved_sanpy_recording(tmp_path: Path, sanpy_data_folder: Path) -
         {"index": 0, "name": "Vm", "unit": "mV", "values_are_scaled": True}
     ]
     assert manifest["command_channels"] == [{"index": 0, "name": "Im", "unit": "pA"}]
-    assert group["raw"].shape == (15, 1, 100001)
-    assert group["command"].shape == (15, 1, 100001)
-    assert group["epoch_index"].shape == (15, 1, 100001)
-    assert len(epochs) == 60
-    assert len(results) == 388
-    np.testing.assert_array_equal(group["raw"][3, 0], analysis.fileLoader._sweepY[:, 3])
+    assert group["raw"].shape == (2, 1, 10001)
+    assert group["command"].shape == (2, 1, 10001)
+    assert group["epoch_index"].shape == (2, 1, 10001)
+    assert len(epochs) == 8
+    assert len(results) == 4
+    np.testing.assert_array_equal(group["raw"][1, 0], analysis.fileLoader._sweepY[:, 1])
     np.testing.assert_array_equal(
-        group["command"][3, 0], analysis.fileLoader._sweepC[:, 3]
+        group["command"][1, 0], analysis.fileLoader._sweepC[:, 1]
     )
     validate_collection(destination)
 

@@ -503,7 +503,7 @@ def test_successful_open_refreshes_launcher_recents(
         monkeypatch: Pytest fixture used to prevent preference-file writes.
         qapp: Running SanPy Qt application supplied by pytest-qt.
     """
-    data_path = str(Path(__file__).resolve().parents[2] / "data")
+    data_path = str(Path(__file__).resolve().parents[1] / "data")
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     refresh_recent = Mock(wraps=qapp._openFirstWidget.refreshRecent)
     monkeypatch.setattr(qapp._openFirstWidget, "refreshRecent", refresh_recent)
@@ -626,7 +626,7 @@ def test_plot_scatter_starts_with_selector_toolbar_only(
         qapp: Running SanPy Qt application supplied by pytest-qt.
         qtbot: Pytest-Qt widget lifecycle helper.
     """
-    data_path = str(Path(__file__).resolve().parents[2] / "data")
+    data_path = str(Path(__file__).resolve().parents[1] / "data")
     monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
     window = qapp.openSanPyWindow(data_path)
     plugin = window.runPlugin("Plot Scatter", window.get_bAnalysis(), show=False)

@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pathlib import Path
 
 from sanpy.analysisDir import analysisDir
 from sanpy.fileloaders import getFileLoaders
@@ -60,25 +61,33 @@ def test_epoch_index_is_optional(tmp_path):
     assert loader.getEpochTable(0) is None
 
 
-def test_rejects_legacy_sec_column_without_raising() -> None:
+def test_rejects_legacy_sec_column_without_raising(tmp_path: Path) -> None:
     """Reject a legacy time-column spelling as a contained load failure."""
-    loader = fileLoader_text("tests/data/2021_07_20_0010.sanpy")
+    path = _write_sanpy(
+        tmp_path,
+        {"sec": [0.0, 0.001], "mv_0": [-60.0, -59.0]},
+        name="legacy-time-column.sanpy",
+    )
+    loader = fileLoader_text(str(path))
 
     assert loader.getLoadError()
     assert loader.sweepList is None
     assert "sweeps: unavailable" in str(loader)
 
 
-def test_analysis_dir_does_not_return_failed_recording() -> None:
+def test_analysis_dir_does_not_return_failed_recording(tmp_path: Path) -> None:
     """Prevent a malformed recording from reaching GUI signal consumers."""
+    path = _write_sanpy(
+        tmp_path,
+        {"sec": [0.0, 0.001], "mv_0": [-60.0, -59.0]},
+        name="legacy-time-column.sanpy",
+    )
     manager = analysisDir.__new__(analysisDir)
-    manager.path = "tests/data"
+    manager.path = str(tmp_path)
     manager.dbFile = "sanpy_recording_db.csv"
     manager._fileLoaderDict = getFileLoaders()
 
-    analysis = manager.loadOneAnalysis(
-        "tests/data/2021_07_20_0010.sanpy"
-    )
+    analysis = manager.loadOneAnalysis(str(path))
 
     assert analysis is None
 

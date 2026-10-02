@@ -1,10 +1,13 @@
 import os
 import sys
+from pathlib import Path
+
 import sanpy
 from sanpy.interface.sanpy_window import SanPyWindow
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+TEST_DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 # @pytest.fixture
 # def sanpyAppObject(qtbot):
@@ -38,7 +41,7 @@ logger = get_logger(__name__)
 #     return _analysisDir
 
 def _test_app_one_file(qtbot, qapp):
-    filePath = os.path.join('data', '19114001.abf')
+    filePath = str(TEST_DATA_DIR / "19114001.abf")
 
     sanpyWindowObject = SanPyWindow(qapp, path=filePath)
     assert sanpyWindowObject is not None    
@@ -51,7 +54,7 @@ def _test_app(qtbot, qapp):
     # sanpyAppObject = SanPyApp(sys.argv)
     # assert sanpyAppObject is not None
     
-    folderPath = 'data'
+    folderPath = str(TEST_DATA_DIR)
 
     sanpyWindowObject = SanPyWindow(qapp, path=folderPath)
     assert sanpyWindowObject is not None    
@@ -105,7 +108,7 @@ def test_analysisdir_tableview(qtbot, qapp):
 
     #
     # analysis dir    
-    folderPath = 'data'
+    folderPath = str(TEST_DATA_DIR)
     _analysisDir = sanpy.analysisDir(folderPath)
     _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
     
@@ -124,7 +127,7 @@ def test_plugins(qtbot, qapp):
 
     # sanpyAppObject = SanPyApp(sys.argv)
     
-    path = os.path.join('data', '19114001.abf')
+    path = str(TEST_DATA_DIR / "19114001.abf")
     sanpyWindowObject = SanPyWindow(qapp, path=path)
     qtbot.addWidget(sanpyWindowObject)
 
@@ -140,7 +143,7 @@ def test_plugins(qtbot, qapp):
     if 1:
         # (2) ba loaded but no analysis
         # path = 'data/19114001.abf'
-        path = os.path.join('data', '19114001.abf')
+        path = str(TEST_DATA_DIR / "19114001.abf")
         baNoAnalysis = sanpy.bAnalysis(path)
 
         # (3) ba loaded and with analysis
@@ -149,7 +152,7 @@ def test_plugins(qtbot, qapp):
         dDict = bd.getDetectionDict('SA Node')
         baWithAnalysis.spikeDetect(dDict)
 
-        pathSweeps = os.path.join('data', '2021_07_20_0010.abf')
+        pathSweeps = str(TEST_DATA_DIR / "2021_07_20_0010.abf")
         baSweeps = sanpy.bAnalysis(pathSweeps)
         dDict = bd.getDetectionDict('Fast Neuron')
         baSweeps.spikeDetect(dDict)

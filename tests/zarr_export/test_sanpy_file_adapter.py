@@ -19,9 +19,9 @@ def test_snapshot_sanpy_preserves_sweep_epochs(sanpy_data_folder: Path) -> None:
 
     snapshot = snapshot_sanpy(analysis)
 
-    assert snapshot.raw.shape == (15, 1, 100001)
+    assert snapshot.raw.shape == (2, 1, 10001)
     assert snapshot.command.shape == snapshot.raw.shape
-    assert snapshot.epochs.groupby("sweep").size().tolist() == [4] * 15
+    assert snapshot.epochs.groupby("sweep").size().tolist() == [4, 4]
     epoch_two = snapshot.epochs.query("epoch == 2").sort_values("sweep")
     expected_levels = [
         analysis.fileLoader.getEpochTable(sweep).getLevel(2)

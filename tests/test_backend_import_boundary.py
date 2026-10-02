@@ -81,7 +81,6 @@ import sanpy
 import sanpy.analysisPlot
 import sanpy.atfStim
 import sanpy.kymAnalysis
-import sanpy.models.myStochHH_v2
 
 for module_name in sys.modules:
     assert not module_name.startswith((
