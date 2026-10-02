@@ -17,9 +17,12 @@ def _make_template(bundled_dir: Path) -> Path:
     Returns:
         Created template directory.
     """
-    template_dir = bundled_dir / "_userFiles" / "SanPy-User-Files"
+    template_dir = bundled_dir / "user_files" / "SanPy-User-Files"
     template_dir.mkdir(parents=True)
     (template_dir / "preferences").mkdir()
+    nested_example = template_dir / "example-data" / "nested" / "example.txt"
+    nested_example.parent.mkdir(parents=True)
+    nested_example.write_text("example", encoding="utf-8")
     return template_dir
 
 
@@ -55,6 +58,9 @@ def test_ensure_user_files_copies_template_once(tmp_path: Path) -> None:
 
     assert sanpy_paths.ensure_user_files() is True
     assert sanpy_paths.preferences_dir.is_dir()
+    assert (
+        sanpy_paths.example_data_dir / "nested" / "example.txt"
+    ).read_text(encoding="utf-8") == "example"
     assert sanpy_paths.ensure_user_files() is False
 
 

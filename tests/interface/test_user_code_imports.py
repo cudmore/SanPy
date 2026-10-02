@@ -97,7 +97,7 @@ def test_user_file_template_contains_no_python_extensions() -> None:
     template = (
         Path(__file__).resolve().parents[2]
         / "sanpy"
-        / "_userFiles"
+        / "user_files"
         / "SanPy-User-Files"
     )
 

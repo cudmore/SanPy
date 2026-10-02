@@ -126,15 +126,17 @@ class SanPyApp(QtWidgets.QApplication):
 
         self._quitInProgress = False
 
-        firstTimeRunning = self.sanpy_paths.ensure_user_files()
-        if firstTimeRunning:
+        first_time_running = self.sanpy_paths.ensure_user_files()
+        if first_time_running:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
         self._fileLoaderDict = getFileLoaders(verbose=True)
         
         self._detectionClass : sanpy.bDetection = sanpy.bDetection(self.sanpy_paths)
 
-        self._configDict: preferences = preferences(self)
+        self._configDict: preferences = preferences(
+            self, first_time_running=first_time_running
+        )
         self._currentWindowGeometry = {
             'x': self._configDict['windowGeometry']['x'],
             'y': self._configDict['windowGeometry']['y'],

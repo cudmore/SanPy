@@ -96,7 +96,8 @@ include = ["sanpy", "sanpy.*"]
 
 [tool.setuptools.package-data]
 sanpy = [
-    "_userFiles/**/*",
+    "user_files/**/*",
+    "user_files/**/.placeholder",
     "detection-presets/*.json",
     "io/zarr_export/schemas/*.json",
     "models/*.mmt",

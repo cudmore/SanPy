@@ -26,7 +26,7 @@ a = Analysis(
     datas=[
         ('../../sanpy/interface/icons/sanpy_transparent.png', '.'),
         ('../../sanpy/detection-presets', 'detection-presets'),
-        ('../../sanpy/_userFiles', '_userFiles'),
+        ('../../sanpy/user_files', 'user_files'),
         (BUILD_INFO_PATH, 'sanpy'),
     ],
     hiddenimports=['numpy.core.multiarray'],

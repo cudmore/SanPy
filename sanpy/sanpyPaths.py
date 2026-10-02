@@ -51,7 +51,7 @@ class SanPyPaths:
     @property
     def bundled_user_files_dir(self) -> Path:
         """Return the bundled first-run user-files template directory."""
-        return self.bundled_dir / "_userFiles" / "SanPy-User-Files"
+        return self.bundled_dir / "user_files" / "SanPy-User-Files"
 
     @property
     def user_documents_dir(self) -> Path:

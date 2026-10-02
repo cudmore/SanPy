@@ -20,9 +20,20 @@ class preferences:
     Created and used by sanpy app SanPyWindow.
     """
 
-    def __init__(self, sanpyApp: "sanpy.interface.SanPyApp"):
+    def __init__(
+        self,
+        sanpyApp: "sanpy.interface.SanPyApp",
+        first_time_running: bool = False,
+    ) -> None:
+        """Initialize persistent interface preferences.
+
+        Args:
+            sanpyApp: Application that owns the shared SanPy paths.
+            first_time_running: Whether this launch created the user-files tree.
+        """
         super().__init__()
         self._sanpyApp = sanpyApp
+        self._first_time_running = first_time_running
 
         # bump this when we change, sanpy app will rebuild if loaded preferences are out of date
         # self._version = 1.2  # increment when we change preferences
@@ -36,6 +47,8 @@ class preferences:
 
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
+        if self._first_time_running:
+            self.save()
 
     def __setitem__(self, key, item):
         self._configDict[key] = item
@@ -202,8 +215,13 @@ class preferences:
         configDict["recentFiles"] = []
         configDict["mostRecentFile"] = ""
 
-        configDict["recentFolders"] = []
-        configDict["mostRecentFolder"] = ""
+        if self._first_time_running:
+            example_data_dir = str(self._sanpyApp.sanpy_paths.example_data_dir)
+            configDict["recentFolders"] = [example_data_dir]
+            configDict["mostRecentFolder"] = example_data_dir
+        else:
+            configDict["recentFolders"] = []
+            configDict["mostRecentFolder"] = ""
 
         configDict["windowGeometry"] = {}
         configDict["windowGeometry"]["x"] = 75
