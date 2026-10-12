@@ -62,9 +62,19 @@ class openFirstWidget(QtWidgets.QMainWindow):
     def getSanPyApp(self):
         return self._sanpyApp
 
-    def closeEvent(self, event):
-        """Hide the launcher while analysis windows remain open."""
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Hide or close the launcher when no background load is active.
+
+        Args:
+            event: Close event generated for the launcher.
+        """
         app = self.getSanPyApp()
+        if app.isAnalysisLoading() and not app.quitInProgress:
+            self.slot_updateStatus(
+                "Please wait for the current recording load to finish."
+            )
+            event.ignore()
+            return
         if app.hasAnalysisWindows() and not app.quitInProgress:
             self.hide()
             event.ignore()
@@ -147,7 +157,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
         logger.info(f'rowId:{rowIdx} path:{path}')
 
         if os.path.isfile(path):
-            self._sanpyApp.openSanPyWindow(path)
+            self._sanpyApp.startOpenSanPyWindow(path)
             # self.close()
         else:
             logger.error(f'did not find path: {path}')
@@ -159,7 +169,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
         logger.info(f'rowId:{rowIdx} path:{path}')
 
         if os.path.isdir(path):
-            self._sanpyApp.openSanPyWindow(path)
+            self._sanpyApp.startOpenSanPyWindow(path)
             # self.close()
         else:
             logger.error(f'did not find path: {path}')
@@ -258,9 +268,6 @@ class openFirstWidget(QtWidgets.QMainWindow):
         """
         # logger.info(text)
         self.statusBar().showMessage(text)
-        # self.statusBar.repaint()
-        # self.repaint()
-        QtWidgets.qApp.processEvents()
 
     def _buildUI(self) -> None:
         """Build the launcher controls and recent-path tables."""

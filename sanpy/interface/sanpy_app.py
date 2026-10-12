@@ -103,6 +103,56 @@ def getAppIconPath(sanpy_paths: SanPyPaths | None = None) -> str:
         )
     return str(appIconPath)
 
+
+class _AnalysisDirLoaderThread(QtCore.QThread):
+    """Construct one analysis directory without blocking the Qt event loop."""
+
+    statusUpdated = QtCore.Signal(str)
+    """Emit a human-readable construction progress message."""
+
+    loaded = QtCore.Signal(object)
+    """Emit the completed :class:`sanpy.analysisDir` instance."""
+
+    failed = QtCore.Signal(str)
+    """Emit a user-facing message when construction fails."""
+
+    def __init__(
+        self,
+        path: str,
+        folder_depth: int | None,
+        file_loader_dict: dict[str, dict[str, object]],
+        parent: QtCore.QObject | None = None,
+    ) -> None:
+        """Initialize a one-shot analysis-directory loader.
+
+        Args:
+            path: Recording or folder to load.
+            folder_depth: Maximum folder depth to scan.
+            file_loader_dict: Registered recording loaders.
+            parent: Optional Qt object that owns this thread.
+        """
+        super().__init__(parent)
+        self._path = path
+        self._folder_depth = folder_depth
+        self._file_loader_dict = file_loader_dict
+
+    def run(self) -> None:
+        """Construct the analysis directory and report its outcome."""
+        try:
+            analysis_dir = sanpy.analysisDir(
+                self._path,
+                folderDepth=self._folder_depth,
+                fileLoaderDict=self._file_loader_dict,
+                status_callback=self.statusUpdated.emit,
+            )
+        except Exception as error:
+            logger.exception(f'Unable to load analysis directory "{self._path}"')
+            message = str(error) or type(error).__name__
+            self.failed.emit(message)
+            return
+        self.loaded.emit(analysis_dir)
+
+
 class SanPyApp(QtWidgets.QApplication):
     """Own the SanPy desktop application and its shared services."""
 
@@ -125,6 +175,7 @@ class SanPyApp(QtWidgets.QApplication):
         # Keep analysis windows alive until Qt emits their destroyed signal.
 
         self._quitInProgress = False
+        self._analysisLoaderThread: _AnalysisDirLoaderThread | None = None
 
         first_time_running = self.sanpy_paths.ensure_user_files()
         if first_time_running:
@@ -235,6 +286,11 @@ class SanPyApp(QtWidgets.QApplication):
         have been closed.
         """
         if self._quitInProgress:
+            return False
+        if self.isAnalysisLoading():
+            self._openFirstWidget.slot_updateStatus(
+                "Please wait for the current recording load to finish."
+            )
             return False
 
         windows = list(self._windowList)
@@ -436,7 +492,7 @@ class SanPyApp(QtWidgets.QApplication):
         for recentFile in self.configDict.getRecentFiles():
             loadFileAction = QtWidgets.QAction(recentFile, self)
             loadFileAction.triggered.connect(
-                partial(self.openSanPyWindow, recentFile)
+                partial(self.startOpenSanPyWindow, recentFile)
             )
 
             self.openRecentMenu.addAction(loadFileAction)
@@ -447,7 +503,7 @@ class SanPyApp(QtWidgets.QApplication):
         for recentFolder in self.configDict.getRecentFolder():
             loadFolderAction = QtWidgets.QAction(recentFolder, self)
             loadFolderAction.triggered.connect(
-                partial(self.openSanPyWindow, recentFolder)
+                partial(self.startOpenSanPyWindow, recentFolder)
             )
 
             self.openRecentMenu.addAction(loadFolderAction)
@@ -549,7 +605,7 @@ class SanPyApp(QtWidgets.QApplication):
         
         # spawn a new window
         logger.info('   spawning new window')
-        self.openSanPyWindow(filePath)
+        self.startOpenSanPyWindow(filePath)
 
     def loadFolder(self, path : str = None, folderDepth=None):
         """Load a folder of raw data files.
@@ -581,7 +637,7 @@ class SanPyApp(QtWidgets.QApplication):
             logger.warning(f'   Did not load path "{path}"')
             return
 
-        self.openSanPyWindow(path)
+        self.startOpenSanPyWindow(path)
         
     def getAppIconPath(self) -> str:
         """Return the application icon path.
@@ -672,11 +728,137 @@ class SanPyApp(QtWidgets.QApplication):
 
         return newWindowGeometry
 
+    def isAnalysisLoading(self) -> bool:
+        """Return whether an interactive analysis-directory load is active."""
+        return self._analysisLoaderThread is not None
+
+    def startOpenSanPyWindow(
+        self,
+        path: str | os.PathLike[str],
+        _checked: bool = False,
+        *,
+        sweep: int | None = None,
+        spikeNumber: int | None = None,
+    ) -> None:
+        """Start an interactive analysis-window load in a worker thread.
+
+        Args:
+            path: Recording or folder to load.
+            _checked: Unused checked state emitted by a Qt action.
+            sweep: Optional sweep to select after loading a recording.
+            spikeNumber: Optional spike to select after loading a recording.
+        """
+        del _checked
+        path_string = os.fspath(path)
+
+        # Existing and unsupported paths complete synchronously without loading.
+        if any(window.path == path_string for window in self._windowList):
+            self.openSanPyWindow(path_string, sweep, spikeNumber)
+            return
+        if os.path.isfile(path_string) and not self._is_supported_recording(
+            path_string
+        ):
+            self.openSanPyWindow(path_string, sweep, spikeNumber)
+            return
+        if not os.path.isfile(path_string) and not os.path.isdir(path_string):
+            message = f'Cannot open missing path "{path_string}".'
+            logger.warning(message)
+            self._openFirstWidget.slot_updateStatus(message)
+            return
+        if self.isAnalysisLoading():
+            self._openFirstWidget.slot_updateStatus(
+                "Please wait for the current recording load to finish."
+            )
+            return
+
+        if os.path.isfile(path_string):
+            folder_depth = 1
+        else:
+            folder_depth = self.configDict["fileList"]["Folder Depth"]
+
+        self.showOpenFirstWidget()
+        self._openFirstWidget.slot_updateStatus(
+            f'Loading "{path_string}" ...'
+        )
+
+        loader = _AnalysisDirLoaderThread(
+            path_string,
+            folder_depth,
+            self.getFileLoaderDict(),
+            parent=self,
+        )
+        self._analysisLoaderThread = loader
+        loader.statusUpdated.connect(self._openFirstWidget.slot_updateStatus)
+        loader.loaded.connect(
+            partial(
+                self._onAnalysisDirLoaded,
+                path_string,
+                sweep,
+                spikeNumber,
+            )
+        )
+        loader.failed.connect(
+            partial(self._onAnalysisDirLoadFailed, path_string)
+        )
+        loader.finished.connect(self._onAnalysisLoaderFinished)
+        loader.start()
+
+    def _onAnalysisDirLoaded(
+        self,
+        path: str,
+        sweep: int | None,
+        spike_number: int | None,
+        analysis_dir: sanpy.analysisDir,
+    ) -> None:
+        """Open a window after its analysis directory finishes loading.
+
+        Args:
+            path: Recording or folder that was loaded.
+            sweep: Optional sweep to select.
+            spike_number: Optional spike to select.
+            analysis_dir: Completed analysis directory.
+        """
+        try:
+            self.openSanPyWindow(
+                path,
+                sweep,
+                spike_number,
+                analysis_dir=analysis_dir,
+            )
+        except Exception as error:
+            logger.exception(f'Unable to open analysis window for "{path}"')
+            message = str(error) or type(error).__name__
+            self._onAnalysisDirLoadFailed(path, message)
+
+    def _onAnalysisDirLoadFailed(self, path: str, message: str) -> None:
+        """Report an interactive analysis-directory load failure.
+
+        Args:
+            path: Recording or folder that failed to load.
+            message: User-facing failure detail.
+        """
+        status = f'Unable to load "{path}": {message}'
+        self._openFirstWidget.slot_updateStatus(status)
+        QtWidgets.QMessageBox.warning(
+            self._openFirstWidget,
+            "Unable to Open",
+            status,
+        )
+
+    def _onAnalysisLoaderFinished(self) -> None:
+        """Release the completed analysis loader thread."""
+        loader = self._analysisLoaderThread
+        self._analysisLoaderThread = None
+        if loader is not None:
+            loader.deleteLater()
+
     def openSanPyWindow(
         self,
         path: str | os.PathLike[str] | None = None,
         sweep: int | None = None,
         spikeNumber: int | None = None,
+        *,
+        analysis_dir: sanpy.analysisDir | None = None,
     ) -> SanPyWindow | None:
         """Open or activate an analysis window for a recording or folder.
 
@@ -684,6 +866,7 @@ class SanPyApp(QtWidgets.QApplication):
             path: Recording or folder path, or None for an empty window.
             sweep: Optional sweep to select when opening a recording.
             spikeNumber: Optional spike to select when opening a recording.
+            analysis_dir: Preconstructed directory from an interactive worker.
 
         Returns:
             Newly created or existing analysis window, or None when ``path``
@@ -721,7 +904,11 @@ class SanPyApp(QtWidgets.QApplication):
         # open new window
         if foundWindow is None:
             logger.info('   opening new window')
-            foundWindow = SanPyWindow(self, path)
+            foundWindow = SanPyWindow(
+                self,
+                path,
+                analysis_dir=analysis_dir,
+            )
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front
@@ -757,6 +944,8 @@ class SanPyApp(QtWidgets.QApplication):
             # The launcher is reused rather than reconstructed, so refresh its
             # cached tables after the successful open updates preferences.
             self._openFirstWidget.refreshRecent()
+
+        self._openFirstWidget.slot_updateStatus("Ready")
 
         # close the initial open first window
         # logger.warning('todo: figure out how to close and garbage collect the _openFirstWidget properly')

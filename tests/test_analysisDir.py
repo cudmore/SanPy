@@ -41,3 +41,30 @@ def test_file(test_data_dir: Path) -> None:
     assert row["kHz"] == 10.0
     assert row["Mode"] == "I-Clamp"
     assert directory._df.at[0, "_ba"] is None
+
+
+def test_constructor_reports_scan_progress(
+    test_data_dir: Path,
+    tmp_path: Path,
+) -> None:
+    """Report file-scan progress through the construction callback.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+        tmp_path: Temporary folder without an existing analysis database.
+    """
+    source = test_data_dir / "2021_07_20_0010.abf"
+    target = tmp_path / source.name
+    target.write_bytes(source.read_bytes())
+    statuses: list[str] = []
+
+    sanpy.analysisDir(
+        path=str(tmp_path),
+        autoLoad=False,
+        folderDepth=1,
+        status_callback=statuses.append,
+    )
+
+    assert len(statuses) == 1
+    assert 'Loading file 1 of 1' in statuses[0]
+    assert str(target) in statuses[0]

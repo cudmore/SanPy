@@ -53,6 +53,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         sanPyApp: "sanpy.interface.SanPyApp",
         path: str | os.PathLike[str] | None,
         parent: QtWidgets.QWidget | None = None,
+        *,
+        analysis_dir: sanpy.analysisDir | None = None,
     ) -> None:
         """Initialize a window for one recording or a folder of recordings.
 
@@ -60,6 +62,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             sanPyApp: Application that owns shared options, loaders, and plugins.
             path: Recording or folder path to load, or None for an empty window.
             parent: Optional parent widget.
+            analysis_dir: Preconstructed analysis directory, if already loaded.
         """
 
         super().__init__(parent)
@@ -150,7 +153,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # if self.path is not None and len(self.path) > 0:
         #     self.slot_loadFolder(self.path)
 
-        self._load()
+        self._load(analysis_dir)
         
         # 20240119 removed
         # we will always have a path
@@ -303,7 +306,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         oneItem = path[0]
         logger.info(oneItem)
 
-        self.getSanPyApp().openSanPyWindow(path)
+        self.getSanPyApp().startOpenSanPyWindow(oneItem)
 
         # if os.path.isdir(oneItem):
         #     self.slot_loadFolder(path=oneItem)
@@ -1134,8 +1137,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def slot_folderDepth(self, folderDepth : int):
         self.configDict['fileList']['Folder Depth'] = folderDepth
         
-    def _load(self):
-        """Load either a single file or a folder.
+    def _load(self, analysis_dir: sanpy.analysisDir | None = None) -> None:
+        """Load or install the analysis directory for this window.
+
+        Args:
+            analysis_dir: Preconstructed directory from the background loader.
+                When omitted, construct the directory synchronously.
         """
         path = self.path
 
@@ -1148,18 +1155,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.error(f'did not load path:{path}')
             return
         
-        fileLoaderDict = self.getSanPyApp().getFileLoaderDict()
-        _open_first_widget = self.getSanPyApp().get_open_first_widget()
-        self.myAnalysisDir = sanpy.analysisDir(
-            path,
-            sanPyWindow=_open_first_widget,  # abb, sanpywindow does not exist yet (is not shown)
-            folderDepth=folderDepth,
-            fileLoaderDict=fileLoaderDict
-        )
-
-        # clear open first status
-        if _open_first_widget is not None:
-            _open_first_widget.slot_updateStatus('Ready')
+        if analysis_dir is None:
+            fileLoaderDict = self.getSanPyApp().getFileLoaderDict()
+            self.myAnalysisDir = sanpy.analysisDir(
+                path,
+                folderDepth=folderDepth,
+                fileLoaderDict=fileLoaderDict,
+            )
+        else:
+            self.myAnalysisDir = analysis_dir
 
         # abb, try and select first file -> not working
 

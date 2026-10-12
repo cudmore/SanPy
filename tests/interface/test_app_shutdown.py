@@ -11,6 +11,7 @@ import pyqtgraph as pg
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 from qtpy import QtCore, QtGui, QtWidgets
 
+import sanpy
 import sanpy.interface.sanpy_window as sanpy_window_module
 from sanpy.interface.openFirstWidget import openFirstWidget
 from sanpy.interface.bDetectionWidget import _SweepSelectionWidget
@@ -48,9 +49,18 @@ class _FakeAnalysisWindow:
 class _FakeLauncher:
     def __init__(self):
         self.close_calls = 0
+        self.statuses: list[str] = []
 
     def close(self):
         self.close_calls += 1
+
+    def slot_updateStatus(self, text: str) -> None:
+        """Record a launcher status update.
+
+        Args:
+            text: Status message sent by the application.
+        """
+        self.statuses.append(text)
 
 
 class _FakeApp:
@@ -60,7 +70,12 @@ class _FakeApp:
         self._windowList = windows
         self._openFirstWidget = _FakeLauncher()
         self._quitInProgress = False
+        self.loading = False
         self.quit_calls = 0
+
+    def isAnalysisLoading(self) -> bool:
+        """Return whether the fake application has an active load."""
+        return self.loading
 
     def quit(self):
         self.quit_calls += 1
@@ -92,6 +107,18 @@ def test_request_quit_closes_everything_after_all_windows_approve():
     assert app._openFirstWidget.close_calls == 1
     assert app.quit_calls == 1
     assert app._quitInProgress is True
+
+
+def test_request_quit_refuses_while_analysis_is_loading() -> None:
+    """Keep the application alive until its background load completes."""
+    app = _FakeApp([])
+    app.loading = True
+
+    assert app.requestQuit() is False
+    assert app.quit_calls == 0
+    assert app._openFirstWidget.statuses == [
+        "Please wait for the current recording load to finish."
+    ]
 
 
 def test_window_registry_removes_window_only_after_qt_destroys_it(
@@ -135,13 +162,47 @@ def test_sanpy_window_enables_qt_managed_deletion(
     app = SimpleNamespace(newWindowGeometry=lambda: geometry, quitInProgress=True)
     monkeypatch.setattr(SanPyWindow, "_buildUI", lambda _window: None)
     monkeypatch.setattr(SanPyWindow, "_buildMenus", lambda _window: None)
-    monkeypatch.setattr(SanPyWindow, "_load", lambda _window: None)
+    monkeypatch.setattr(
+        SanPyWindow,
+        "_load",
+        lambda _window, _analysis_dir=None: None,
+    )
     monkeypatch.setattr(SanPyWindow, "slot_updateStatus", lambda _window, _text: None)
 
     window = SanPyWindow(app, None)
     qtbot.addWidget(window)
 
     assert window.testAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+
+def test_sanpy_window_installs_preloaded_analysis_directory(
+    tmp_path: Path,
+) -> None:
+    """Install a worker result without constructing another directory.
+
+    Args:
+        tmp_path: Temporary folder used to create a recording path.
+    """
+    recording_path = tmp_path / "recording.abf"
+    recording_path.touch()
+    row = {"File": recording_path.name}
+    analysis_dir = SimpleNamespace(
+        findFileRow=Mock(return_value=0),
+        getFileRow=Mock(return_value=(None, row)),
+    )
+    select_row = Mock()
+    window = SimpleNamespace(
+        path=str(recording_path),
+        myAnalysisDir=None,
+        getSanPyApp=Mock(side_effect=AssertionError("unexpected construction")),
+        slot_fileTableClicked=select_row,
+    )
+
+    SanPyWindow._load(window, analysis_dir)
+
+    assert window.myAnalysisDir is analysis_dir
+    window.getSanPyApp.assert_not_called()
+    select_row.assert_called_once_with(0, row, selectingAgain=False)
 
 
 def test_qt_managed_plot_windows_survive_repeated_garbage_collection(
@@ -513,6 +574,126 @@ def test_successful_open_refreshes_launcher_recents(
     refresh_recent.assert_called_once_with()
 
 
+def test_interactive_open_constructs_analysis_dir_in_worker(
+    monkeypatch: pytest.MonkeyPatch,
+    qtbot: Any,
+    qapp: Any,
+    tmp_path: Path,
+) -> None:
+    """Return worker progress and the completed directory to the GUI thread.
+
+    Args:
+        monkeypatch: Pytest fixture used to isolate worker construction.
+        qtbot: Pytest-Qt helper used to wait for thread completion.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary folder used as the loading target.
+    """
+    analysis_dir = object()
+    statuses: list[str] = []
+    open_window = Mock()
+
+    def construct_analysis_dir(
+        path: str,
+        *,
+        folderDepth: int | None,
+        fileLoaderDict: dict[str, dict[str, object]],
+        status_callback: Any,
+    ) -> object:
+        """Construct a sentinel directory and report progress.
+
+        Args:
+            path: Folder passed to the worker.
+            folderDepth: Folder depth passed to the worker.
+            fileLoaderDict: Loader definitions passed to the worker.
+            status_callback: Callback used to report progress.
+
+        Returns:
+            Sentinel object representing the completed directory.
+        """
+        assert path == str(tmp_path)
+        assert folderDepth is not None
+        assert fileLoaderDict is qapp.getFileLoaderDict()
+        status_callback("Scanning recordings")
+        return analysis_dir
+
+    monkeypatch.setattr(sanpy, "analysisDir", construct_analysis_dir)
+    monkeypatch.setattr(qapp, "showOpenFirstWidget", lambda: None)
+    monkeypatch.setattr(
+        qapp._openFirstWidget,
+        "slot_updateStatus",
+        statuses.append,
+    )
+    monkeypatch.setattr(qapp, "openSanPyWindow", open_window)
+
+    qapp.startOpenSanPyWindow(str(tmp_path))
+    qtbot.waitUntil(lambda: qapp._analysisLoaderThread is None)
+
+    assert "Scanning recordings" in statuses
+    open_window.assert_called_once_with(
+        str(tmp_path),
+        None,
+        None,
+        analysis_dir=analysis_dir,
+    )
+
+
+def test_interactive_open_reports_worker_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    qtbot: Any,
+    qapp: Any,
+    tmp_path: Path,
+) -> None:
+    """Keep the launcher available when worker construction fails.
+
+    Args:
+        monkeypatch: Pytest fixture used to force worker failure.
+        qtbot: Pytest-Qt helper used to wait for thread completion.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary folder used as the loading target.
+    """
+    statuses: list[str] = []
+    warning = Mock(return_value=QtWidgets.QMessageBox.Ok)
+    open_window = Mock()
+
+    def fail_analysis_dir(
+        path: str,
+        *,
+        folderDepth: int | None,
+        fileLoaderDict: dict[str, dict[str, object]],
+        status_callback: Any,
+    ) -> object:
+        """Raise the expected construction failure.
+
+        Args:
+            path: Folder passed to the worker.
+            folderDepth: Folder depth passed to the worker.
+            fileLoaderDict: Loader definitions passed to the worker.
+            status_callback: Callback used to report progress.
+
+        Raises:
+            RuntimeError: Always, to exercise worker failure handling.
+        """
+        del path, folderDepth, fileLoaderDict, status_callback
+        raise RuntimeError("read failed")
+
+    monkeypatch.setattr(sanpy, "analysisDir", fail_analysis_dir)
+    monkeypatch.setattr(qapp, "showOpenFirstWidget", lambda: None)
+    monkeypatch.setattr(
+        qapp._openFirstWidget,
+        "slot_updateStatus",
+        statuses.append,
+    )
+    monkeypatch.setattr(qapp, "openSanPyWindow", open_window)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "warning", warning)
+
+    qapp.startOpenSanPyWindow(str(tmp_path))
+    qtbot.waitUntil(lambda: qapp._analysisLoaderThread is None)
+
+    open_window.assert_not_called()
+    assert statuses[-1].endswith("read failed")
+    warning.assert_called_once()
+
+
 def test_open_file_dialog_lists_only_registered_recordings(
     monkeypatch: pytest.MonkeyPatch, qapp: Any
 ) -> None:
@@ -825,6 +1006,7 @@ def test_application_quit_does_not_restore_launcher_or_prompt_again() -> None:
 def test_launcher_hides_instead_of_quitting_while_analysis_is_open():
     app = SimpleNamespace(
         hasAnalysisWindows=lambda: True,
+        isAnalysisLoading=lambda: False,
         quitInProgress=False,
     )
     launcher = SimpleNamespace(
@@ -844,6 +1026,7 @@ def test_launcher_hides_instead_of_quitting_while_analysis_is_open():
 def test_launcher_close_is_accepted_when_no_analysis_is_open():
     app = SimpleNamespace(
         hasAnalysisWindows=lambda: False,
+        isAnalysisLoading=lambda: False,
         quitInProgress=False,
     )
     launcher = SimpleNamespace(getSanPyApp=lambda: app)
@@ -853,3 +1036,26 @@ def test_launcher_close_is_accepted_when_no_analysis_is_open():
 
     assert event.accepted is True
     assert event.ignored is False
+
+
+def test_launcher_close_is_refused_while_analysis_is_loading() -> None:
+    """Keep the launcher alive while it owns a background load."""
+    statuses: list[str] = []
+    app = SimpleNamespace(
+        hasAnalysisWindows=lambda: False,
+        isAnalysisLoading=lambda: True,
+        quitInProgress=False,
+    )
+    launcher = SimpleNamespace(
+        getSanPyApp=lambda: app,
+        slot_updateStatus=statuses.append,
+    )
+    event = _FakeCloseEvent()
+
+    openFirstWidget.closeEvent(launcher, event)
+
+    assert event.ignored is True
+    assert event.accepted is False
+    assert statuses == [
+        "Please wait for the current recording load to finish."
+    ]

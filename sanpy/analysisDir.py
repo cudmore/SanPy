@@ -10,6 +10,7 @@ import copy  # For copy.deepcopy() of bAnalysis
 # import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
 
+from collections.abc import Callable
 from typing import List, Optional
 
 import numpy as np
@@ -241,21 +242,21 @@ class analysisDir:
     def __init__(
         self,
         path: str | None = None,
-        sanPyWindow: "sanpy.interface.SanPyWindow | None" = None,
         fileLoaderDict: dict[str, dict[str, object]] | None = None,
         autoLoad: bool = False,
         folderDepth: Optional[int] = None,
+        status_callback: Callable[[str], None] | None = None,
     ) -> None:
         """Load a folder catalog and optionally load its recordings.
 
         Args:
             path: Path to a recording or folder.
-            sanPyWindow: Optional window used to report loading progress.
             fileLoaderDict: File-loader definitions keyed by extension. SanPy's
                 registered loaders are used when omitted.
             autoLoad: Whether to load each recording while scanning a folder.
             folderDepth: Maximum folder depth to scan. Use ``1`` for only the
                 selected folder or ``None`` for unlimited recursion.
+            status_callback: Optional callback for construction progress.
 
         Note:
             Passing a recording path creates a one-file collection rooted in that
@@ -272,9 +273,6 @@ class analysisDir:
         logger.info(f'{path}')
 
         self.path: str = folderPath  # path to folder
-        
-        self._sanPyWindow = sanPyWindow
-        # used to signal on building initial db
 
         self._fileLoaderDict = fileLoaderDict
 
@@ -295,7 +293,10 @@ class analysisDir:
         self._df = self.loadHdf()
         if self._df is None:
             # did not load h5 file
-            self._df = self.loadFolder(loadData=autoLoad)
+            self._df = self.loadFolder(
+                loadData=autoLoad,
+                status_callback=status_callback,
+            )
             self._updateLoadedAnalyzed()
         elif self._fileLoaderDict is not None:
             logger.info(f'sync existing df with filePath: {self._filePath}')
@@ -761,13 +762,21 @@ class analysisDir:
             self._updateLoadedAnalyzed()
             self._isDirty = True  # if true, prompt to save on quit
 
-    def loadFolder(self, path=None, loadData=False) -> pd.DataFrame:
-        """Parse a folder and load all (abf, csv, ...).
-        
-        Only called if no h5 file.
+    def loadFolder(
+        self,
+        path: str | None = None,
+        loadData: bool = False,
+        status_callback: Callable[[str], None] | None = None,
+    ) -> pd.DataFrame:
+        """Parse a folder and build its recording table.
 
-        TODO: get rid of loading database from .csv (it is replaced by .h5 file)
-        TODO: extend the logic to load from cloud (after we were instantiated)
+        Args:
+            path: Folder to scan. The configured directory is used when omitted.
+            loadData: Whether to retain each loaded analysis in memory.
+            status_callback: Optional callback for per-file progress messages.
+
+        Returns:
+            Dataframe containing one row for each supported recording.
         """
         logger.info("Loading folder from scratch (no h5 file)")
 
@@ -786,10 +795,13 @@ class analysisDir:
         # build new db dataframe
         listOfDict = []
         for rowIdx, fullFilePath in enumerate(fileList):
-            
-            self.signalWindow(
+            status_message = (
                 f'Loading file {rowIdx+1} of {_numFilesToLoad} "{fullFilePath}"'
             )
+            if status_callback is None:
+                logger.info(status_message)
+            else:
+                status_callback(status_message)
 
             # rowDict is what we are showing in the file table
             # abb debug vue, set loadData=True
@@ -1300,7 +1312,6 @@ class analysisDir:
             one_df = one_df.copy()
             one_df["file_number"] = int(row_idx)
             one_df["file_key"] = self.get_file_key(int(row_idx))
-            # self.signalWindow(f'Adding "{ba.fileLoader.filename}"')
             frames.append(one_df)
         if not frames:
             return None
@@ -1311,17 +1322,6 @@ class analysisDir:
             + pooled["spikeNumber"].astype(int).astype(str)
         )
         return pooled
-
-    def signalWindow(self, str, verbose=True):
-        """Update status bar of SanPy window.
-
-        TODO make this a signal and connect app to it.
-            Will not be able to do this, we need to run outside Qt
-        """
-        if self._sanPyWindow is not None:
-            self._sanPyWindow.slot_updateStatus(str)
-        elif verbose:
-            logger.info(str)
 
     def api_getFileHeaders(self):
         headerList = []
