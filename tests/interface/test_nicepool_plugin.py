@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pandas as pd
 import pytest
+from PyQt5 import QtCore
 from PyQt5.QtTest import QSignalSpy
 from pytestqt.qtbot import QtBot
 
@@ -126,30 +128,68 @@ def test_nicepool_spike_results_are_the_current_file() -> None:
     analysis.asDataFrame.assert_called_once_with(regenerateAnalysisDataFrame=True)
 
 
-def test_nicepool_pool_plugin_uses_the_folder_pool() -> None:
-    """Load every analyzed file and remember the open file's table row."""
-    # assert NicePoolPoolPlugin.myHumanName == "Plot Tool (Pool)"
+def test_nicepool_pool_plugin_builds_rows_incrementally(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Pool one row per timer turn and report each relative file key.
+
+    Args:
+        monkeypatch: Pytest fixture used to capture timer callbacks.
+    """
     assert issubclass(NicePoolPoolPlugin, NicePoolPlugin)
 
-    current = MagicMock()
-    other = MagicMock()
-    pooled = pd.DataFrame({"spikeNumber": [1], "row_id": ["1:1"]})
+    callbacks: list[Callable[[], None]] = []
+    monkeypatch.setattr(
+        QtCore.QTimer,
+        "singleShot",
+        lambda _delay, callback: callbacks.append(callback),
+    )
+    first = pd.DataFrame(
+        {
+            "spikeNumber": [1],
+            "file_number": [0],
+            "file_key": ["first.abf"],
+            "row_id": ["0:1"],
+        }
+    )
     analysis_dir = MagicMock()
     analysis_dir.get_row_for_file_key.return_value = 1
-    analysis_dir.pool_spike_dataframe.return_value = pooled
+    analysis_dir.getDataFrame.return_value = pd.DataFrame(index=[0, 1])
+    analysis_dir.get_file_key.side_effect = ["first.abf", "nested/second.abf"]
+    analysis_dir.spike_dataframe_for_row.side_effect = [first, None]
     window = MagicMock()
     window.myAnalysisDir = analysis_dir
     window.state = WindowState("current.abf", 0, None)
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._pool_generation = 0
+    plugin._pool_row_indices = []
+    plugin._pool_frames = []
+    plugin._pool_position = 0
+    plugin._initial_pool_complete = False
     plugin._current_file_number = None
-    plugin._ba = current
+    plugin._row_id_to_file_key = {}
+    plugin._apply_spike_results = MagicMock()
+    plugin.mark_initial_display_ready = MagicMock()
     plugin.getSanPyWindow = lambda: window
 
-    result = plugin._spike_results()
+    plugin.replot()
+    assert len(callbacks) == 1
+    callbacks.pop(0)()
+    callbacks.pop(0)()
+    plugin.mark_initial_display_ready.assert_not_called()
+    callbacks.pop(0)()
 
-    assert result is pooled
     assert plugin._current_file_number == 1
-    analysis_dir.pool_spike_dataframe.assert_called_once_with()
+    assert window.slot_updateStatus.call_args_list == [
+        call('Pooling file 1 of 2 "first.abf"'),
+        call('Pooling file 2 of 2 "nested/second.abf"'),
+    ]
+    analysis_dir.spike_dataframe_for_row.assert_any_call(0)
+    analysis_dir.spike_dataframe_for_row.assert_any_call(1)
+    pooled = plugin._apply_spike_results.call_args.args[0]
+    pd.testing.assert_frame_equal(pooled, first)
+    plugin.mark_initial_display_ready.assert_called_once_with()
 
 
 def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
@@ -168,15 +208,37 @@ def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
     )
 
 
-def test_nicepool_pool_without_a_folder_has_no_results() -> None:
+def test_nicepool_pool_without_a_folder_shows_empty_state() -> None:
     """Do not fall back to the current file when no folder is open."""
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._pool_generation = 0
+    plugin._pool_row_indices = []
+    plugin._pool_frames = []
+    plugin._pool_position = 0
+    plugin._initial_pool_complete = False
     plugin._current_file_number = 3
-    plugin._ba = MagicMock()
+    plugin._row_id_to_file_key = {}
+    plugin._apply_spike_results = MagicMock()
+    plugin.mark_initial_display_ready = MagicMock()
     plugin.getSanPyWindow = lambda: None
 
-    assert plugin._spike_results() is None
+    plugin.replot()
+
     assert plugin._current_file_number is None
+    plugin._apply_spike_results.assert_called_once_with(None)
+    plugin.mark_initial_display_ready.assert_called_once_with()
+
+
+def test_nicepool_pool_ignores_superseded_timer_callback() -> None:
+    """Drop a timer callback after replot or close advances its generation."""
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._pool_generation = 2
+    plugin.getSanPyWindow = MagicMock()
+
+    plugin._pool_next_row(1)
+
+    plugin.getSanPyWindow.assert_not_called()
 
 
 def test_selection_to_spikes_rejects_malformed_payload() -> None:

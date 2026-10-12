@@ -279,6 +279,7 @@ class analysisDir:
         self.autoLoad = autoLoad
 
         self.folderDepth = folderDepth
+        self._pool_frame_cache: dict[str, tuple[str, pd.DataFrame]] = {}
 
         self._isDirty = False
         # keep track if analysis was changed and prompt on quit
@@ -602,6 +603,7 @@ class analysisDir:
                     # we are now saved into h5 file, remember uuid to load
                     # print('xxx SETTING dir uuid')
                     df.at[row, "uuid"] = ba.uuid
+                    self._pool_frame_cache.pop(self.get_file_key(row), None)
 
         # rebuild (L, A, S) columns
         self._updateLoadedAnalyzed()
@@ -1186,10 +1188,12 @@ class analysisDir:
         self._df = df
 
     def unloadRow(self, rowIdx):
+        self._pool_frame_cache.pop(self.get_file_key(rowIdx), None)
         self._df.loc[rowIdx, "_ba"] = None
         self._updateLoadedAnalyzed()
 
     def removeRowFromDatabase(self, rowIdx):
+        self._pool_frame_cache.pop(self.get_file_key(rowIdx), None)
         # delete from h5 file
         uuid = self._df.at[rowIdx, "uuid"]
         self._deleteFromHdf(uuid)
@@ -1201,6 +1205,7 @@ class analysisDir:
 
     def deleteRow(self, rowIdx):
         df = self._df
+        self._pool_frame_cache.pop(self.get_file_key(rowIdx), None)
 
         # delete from h5 file
         uuid = df.at[rowIdx, "uuid"]
@@ -1222,6 +1227,7 @@ class analysisDir:
         -----
         20231230, trying to use this to open a one file window with an exiting h5 file.
         """
+        self._pool_frame_cache.clear()
 
         pathFileList = self.getFileList()
 
@@ -1274,13 +1280,77 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def pool_spike_dataframe(self) -> pd.DataFrame | None:
+    def spike_dataframe_for_row(self, row_idx: int) -> pd.DataFrame | None:
+        """Return pooled spike results for one file-table row.
+
+        A loaded analysis is always authoritative. For an unloaded row, a
+        matching cached frame is reused or the saved analysis is loaded without
+        raw sweep arrays. Temporary analyses are not stored in the file table.
+
+        Args:
+            row_idx: File-table row index.
+
+        Returns:
+            Copied spike results with pooled identity columns, or ``None`` when
+            the row has no saved analyzed spikes.
+
+        Raises:
+            ValueError: If analyzed results have no ``spikeNumber`` column.
+        """
+        file_key = self.get_file_key(row_idx)
+        uuid = str(self._df.at[row_idx, "uuid"])
+        ba = self._df.at[row_idx, "_ba"]
+        cache_result = ba is None or ba == ""
+
+        if not cache_result:
+            self._pool_frame_cache.pop(file_key, None)
+        else:
+            cached = self._pool_frame_cache.get(file_key)
+            if cached is not None:
+                if cached[0] == uuid:
+                    cached_frame = cached[1]
+                    return None if cached_frame.empty else cached_frame.copy()
+                self._pool_frame_cache.pop(file_key, None)
+            if not uuid:
+                return None
+            file_path = self.getPathFromRelPath(file_key)
+            ba = self.loadOneAnalysis(file_path, uuid, allowAutoLoad=False)
+
+        if ba is None or not ba.isAnalyzed():
+            return None
+        one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
+        if one_df is None or one_df.empty:
+            if cache_result:
+                self._pool_frame_cache[file_key] = (uuid, pd.DataFrame())
+            return None
+        if "spikeNumber" not in one_df.columns:
+            raise ValueError(
+                "SanPy spike results are missing the spikeNumber column"
+            )
+
+        one_df = one_df.copy()
+        one_df["file_number"] = int(row_idx)
+        one_df["file_key"] = file_key
+        one_df["row_id"] = (
+            one_df["file_number"].astype(int).astype(str)
+            + ":"
+            + one_df["spikeNumber"].astype(int).astype(str)
+        )
+        if cache_result:
+            self._pool_frame_cache[file_key] = (uuid, one_df.copy())
+        return one_df
+
+    def pool_spike_dataframe(
+        self,
+        status_callback: Callable[[str], None] | None = None,
+    ) -> pd.DataFrame | None:
         """Concatenate spike results for every analyzed file.
 
-        Loads a saved analysis when that file is not already in memory. Each
-        copied row receives ``file_number`` as its current file-table row and
-        ``row_id`` as ``"{file_number}:{spikeNumber}"``. The per-file analysis
-        keeps its stored ``file_number`` of 0.
+        Reuses per-file cached results or loads a saved analysis without raw
+        sweep arrays when that file is not already in memory.
+
+        Args:
+            status_callback: Optional callback for per-file progress messages.
 
         Returns:
             The concatenated spike table, or ``None`` when no file has spikes.
@@ -1288,40 +1358,25 @@ class analysisDir:
         Raises:
             ValueError: If an analyzed file has no ``spikeNumber`` column.
 
-        Notes:
-            Each call reloads and regenerates every analyzed file. NicePool (pool)
-            calls this on each replot.
         """
         frames: list[pd.DataFrame] = []
-        for row_idx in self._df.index:
-            
-            # abb, this loads raw data -> we do not want that
-            # ba = self.getAnalysis(row_idx, allowAutoLoad=True)
-            ba = self.getAnalysis(row_idx, allowAutoLoad=False)
-            
-            if ba is None or not ba.isAnalyzed():
-                continue
-            one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
-            if one_df is None or one_df.empty:
-                continue
-            if "spikeNumber" not in one_df.columns:
-                raise ValueError(
-                    "SanPy spike results are missing the spikeNumber column"
-                )
-            # Copy so file_number and row_id stay on the pooled frame only.
-            one_df = one_df.copy()
-            one_df["file_number"] = int(row_idx)
-            one_df["file_key"] = self.get_file_key(int(row_idx))
-            frames.append(one_df)
+        row_indices = list(self._df.index)
+        total = len(row_indices)
+        for position, row_idx in enumerate(row_indices, start=1):
+            file_key = self.get_file_key(int(row_idx))
+            status_message = (
+                f'Pooling file {position} of {total} "{file_key}"'
+            )
+            if status_callback is None:
+                logger.info(status_message)
+            else:
+                status_callback(status_message)
+            one_df = self.spike_dataframe_for_row(int(row_idx))
+            if one_df is not None:
+                frames.append(one_df)
         if not frames:
             return None
-        pooled = pd.concat(frames, ignore_index=True)
-        pooled["row_id"] = (
-            pooled["file_number"].astype(int).astype(str)
-            + ":"
-            + pooled["spikeNumber"].astype(int).astype(str)
-        )
-        return pooled
+        return pd.concat(frames, ignore_index=True)
 
     def api_getFileHeaders(self):
         headerList = []

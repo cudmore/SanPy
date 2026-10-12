@@ -527,6 +527,7 @@ def test_plugins_button_reuses_existing_plugin_tabs(
         SimpleNamespace(
             getInitError=lambda: False,
             getShowSelf=lambda: True,
+            is_initial_display_ready=lambda: True,
             getWidget=lambda widget=widget: widget,
         )
         for widget in plugin_widgets

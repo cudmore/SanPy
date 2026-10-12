@@ -242,6 +242,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 )
                 # print(2)
                 if not newPlugin.getInitError() and show:
+                    self._openPluginSet.add(newPlugin)
                     # if _pluginDict is not None:
                     #     newPlugin.setGeometry(
                     #         _pluginDict["l"],
@@ -249,8 +250,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     #         _pluginDict["w"],
                     #         _pluginDict["h"],
                     #     )
-                    newPlugin.getWidget().show()
-                    newPlugin.getWidget().setVisible(True)
+                    if newPlugin.is_initial_display_ready():
+                        self._showStandalonePlugin(newPlugin)
+                    else:
+                        newPlugin.signalInitialDisplayReady.connect(
+                            partial(self._showStandalonePlugin, newPlugin)
+                        )
                     # newPlugin.getWidget().raise_()  # bring to front, raise is a python keyword
                     # newPlugin.getWidget().activateWindow()  # bring to front
 
@@ -263,10 +268,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # except(TypeError) as e:
             #     logger.error(f'Error opening plugin "{pluginName}": {e}')
             #     return
-            if not newPlugin.getInitError() and show:
-                self._openPluginSet.add(newPlugin)
 
             return newPlugin
+
+    def _showStandalonePlugin(self, plugin: object) -> None:
+        """Present one standalone plugin after its initial data is ready.
+
+        Args:
+            plugin: Constructed SanPy plugin exposing ``getWidget``.
+        """
+        widget = plugin.getWidget()
+        widget.show()
+        widget.setVisible(True)
 
     @property
     def useDarkStyle(self):
@@ -1294,7 +1307,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def slot_updateStatus(self, text: str):
         """Update the bottom status bar with new str"""
-        logger.info(text)
 
         # having trouble with an immediate update?
         self.statusBar().showMessage(text)
@@ -1355,6 +1367,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         for index in range(targetTab.count()):
             if targetTab.tabText(index) == pluginName:
+                if not targetTab.isTabEnabled(index):
+                    return
                 targetTab.setCurrentIndex(index)
                 if targetTab is self.myPluginTab1:
                     self.pluginDock1.show()
@@ -1368,8 +1382,33 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
 
         new_tab_index = targetTab.addTab(new_plugin.getWidget(), pluginName)
-        targetTab.setCurrentIndex(new_tab_index)
-        if targetTab is self.myPluginTab1:
+        if new_plugin.is_initial_display_ready():
+            self._activatePluginTab(new_plugin, targetTab)
+        else:
+            targetTab.setTabEnabled(new_tab_index, False)
+            new_plugin.getWidget().hide()
+            new_plugin.signalInitialDisplayReady.connect(
+                partial(self._activatePluginTab, new_plugin, targetTab)
+            )
+
+    def _activatePluginTab(
+        self,
+        plugin: object,
+        target_tab: QtWidgets.QTabWidget,
+    ) -> None:
+        """Enable and present a plugin tab whose initial data is ready.
+
+        Args:
+            plugin: Constructed SanPy plugin exposing ``getWidget``.
+            target_tab: Tab widget that owns the plugin.
+        """
+        index = target_tab.indexOf(plugin.getWidget())
+        if index < 0:
+            return
+        target_tab.setTabEnabled(index, True)
+        target_tab.setCurrentIndex(index)
+        plugin.getWidget().setVisible(True)
+        if target_tab is self.myPluginTab1:
             # Preserve the dock's current floating/docked location when showing it.
             self.pluginDock1.show()
 

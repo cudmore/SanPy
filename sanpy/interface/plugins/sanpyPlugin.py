@@ -82,6 +82,8 @@ class sanpyPlugin(QtWidgets.QWidget):
     ----------
     signalCloseWindow : QtCore.pyqtSignal
         Signal emitted when the plugin window is closed.
+    signalInitialDisplayReady : QtCore.pyqtSignal
+        Signal emitted when deferred initial presentation may proceed.
     signalStateRequest : QtCore.pyqtSignal
         Signal emitted by explicitly interactive plugins requesting new state.
     ba
@@ -89,6 +91,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     signalCloseWindow = QtCore.pyqtSignal(object)
     """Emit signal on window close."""
+
+    signalInitialDisplayReady = QtCore.pyqtSignal()
+    """Emit once when a deferred plugin is ready for its initial display."""
 
     signalStateRequest = QtCore.pyqtSignal(object, bool)
     """Request a complete window state and optional one-shot zoom."""
@@ -162,6 +167,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         # to show as a widget
         self._showSelf: bool = True
+        self._initialDisplayReady: bool = True
 
         self._blockSlots = False
 
@@ -312,6 +318,21 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def setShowSelf(self, show: bool):
         self._showSelf = show
+
+    def defer_initial_display(self) -> None:
+        """Keep this plugin hidden until it marks its initial display ready."""
+        self._initialDisplayReady = False
+
+    def is_initial_display_ready(self) -> bool:
+        """Return whether the plugin may be presented for the first time."""
+        return self._initialDisplayReady
+
+    def mark_initial_display_ready(self) -> None:
+        """Mark a deferred plugin ready and notify its presentation owner."""
+        if self._initialDisplayReady:
+            return
+        self._initialDisplayReady = True
+        self.signalInitialDisplayReady.emit()
 
     @property
     def sweepNumber(self):

@@ -1,6 +1,7 @@
 """Tests for SanPy application, window, and plugin shutdown behavior."""
 
 import gc
+from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -433,6 +434,7 @@ def test_only_standalone_plugins_are_registered() -> None:
     plugin = Mock()
     plugin.getInitError.return_value = False
     plugin.getWidget.return_value = widget
+    plugin.is_initial_display_ready.return_value = True
     constructor = Mock(return_value=plugin)
     constructor.myHumanName = "Example"
     plugin_info = {
@@ -449,12 +451,93 @@ def test_only_standalone_plugins_are_registered() -> None:
         _openPluginSet=set(),
         getSanPyApp=lambda: app,
     )
+    window._showStandalonePlugin = partial(
+        SanPyWindow._showStandalonePlugin,
+        window,
+    )
 
     SanPyWindow.runPlugin(window, "Example", None, show=False)
     assert window._openPluginSet == set()
 
     SanPyWindow.runPlugin(window, "Example", None, show=True)
     assert window._openPluginSet == {plugin}
+
+
+def test_standalone_plugin_waits_for_initial_display_readiness() -> None:
+    """Keep a deferred standalone plugin hidden until its ready signal."""
+    widget = Mock()
+    ready_signal = Mock()
+    plugin = Mock()
+    plugin.getInitError.return_value = False
+    plugin.getWidget.return_value = widget
+    plugin.is_initial_display_ready.return_value = False
+    plugin.signalInitialDisplayReady = ready_signal
+    constructor = Mock(return_value=plugin)
+    constructor.myHumanName = "Example"
+    app = SimpleNamespace(
+        getPlugins=lambda: SimpleNamespace(
+            pluginDict={"Example": {"constructor": constructor}}
+        )
+    )
+    window = SimpleNamespace(
+        startSec=None,
+        stopSec=None,
+        _openPluginSet=set(),
+        getSanPyApp=lambda: app,
+    )
+    window._showStandalonePlugin = partial(
+        SanPyWindow._showStandalonePlugin,
+        window,
+    )
+
+    SanPyWindow.runPlugin(window, "Example", None, show=True)
+
+    assert window._openPluginSet == {plugin}
+    widget.show.assert_not_called()
+    ready_callback = ready_signal.connect.call_args.args[0]
+    ready_callback()
+    widget.show.assert_called_once_with()
+    widget.setVisible.assert_called_once_with(True)
+
+
+def test_plugin_tab_waits_for_initial_display_readiness() -> None:
+    """Keep a deferred plugin tab disabled and its dock hidden until ready."""
+    widget = Mock()
+    ready_signal = Mock()
+    plugin = Mock()
+    plugin.getInitError.return_value = False
+    plugin.getShowSelf.return_value = True
+    plugin.getWidget.return_value = widget
+    plugin.is_initial_display_ready.return_value = False
+    plugin.signalInitialDisplayReady = ready_signal
+    tabs = Mock()
+    tabs.count.return_value = 0
+    tabs.addTab.return_value = 0
+    tabs.indexOf.return_value = 0
+    dock = Mock()
+    window = SimpleNamespace(
+        myPluginTab1=tabs,
+        pluginDock1=dock,
+        get_bAnalysis=lambda: None,
+        runPlugin=Mock(return_value=plugin),
+    )
+    window._activatePluginTab = partial(
+        SanPyWindow._activatePluginTab,
+        window,
+    )
+
+    SanPyWindow.openPluginInTab(window, "Plot Tool (Pool)", tabs)
+
+    tabs.setTabEnabled.assert_called_once_with(0, False)
+    tabs.setCurrentIndex.assert_not_called()
+    widget.hide.assert_called_once_with()
+    dock.show.assert_not_called()
+    ready_callback = ready_signal.connect.call_args.args[0]
+    ready_callback()
+    assert tabs.setTabEnabled.call_args_list[-1].args == (0, True)
+    tabs.setCurrentIndex.assert_called_once_with(0)
+    widget.setVisible.assert_called_once_with(True)
+    dock.show.assert_called_once_with()
 
 
 def test_closing_embedded_tab_closes_and_deletes_plugin() -> None:

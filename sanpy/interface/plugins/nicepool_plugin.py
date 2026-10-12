@@ -371,8 +371,14 @@ class NicePoolPlugin(sanpyPlugin):
         if self._nicepool is None:
             return
 
-        dataframe = self._spike_results()
+        self._apply_spike_results(self._spike_results())
 
+    def _apply_spike_results(self, dataframe: pd.DataFrame | None) -> None:
+        """Replace NicePool data with one prepared spike-results table.
+
+        Args:
+            dataframe: Spike results to display, or ``None`` for an empty state.
+        """
         if dataframe is None or dataframe.empty:
             self._row_id_to_spike = {}
             self._current_file_number = None
