@@ -1,4 +1,4 @@
-"""Plot firing-rate/current summaries for one recording epoch."""
+"""Plot firing-rate/current summaries across recording sweeps."""
 
 import time
 from typing import Union, Dict, List, Tuple, Optional, Optional
@@ -32,18 +32,18 @@ from sanpy.interface.window_state import WindowState
 def getStatFi(
     dfMaster: pd.DataFrame,
     stat: str,
-    epochNumber: int = 2,
+    epochNumber: Optional[int] = 2,
     intervalStat: bool = False,
     filename: str = "",
 ) -> pd.DataFrame:
-    """Summarize one analysis statistic for every sweep in an epoch.
+    """Summarize one analysis statistic for every selected sweep.
 
     Sweeps correspond to different current injection amplitudes.
 
     Args:
         dfMaster: Per-spike analysis results.
         stat: Column containing the statistic to summarize.
-        epochNumber: Epoch to include in the summary.
+        epochNumber: Epoch to include, or ``None`` to include all events.
         intervalStat: Whether to skip the first event when selecting the first
             and second interval values.
         filename: Value to include in the output ``filename`` column.
@@ -53,13 +53,16 @@ def getStatFi(
         statistics in columns.
 
     Notes:
-        Sweeps without spikes in the selected epoch are not included.
+        Sweeps without spikes in the selected epoch are not included. When
+        ``epochNumber`` is ``None``, events from every epoch are included.
     """
 
     _startSec = time.time()
 
-    # reduce to only spikes for given epochNumber
-    dfEpoch = dfMaster[dfMaster["epoch"] == epochNumber]
+    if epochNumber is None:
+        dfEpoch = dfMaster
+    else:
+        dfEpoch = dfMaster[dfMaster["epoch"] == epochNumber]
 
     # we also want 1st, 2nd, 3rd and nth values
     # don't use agg variable `first` or `last`` (they skip nan)
@@ -135,7 +138,7 @@ def getStatFi(
 
 
 class plotFi(sanpyPlugin):
-    """Display firing statistics across sweeps for one selected epoch."""
+    """Display firing statistics for one epoch or all events across sweeps."""
 
     myHumanName = "Plot FI"
 
@@ -150,8 +153,9 @@ class plotFi(sanpyPlugin):
         self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
         self.toggleResponseOptions(ResponseType.setAxis, False)
 
-        # inherited property
-        self._epochNumber = 2
+        num_epochs = None if self.ba is None else self.ba.fileLoader.numEpochs
+        if num_epochs is not None and num_epochs > 0:
+            self._epochNumber = 2
 
         self.setDefaultPlot()
 
@@ -493,10 +497,14 @@ class plotFi(sanpyPlugin):
         """
         selected_epoch = self.epochNumber
 
-        # The shared plugin implementation resets sweep and epoch state. Plot FI
-        # spans every sweep but requires one epoch, so restore its chosen epoch.
+        # The shared implementation resets sweep and epoch state. Preserve the
+        # chosen epoch only when the new recording provides epoch information.
         super().slot_switchFile(ba, rowDict, replot=False)
-        self._epochNumber = selected_epoch
+        num_epochs = ba.fileLoader.numEpochs
+        if num_epochs is not None and num_epochs > 0:
+            self._epochNumber = (
+                selected_epoch if isinstance(selected_epoch, int) else 2
+            )
         self._updateTopToolbar()
         self._refresh_fi_epoch_combo_box()
 
@@ -536,28 +544,46 @@ class plotFi(sanpyPlugin):
 
         self.axs.autoscale(enable=True, axis="y", tight=None)
 
-        epoch_number = self.epochNumber
-        if not isinstance(epoch_number, int) or isinstance(epoch_number, bool):
-            logger.warning("Plot FI requires one numeric epoch.")
-            self._show_plot_message("Select one epoch to plot")
-            return
-
         num_epochs = self.ba.fileLoader.numEpochs
-        if num_epochs is None or not 0 <= epoch_number < num_epochs:
-            logger.warning(
-                "Epoch %s is unavailable in %s.", epoch_number, self.ba.getFileName()
-            )
-            self._show_plot_message(f"Epoch {epoch_number} is not available")
-            return
+        has_epochs = num_epochs is not None and num_epochs > 0
+        if has_epochs:
+            epoch_number = self.epochNumber
+            if not isinstance(epoch_number, int) or isinstance(epoch_number, bool):
+                logger.warning("Plot FI requires one numeric epoch.")
+                self._show_plot_message("Select one epoch to plot")
+                return
+
+            if not 0 <= epoch_number < num_epochs:
+                logger.warning(
+                    "Epoch %s is unavailable in %s.",
+                    epoch_number,
+                    self.ba.getFileName(),
+                )
+                self._show_plot_message(f"Epoch {epoch_number} is not available")
+                return
+            x_stat = "epochLevel"
+            x_label = "Current Step (pA)"
+        else:
+            epoch_number = None
+            # Recordings without epoch tables store NaN epochLevel values. Sweep
+            # is the only reliable grouped X coordinate for an all-event FI plot.
+            x_stat = "sweep"
+            x_label = "Sweep"
 
         # get masterDf
         dfMaster = self.ba.spikeDict.asDataFrame()
         if dfMaster is None or dfMaster.empty:
             logger.info("No detected spikes are available for Plot FI.")
-            self._show_plot_message(f"No spikes detected in epoch {epoch_number}")
+            if epoch_number is None:
+                self._show_plot_message("No spikes detected")
+            else:
+                self._show_plot_message(f"No spikes detected in epoch {epoch_number}")
             return
 
-        dfEpoch = dfMaster[dfMaster["epoch"] == epoch_number]
+        if epoch_number is None:
+            dfEpoch = dfMaster
+        else:
+            dfEpoch = dfMaster[dfMaster["epoch"] == epoch_number]
         if dfEpoch.empty:
             logger.info("No spikes were detected in epoch %s.", epoch_number)
             self._show_plot_message(f"No spikes detected in epoch {epoch_number}")
@@ -569,11 +595,9 @@ class plotFi(sanpyPlugin):
         # user has to specify which epoch
         plotRaw = self._plotDict["Raw"]
         if plotRaw:
-            # reduce to only spikes for given epochNumber
-            # sns.scatterplot(x='epochLevel', y=stat, data=dfEpoch, ax=_ax)
             self._raw_spike_rows = dfEpoch.reset_index(drop=True)
             self._raw_artist = self.axs.scatter(
-                "epochLevel",
+                x_stat,
                 yStat,
                 data=self._raw_spike_rows,
                 marker="o",
@@ -630,7 +654,7 @@ class plotFi(sanpyPlugin):
             else:
                 _yerr = None
             self.axs.errorbar(
-                "epochLevel",
+                x_stat,
                 _stat,
                 yerr=_yerr,
                 data=self.df_fi,
@@ -644,15 +668,14 @@ class plotFi(sanpyPlugin):
             self.axs.legend(loc="upper left")
 
         #
-        # set x-axis to full range of all injected currents (e.g. epochLevel)
-        # pad by 10%
-        epochLevels = dfEpoch["epochLevel"].unique()
-        _minEpochLevel = np.min(epochLevels)
-        _maxEpochLevel = np.max(epochLevels)
-        _xRange = _maxEpochLevel - _minEpochLevel
+        # Set the X-axis to the selected current or sweep range, padded by 10%.
+        x_values = dfEpoch[x_stat].unique()
+        _xMinValue = np.min(x_values)
+        _xMaxValue = np.max(x_values)
+        _xRange = _xMaxValue - _xMinValue
         _xPad = _xRange * 0.1
-        _xMin = _minEpochLevel - _xPad
-        _xMax = _maxEpochLevel + _xPad
+        _xMin = _xMinValue - _xPad
+        _xMax = _xMaxValue + _xPad
         logger.info(f"_xMin:{_xMin} _xMax:{_xMax}")
         if np.isnan(_xMin) or np.isnan(_xMax):
             pass
@@ -660,7 +683,7 @@ class plotFi(sanpyPlugin):
             self.axs.set_xlim([_xMin, _xMax])
 
         # set axis labels
-        self.axs.set_xlabel("Current Step (pA)")
+        self.axs.set_xlabel(x_label)
         self.axs.set_ylabel(yHumanStat)
 
         self.axs.spines["right"].set_visible(False)

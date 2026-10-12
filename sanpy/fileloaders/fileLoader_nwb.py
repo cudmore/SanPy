@@ -376,11 +376,11 @@ class fileLoader_nwb(fileLoader_base):
             )
             references.append((response_reference, stimulus_reference))
 
-        logger.warning(
-            f"NWB file has no IntracellularRecordingsTable rows; loaded "
-            f"{len(references)} legacy sweeps by matching acquisition and "
-            "stimulus sweep numbers"
-        )
+        # logger.warning(
+        #     f"NWB file has no IntracellularRecordingsTable rows; loaded "
+        #     f"{len(references)} legacy sweeps by matching acquisition and "
+        #     "stimulus sweep numbers"
+        # )
         return references
 
     @staticmethod
@@ -421,10 +421,10 @@ class fileLoader_nwb(fileLoader_base):
         """
         scratch = nwbfile.scratch
         if _SANPY_METADATA_NAME not in scratch:
-            logger.warning(
-                f"NWB file has no optional {_SANPY_METADATA_NAME} scratch entry; "
-                "using default SanPy metadata"
-            )
+            # logger.warning(
+            #     f"NWB file has no optional {_SANPY_METADATA_NAME} scratch entry; "
+            #     "using default SanPy metadata"
+            # )
             return
 
         try:

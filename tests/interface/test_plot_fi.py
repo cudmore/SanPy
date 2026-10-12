@@ -152,19 +152,48 @@ def test_get_stat_fi_returns_expected_empty_schema() -> None:
     assert result.empty
 
 
-def test_plot_fi_preserves_epoch_when_switching_files(
-    qtbot: Any, monkeypatch: Any
+def test_get_stat_fi_includes_all_events_without_epoch_filter() -> None:
+    """Summarize every event when no numeric epoch is available."""
+    master = pd.DataFrame(
+        {
+            "epoch": [np.nan, np.nan, np.nan],
+            "epochLevel": [np.nan, np.nan, np.nan],
+            "sweep": [0, 1, 1],
+            "thresholdSec": [0.1, 0.2, 0.3],
+        }
+    )
+
+    result = getStatFi(master, "thresholdSec", epochNumber=None)
+
+    assert result["sweep"].tolist() == [0, 1]
+    assert result["thresholdSec_count"].tolist() == [1, 2]
+
+
+@pytest.mark.parametrize(
+    ("selected_epoch", "num_epochs", "expected_epoch"),
+    [(2, 3, 2), (2, None, "All"), ("All", 3, 2)],
+    ids=["preserved", "epochs-unavailable", "default-for-new-file"],
+)
+def test_plot_fi_uses_epoch_availability_when_switching_files(
+    qtbot: Any,
+    monkeypatch: Any,
+    selected_epoch: int | str,
+    num_epochs: int | None,
+    expected_epoch: int | str,
 ) -> None:
-    """Keep Plot FI's numeric epoch while delegating shared switch behavior.
+    """Preserve a numeric epoch only when the new recording has epochs.
 
     Args:
         qtbot: Pytest-Qt widget lifecycle helper.
         monkeypatch: Pytest attribute replacement helper.
+        selected_epoch: Plot FI epoch state before switching recordings.
+        num_epochs: Epoch count reported by the new recording.
+        expected_epoch: Plot FI epoch state after switching recordings.
     """
     plugin = plotFi.__new__(plotFi)
     QtWidgets.QWidget.__init__(plugin)
     qtbot.addWidget(plugin)
-    plugin._epochNumber = 2
+    plugin._epochNumber = selected_epoch
     calls: list[tuple[str, object]] = []
 
     def fake_base_switch(
@@ -213,14 +242,17 @@ def test_plot_fi_preserves_epoch_when_switching_files(
     monkeypatch.setattr(plotFi, "_refresh_fi_epoch_combo_box", fake_epoch_refresh)
     monkeypatch.setattr(plotFi, "replot", fake_replot)
 
-    plugin.slot_switchFile(SimpleNamespace())
+    analysis = SimpleNamespace(
+        fileLoader=SimpleNamespace(numEpochs=num_epochs)
+    )
+    plugin.slot_switchFile(analysis)
 
-    assert plugin.epochNumber == 2
+    assert plugin.epochNumber == expected_epoch
     assert calls == [
         ("base", False),
-        ("toolbar", 2),
-        ("epoch-control", 2),
-        ("replot", 2),
+        ("toolbar", expected_epoch),
+        ("epoch-control", expected_epoch),
+        ("replot", expected_epoch),
     ]
 
 
@@ -340,6 +372,62 @@ def test_plot_fi_clears_stale_output_for_unavailable_epoch(qtbot: Any) -> None:
     plugin._fiTableView.slotSwitchTableDf.assert_called_once_with(None)
     plugin.axs.text.assert_called_once()
     assert "Epoch 2 is not available" in plugin.axs.text.call_args.args
+    plugin.static_canvas.draw.assert_called_once_with()
+
+
+def test_plot_fi_uses_all_events_and_sweep_axis_without_epochs(
+    qtbot: Any,
+) -> None:
+    """Plot every event by sweep when the recording has no epoch information.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._epochNumber = "All"
+    plugin._ba = SimpleNamespace(
+        fileLoader=SimpleNamespace(numEpochs=None),
+        spikeDict=SimpleNamespace(
+            asDataFrame=lambda: pd.DataFrame(
+                {
+                    "epoch": [np.nan, np.nan, np.nan],
+                    "epochLevel": [np.nan, np.nan, np.nan],
+                    "sweep": [0, 1, 1],
+                    "spikeNumber": [0, 1, 2],
+                    "thresholdSec": [0.1, 0.2, 0.3],
+                }
+            )
+        ),
+        getFileName=lambda: "new.nwb",
+    )
+    plugin.df_fi = pd.DataFrame({"stale": [1]})
+    plugin.axs = Mock()
+    plugin.axs.transAxes = object()
+    plugin.axs.spines = {"right": Mock(), "top": Mock()}
+    plugin.static_canvas = Mock()
+    plugin._fiTableView = Mock()
+    plugin._yStatListWidget = Mock()
+    plugin._yStatListWidget.getCurrentStat.return_value = (
+        "Threshold Time",
+        "thresholdSec",
+    )
+    plugin.setDefaultPlot()
+
+    plugin.replot()
+
+    assert plugin.epochNumber == "All"
+    assert plugin.df_fi["sweep"].tolist() == [0, 1]
+    assert plugin.df_fi["thresholdSec_count"].tolist() == [1, 2]
+    assert plugin.axs.scatter.call_args.args[:2] == ("sweep", "thresholdSec")
+    assert plugin.axs.errorbar.call_args.args[:2] == (
+        "sweep",
+        "thresholdSec_mean",
+    )
+    plugin.axs.set_xlabel.assert_called_once_with("Sweep")
+    table_df = plugin._fiTableView.slotSwitchTableDf.call_args.args[0]
+    assert table_df is plugin.df_fi
     plugin.static_canvas.draw.assert_called_once_with()
 
 

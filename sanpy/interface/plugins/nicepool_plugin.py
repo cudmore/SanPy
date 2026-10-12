@@ -20,7 +20,8 @@ logger = get_logger(__name__)
 _IDENTITY_COLUMNS: tuple[str, ...] = ("file", "include")
 _PREFILTER_COLUMNS: tuple[str, ...] = ("sweep", "epoch", "include")
 _PLOT_COLUMN_KEYS: tuple[str, ...] = ("groupColumn", "yColumn", "xColumn")
-_DEFAULT_PRESET_NAME = "FI Plot"
+# _DEFAULT_PRESET_NAME = "FI Plot"
+_DEFAULT_PRESET_NAME = "Sweep Plot"
 
 _PRESET_FI_PLOT: dict[str, Any] = {
     "name": "FI Plot",

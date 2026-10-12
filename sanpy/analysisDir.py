@@ -1216,7 +1216,7 @@ class analysisDir:
         # our currently loaded files
         dfFileList = self._df["File"].tolist()
 
-        logger.info(f'dfFileList: {dfFileList}')
+        # logger.info(f'dfFileList: {dfFileList}')
         # print('    === pathFileList (on drive):')
         # print('    ', pathFileList)
         # print('    === dfFileList (in table):')
