@@ -45,6 +45,32 @@ def test_get_sweep_y_ignores_current_sweep() -> None:
     np.testing.assert_array_equal(loader.get_sweep_y(1), np.full(4, 2.0))
     assert loader.currentSweep == 0
     np.testing.assert_array_equal(loader.sweepY, np.full(4, 1.0))
+    np.testing.assert_array_equal(loader.get_sweep_c(1), np.zeros(4))
+
+
+def test_get_sweep_c_ignores_current_sweep() -> None:
+    """Return an explicit command sweep while the property follows currentSweep."""
+
+    class _CommandSweepLoader(fileLoader_base):
+        """Load two synthetic recording and command sweeps."""
+
+        def loadFile(self) -> None:
+            """Store two-column recording and command arrays."""
+            points = 4
+            time = np.arange(points) / 1000
+            sweep_x = np.column_stack((time, time))
+            sweep_y = np.column_stack((np.full(points, 1.0), np.full(points, 2.0)))
+            sweep_c = np.column_stack(
+                (np.full(points, 10.0), np.full(points, 20.0))
+            )
+            self.setLoadedData(sweep_x, sweep_y, sweepC=sweep_c)
+
+    loader = _CommandSweepLoader("unused.abf")
+    loader.setSweep(0)
+
+    np.testing.assert_array_equal(loader.get_sweep_c(1), np.full(4, 20.0))
+    assert loader.currentSweep == 0
+    np.testing.assert_array_equal(loader.sweepC, np.full(4, 10.0))
 
 
 def test_new_b_analysis(test_data_dir: Path) -> None:

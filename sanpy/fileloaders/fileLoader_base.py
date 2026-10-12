@@ -430,6 +430,27 @@ class fileLoader_base(ABC):
         """
         return self._sweepX[:, 0]
 
+    # abb not unit tested, previously we only had 1d sweepx (assuming all sweepx are the same)
+    def get_sweep_x(self, sweep: int) -> np.ndarray:
+        """Return the time base for a requested sweep."""
+        if self._sweepX.shape[1] == 1:
+            return self._sweepX[:, 0]
+        return self._sweepX[:, sweep]
+
+    def get_sweep_c(self, sweep: int) -> np.ndarray:
+        """Return DAC command values for one sweep.
+
+        Args:
+            sweep: Zero-based column of ``_sweepC``.
+
+        Returns:
+            DAC command values for ``sweep``. This does not read or change
+            ``currentSweep``. Returns zeros when no command was loaded.
+        """
+        if self._sweepC is None:
+            return np.zeros_like(self._sweepX[:, 0])
+        return self._sweepC[:, sweep]
+
     def get_sweep_y(self, sweep: int) -> np.ndarray:
         """Return recorded Y values for one sweep.
 
@@ -466,9 +487,7 @@ class fileLoader_base(ABC):
         Returns:
             DAC command for the current sweep, or zeros when no command was loaded.
         """
-        if self._sweepC is None:
-            return np.zeros_like(self._sweepX[:, 0])
-        return self._sweepC[:, self.currentSweep]
+        return self.get_sweep_c(self.currentSweep)
 
     def get_xUnits(self):
         return self._sweepLabelX
