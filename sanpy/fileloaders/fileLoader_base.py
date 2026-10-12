@@ -188,28 +188,27 @@ class fileLoader_base(ABC):
     #     pass
 
     @abstractmethod
-    def loadFile(self):
+    def loadFile(self) -> None:
         """Derived classes must load the data and call setLoadedData(sweepX, sweepY)."""
         pass
 
-    def __init__(self, filepath: str, loadData: bool = True):
-        """Base class to derive new file loaders.
+    def __init__(self, filepath: str, loadData: bool = True) -> None:
+        """Initialize a file loader.
 
-        Parameters
-        ----------
-        filepath : str
-            File path to load. Will use different derived classes based on extension
-        loadData : bool
-            If True then load raw data, otherwise just load the header.
+        Args:
+            filepath: Recording path handled by the derived loader.
+            loadData: Whether the derived loader should materialize raw sweep arrays.
         """
 
         super().__init__()
 
         logger.info(filepath)
+        logger.info(f'  loadData:{loadData}')
 
         self._loadError = False
 
         self._path = filepath
+        self._loadData = loadData
 
         # abb 202610 moved back to banalysis
         # per file experimentalmetadata

@@ -34,7 +34,7 @@ class fileLoader_nwb(fileLoader_base):
     loadFileType = ".nwb"
 
     def loadFile(self) -> None:
-        """Load ``self.filepath`` and contain failures for ``bAnalysis``.
+        """Load NWB metadata and optionally materialize raw sweep arrays.
 
         Any exception is logged and converted to the standard SanPy loader-error
         state so callers can inspect ``analysis.loadError``.
@@ -46,7 +46,7 @@ class fileLoader_nwb(fileLoader_base):
             self._loadError = True
 
     def _load_file(self) -> None:
-        """Read NWB intracellular recordings and populate SanPy arrays.
+        """Read NWB intracellular metadata and optional raw arrays.
 
         Raises:
             ValueError: If the NWB data cannot be represented faithfully by the
@@ -64,6 +64,7 @@ class fileLoader_nwb(fileLoader_base):
             missing_stimulus_sweeps: list[int] = []
             common_sample_interval: Optional[float] = None
             expected_length: Optional[int] = None
+            expected_duration: Optional[float] = None
 
             for sweep, (
                 response_reference,
@@ -89,28 +90,11 @@ class fileLoader_nwb(fileLoader_base):
                     raise ValueError(f"Sweep {sweep} response has no electrode ID")
                 electrode_ids.add(str(electrode_id))
 
-                response_time = self._reference_timestamps(
+                sample_interval, sweep_duration, start_time = self._reference_timing(
                     response_reference,
                     label=f"response for sweep {sweep}",
                 )
-                response_values = self._reference_values(
-                    response_reference,
-                    label=f"response for sweep {sweep}",
-                )
-                # NWB converts stored values to volts; SanPy represents Vm in mV.
-                response_mv = (
-                    response_values * float(response_series.conversion)
-                    + float(response_series.offset)
-                ) * 1e3
-
-                start_time = float(response_time[0])
                 normalized_start_times.append(start_time)
-                # SanPy analysis convention uses a sweep-local time axis at zero.
-                local_time = response_time - start_time
-                sample_interval = self._validate_regular_time(
-                    local_time,
-                    label=f"response for sweep {sweep}",
-                )
 
                 if common_sample_interval is None:
                     common_sample_interval = sample_interval
@@ -125,12 +109,47 @@ class fileLoader_nwb(fileLoader_base):
                         f"from {common_sample_interval} seconds"
                     )
 
-                if expected_length is None:
-                    expected_length = len(response_mv)
-                elif len(response_mv) != expected_length:
+                if expected_duration is None:
+                    expected_duration = sweep_duration
+                elif not np.isclose(
+                    sweep_duration,
+                    expected_duration,
+                    rtol=_RTOL,
+                    atol=_ATOL,
+                ):
                     raise ValueError(
-                        f"Sweep {sweep} has {len(response_mv)} response samples; "
+                        f"Sweep {sweep} duration {sweep_duration} differs "
+                        f"from {expected_duration} seconds"
+                    )
+
+                sample_count = int(response_reference.count)
+                if expected_length is None:
+                    expected_length = sample_count
+                elif sample_count != expected_length:
+                    raise ValueError(
+                        f"Sweep {sweep} has {sample_count} response samples; "
                         f"expected {expected_length}"
+                    )
+
+                response_mv: Optional[np.ndarray] = None
+                local_time: Optional[np.ndarray] = None
+                if self._loadData:
+                    response_time = self._reference_timestamps(
+                        response_reference,
+                        label=f"response for sweep {sweep}",
+                    )
+                    response_values = self._reference_values(
+                        response_reference,
+                        label=f"response for sweep {sweep}",
+                    )
+                    response_mv = (
+                        response_values * float(response_series.conversion)
+                        + float(response_series.offset)
+                    ) * 1e3
+                    local_time = response_time - float(response_time[0])
+                    self._validate_regular_time(
+                        local_time,
+                        label=f"response for sweep {sweep}",
                     )
 
                 command_na: Optional[np.ndarray] = None
@@ -160,54 +179,108 @@ class fileLoader_nwb(fileLoader_base):
                             "different electrodes"
                         )
 
-                    stimulus_time = self._reference_timestamps(
+                    (
+                        stimulus_interval,
+                        stimulus_duration,
+                        _stimulus_start,
+                    ) = self._reference_timing(
                         stimulus_reference,
                         label=f"stimulus for sweep {sweep}",
                     )
-                    stimulus_values = self._reference_values(
-                        stimulus_reference,
-                        label=f"stimulus for sweep {sweep}",
-                    )
-                    stimulus_local_time = stimulus_time - float(stimulus_time[0])
-                    self._validate_regular_time(
-                        stimulus_local_time,
-                        label=f"stimulus for sweep {sweep}",
-                    )
-                    if len(stimulus_values) != len(response_mv):
+                    if int(stimulus_reference.count) != sample_count:
                         raise ValueError(
                             f"Sweep {sweep} stimulus and response lengths differ: "
-                            f"{len(stimulus_values)} and {len(response_mv)}"
+                            f"{int(stimulus_reference.count)} and {sample_count}"
                         )
-                    if not np.allclose(
-                        stimulus_local_time,
-                        local_time,
+                    if not np.isclose(
+                        stimulus_interval,
+                        sample_interval,
                         rtol=_RTOL,
                         atol=_ATOL,
                     ):
                         raise ValueError(
-                            f"Sweep {sweep} stimulus and response sample times "
-                            "do not align"
+                            f"Sweep {sweep} stimulus and response sample intervals "
+                            "differ"
+                        )
+                    if not np.isclose(
+                        stimulus_duration,
+                        sweep_duration,
+                        rtol=_RTOL,
+                        atol=_ATOL,
+                    ):
+                        raise ValueError(
+                            f"Sweep {sweep} stimulus and response durations differ"
                         )
 
-                    # NWB converts stored values to amperes; SanPy commands use nA.
-                    command_na = (
-                        stimulus_values * float(stimulus_series.conversion)
-                        + float(stimulus_series.offset)
-                    ) * 1e9
+                    if self._loadData:
+                        stimulus_time = self._reference_timestamps(
+                            stimulus_reference,
+                            label=f"stimulus for sweep {sweep}",
+                        )
+                        stimulus_values = self._reference_values(
+                            stimulus_reference,
+                            label=f"stimulus for sweep {sweep}",
+                        )
+                        stimulus_local_time = stimulus_time - float(stimulus_time[0])
+                        self._validate_regular_time(
+                            stimulus_local_time,
+                            label=f"stimulus for sweep {sweep}",
+                        )
+                        if local_time is None or not np.allclose(
+                            stimulus_local_time,
+                            local_time,
+                            rtol=_RTOL,
+                            atol=_ATOL,
+                        ):
+                            raise ValueError(
+                                f"Sweep {sweep} stimulus and response sample times "
+                                "do not align"
+                            )
+                        command_na = (
+                            stimulus_values * float(stimulus_series.conversion)
+                            + float(stimulus_series.offset)
+                        ) * 1e9
 
-                sweep_times.append(local_time.astype(np.float64, copy=False))
-                sweep_responses.append(response_mv.astype(np.float64, copy=False))
-                sweep_commands.append(
-                    None
-                    if command_na is None
-                    else command_na.astype(np.float64, copy=False)
-                )
+                if self._loadData:
+                    if local_time is None or response_mv is None:
+                        raise RuntimeError(
+                            f"Sweep {sweep} raw response data was not materialized"
+                        )
+                    sweep_times.append(local_time.astype(np.float64, copy=False))
+                    sweep_responses.append(
+                        response_mv.astype(np.float64, copy=False)
+                    )
+                    sweep_commands.append(
+                        None
+                        if command_na is None
+                        else command_na.astype(np.float64, copy=False)
+                    )
 
             if len(electrode_ids) != 1:
                 raise ValueError(
                     "The NWB loader requires one electrode; found "
                     f"{len(electrode_ids)}"
                 )
+
+            if (
+                common_sample_interval is None
+                or expected_duration is None
+                or expected_length is None
+            ):
+                raise ValueError("NWB file contains no usable response sweeps")
+
+            session_start_time = nwbfile.session_start_time
+            self.setAcqDate(session_start_time.strftime("%Y-%m-%d"))
+            self.setAcqTime(session_start_time.strftime("%H:%M:%S"))
+            self.setAcqDateTime(session_start_time.isoformat())
+            self._numChannels = len(electrode_ids)
+            self._numSweeps = len(recording_references)
+            self._sweepList = list(range(self._numSweeps))
+            self._sweepLengthSec = expected_duration
+            self._dataPointsPerMs = 1.0 / (common_sample_interval * 1000.0)
+            self._recordingMode = recordingModes.iclamp
+            self._sweepLabelX = "seconds"
+            self._sweepLabelY = "mv"
 
             if any(
                 not np.isclose(value, 0.0, rtol=0.0, atol=_ATOL)
@@ -220,47 +293,41 @@ class fileLoader_nwb(fileLoader_base):
                     f"{preview_label}: {normalized_start_times[:10]}"
                 )
 
-            sweep_x = np.column_stack(sweep_times)
-            sweep_y = np.column_stack(sweep_responses)
-            sweep_c: Optional[np.ndarray]
-            if len(missing_stimulus_sweeps) == len(sweep_commands):
-                # Preserve the distinction between no command and a real zero command.
-                sweep_c = None
-                logger.warning(
-                    "NWB file contains no usable current-clamp stimulus for any "
-                    "sweep; SanPy will provide zero commands through its public API"
-                )
-            else:
-                command_columns: list[np.ndarray] = []
-                for sweep, command in enumerate(sweep_commands):
-                    if command is None:
-                        # SanPy requires a rectangular command matrix when any
-                        # sweep has a command, so missing columns must be explicit.
-                        command = np.zeros_like(sweep_responses[sweep])
-                    command_columns.append(command)
-                sweep_c = np.column_stack(command_columns)
-                if missing_stimulus_sweeps:
+            if self._loadData:
+                sweep_x = np.column_stack(sweep_times)
+                sweep_y = np.column_stack(sweep_responses)
+                sweep_c: Optional[np.ndarray]
+                if len(missing_stimulus_sweeps) == len(sweep_commands):
+                    sweep_c = None
                     logger.warning(
-                        f"NWB stimuli were missing for sweeps "
-                        f"{missing_stimulus_sweeps}; inserted zero command "
-                        "columns because SanPy requires a rectangular command "
-                        "matrix"
+                        "NWB file contains no usable current-clamp stimulus for "
+                        "any sweep; SanPy will provide zero commands through its "
+                        "public API"
                     )
+                else:
+                    command_columns: list[np.ndarray] = []
+                    for sweep, command in enumerate(sweep_commands):
+                        if command is None:
+                            command = np.zeros_like(sweep_responses[sweep])
+                        command_columns.append(command)
+                    sweep_c = np.column_stack(command_columns)
+                    if missing_stimulus_sweeps:
+                        logger.warning(
+                            f"NWB stimuli were missing for sweeps "
+                            f"{missing_stimulus_sweeps}; inserted zero command "
+                            "columns because SanPy requires a rectangular command "
+                            "matrix"
+                        )
 
-            session_start_time = nwbfile.session_start_time
-            self.setAcqDate(session_start_time.strftime("%Y-%m-%d"))
-            self.setAcqTime(session_start_time.strftime("%H:%M:%S"))
-            self.setAcqDateTime(session_start_time.isoformat())
-
-            self.setLoadedData(
-                sweepX=sweep_x,
-                sweepY=sweep_y,
-                sweepC=sweep_c,
-                recordingMode=recordingModes.iclamp,
-                xLabel="seconds",
-                yLabel="mv",
-            )
-            self._restore_optional_sanpy_metadata(nwbfile)
+                self.setLoadedData(
+                    sweepX=sweep_x,
+                    sweepY=sweep_y,
+                    sweepC=sweep_c,
+                    recordingMode=recordingModes.iclamp,
+                    xLabel="seconds",
+                    yLabel="mv",
+                )
+                self._restore_optional_sanpy_metadata(nwbfile)
 
     @staticmethod
     def _collect_sweep_references(
@@ -487,6 +554,52 @@ class fileLoader_nwb(fileLoader_base):
         if not value.isvalid():
             return None
         return value
+
+    @staticmethod
+    def _reference_timing(
+        reference: TimeSeriesReference,
+        label: str,
+    ) -> tuple[float, float, float]:
+        """Read timing metadata without materializing a complete time axis.
+
+        Args:
+            reference: Valid NWB time-series reference.
+            label: Human-readable location used in errors.
+
+        Returns:
+            Sample interval, selected duration, and selected starting time in
+            seconds.
+
+        Raises:
+            ValueError: If timing metadata is missing, nonfinite, or invalid.
+        """
+        count = int(reference.count)
+        if count < 2:
+            raise ValueError(f"{label} must contain at least two samples")
+
+        series = reference.timeseries
+        start_index = int(reference.idx_start)
+        if series.timestamps is None:
+            rate = float(series.rate)
+            if not np.isfinite(rate) or rate <= 0:
+                raise ValueError(f"{label} sampling rate must be positive")
+            sample_interval = 1.0 / rate
+            start_time = float(series.starting_time) + start_index * sample_interval
+            duration = (count - 1) * sample_interval
+        else:
+            first = float(series.timestamps[start_index])
+            second = float(series.timestamps[start_index + 1])
+            last = float(series.timestamps[start_index + count - 1])
+            values = np.asarray((first, second, last), dtype=np.float64)
+            if not np.isfinite(values).all():
+                raise ValueError(f"{label} timing metadata must be finite")
+            sample_interval = second - first
+            start_time = first
+            duration = last - first
+            if sample_interval <= 0 or duration <= 0:
+                raise ValueError(f"{label} timestamps must be strictly increasing")
+
+        return sample_interval, duration, start_time
 
     @staticmethod
     def _reference_values(

@@ -33,3 +33,11 @@ def test_file(test_data_dir: Path) -> None:
     )
 
     assert len(directory) == 1
+    row = directory.getRowDict(0)
+    assert row["Dur(s)"] == 0.16
+    assert row["Channels"] == 2
+    assert row["Sweeps"] == 18
+    assert row["Epochs"] == 5
+    assert row["kHz"] == 10.0
+    assert row["Mode"] == "I-Clamp"
+    assert directory._df.at[0, "_ba"] is None

@@ -1,8 +1,12 @@
-from typing import Union, Dict, List, Tuple
+"""Load Axon Binary Format recordings."""
+
+from typing import Any
+
 import numpy as np
 import pyabf
+from pyabf.waveform import EpochTable as PyAbfEpochTable
 
-import sanpy
+from sanpy.fileloaders.epochTable import epochTable as SanPyEpochTable
 from sanpy.fileloaders.fileLoader_base import fileLoader_base, recordingModes
 
 from sanpy.sanpyLogger import get_logger
@@ -11,166 +15,141 @@ logger = get_logger(__name__)
 
 
 class fileLoader_abf(fileLoader_base):
+    """Load ABF metadata eagerly and raw sweep arrays only when requested."""
+
     loadFileType = ".abf"
 
-    # @property
-    # def loadFileType(self):
-    #     return 'abf'
-
-    def loadFile(self):
-        self._loadAbf()
+    def loadFile(self) -> None:
+        """Load ABF headers and optionally materialize raw sweep arrays."""
+        self._loadAbf(loadData=self._loadData)
 
     def _loadAbf(
-        self, byteStream=None, loadData: bool = True, stimulusFileFolder: str = None
-    ):
-        """Load pyAbf from path."""
+        self,
+        byteStream: Any | None = None,
+        loadData: bool = True,
+        stimulusFileFolder: str | None = None,
+    ) -> None:
+        """Load ABF metadata and optionally its raw sweeps.
+
+        Args:
+            byteStream: Optional pyABF-compatible byte stream.
+            loadData: Whether to materialize raw sweep arrays.
+            stimulusFileFolder: Optional alternate folder for stimulus files.
+        """
         try:
-            # logger.info(f'loadData:{loadData}')
             if byteStream is not None:
                 logger.info("Loading byte stream")
-                self._abf = pyabf.ABF(byteStream)
+                self._abf = pyabf.ABF(byteStream, loadData=loadData)
                 self._isBytesIO = True
             else:
-                # logger.info(f'Loading file: {self.filepath}')
                 self._abf = pyabf.ABF(
                     self.filepath,
                     loadData=loadData,
                     stimulusFileFolder=stimulusFileFolder,
                 )
 
-        except NotImplementedError as e:
+        except NotImplementedError as error:
             logger.error(f"    did not load abf file: {self.filepath}")
-            logger.error(f"      NotImplementedError exception was: {e}")
+            logger.error(f"      NotImplementedError exception was: {error}")
             self._loadError = True
             self._abf = None
 
-        except Exception as e:
-            # some abf files throw: 'unpack requires a buffer of 234 bytes'
-            # 'ABF' object has no attribute 'sweepEpochs'
+        except Exception as error:
             logger.error(f"    did not load abf file: {self.filepath}")
-            logger.error(f"        unknown Exception was: {e}")
+            logger.error(f"        unknown Exception was: {error}")
             self._loadError = True
             self._abf = None
 
-        self._epochTableList = None
-        if not self._loadError and loadData:            
-            try:
-                _tmp = self._abf.sweepEpochs.p1s
-            except AttributeError as e:
-                logger.warning(
-                    f"    did not find epochTable loadData:{loadData}: {e} in file {self.filepath}"
-                )
-            else:
-                _numSweeps = len(self._abf.sweepList)
-                self._epochTableList = [None] * _numSweeps
-                for _sweepIdx in range(_numSweeps):
-                    self._abf.setSweep(_sweepIdx)
-                    self._epochTableList[_sweepIdx] = sanpy.fileloaders.epochTable(
-                        self._abf
-                    )
-                self._abf.setSweep(0)
+        if self._loadError or self._abf is None:
+            self.myFileType = "abf"
+            return
 
-            self._sweepList = self._abf.sweepList
-            self._sweepLengthSec = (
-                self._abf.sweepLengthSec
-            )  # assuming all sweeps have the same duration
+        self._sweepList = list(self._abf.sweepList)
+        self._numSweeps = len(self._sweepList)
+        self._sweepLengthSec = float(self._abf.sweepLengthSec)
+        self._dataPointsPerMs = float(self._abf.dataPointsPerMs)
+        self._epochTableList = self._build_epoch_tables(self._abf)
 
-            # on load, sweep is 0
-            if loadData:
-                
-                # owl
-                #<bound method ABF.sweepD of ABF (v2.9) with 1 channel (pA), sampled at 10.0 kHz, containing 18 sweeps, having no tags, with a total length of 6.33 minutes, recorded with protocol "PPR_v-clamp_owl". path=/Users/cudmore/Dropbox/data/sanpy-users/porter/2022_08_15_0022.abf>
-                # print('self._abf.sweepD')
-                # for _i in range(8):
-                #     print(_i)
-                #     print(self._abf.sweepD(_i))
+        abf_datetime = self._abf.abfDateTime
+        self.setAcqDate(abf_datetime.strftime("%Y-%m-%d"))
+        self.setAcqTime(abf_datetime.strftime("%H:%M:%S"))
+        self.setAcqDateTime(abf_datetime.isoformat(sep=" "))
 
-                
-                _numRows = self._abf.sweepX.shape[0]
-                numSweeps = len(self._sweepList)
-                self._sweepX = np.zeros((_numRows, 1))
-                self._sweepY = np.zeros((_numRows, numSweeps))
-                self._sweepC = np.zeros((_numRows, numSweeps))
+        self._numChannels = len(self._abf.adcUnits)
+        if self._numChannels > 1:
+            logger.warning(
+                f"SanPy defaults to channel 0 for {self._numChannels}-channel "
+                f"recording {self._path}"
+            )
 
-                _channel = 0
-                for sweep in self._sweepList:
-                    self._abf.setSweep(sweepNumber=sweep, channel=_channel)
-                    if sweep == 0:
-                        self._sweepX[
-                            :, sweep
-                        ] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
-                    self._sweepY[:, sweep] = self._abf.sweepY
-                    try:
-                        self._sweepC[:, sweep] = self._abf.sweepC
-                    except ValueError as e:
-                        # pyabf will raise this error if it is an atf file
-                        logger.warning(
-                            f"    exception fetching sweepC for sweep {sweep} with {self.numSweeps}: {e}"
-                        )
-                        #
-                        # if we were recorded with a stimulus file abf
-                        # needed to assign stimulusWaveformFromFile
-                        try:
-                            tmpSweepC = self._abf.sweepC
-                            self._sweepC[:, sweep] = self._abf.sweepC
-                        except ValueError as e:
-                            logger.warning(f"ba has no sweep {sweep} sweepC ???")
+        adc_units = self._abf.adcUnits[0]
+        self._sweepLabelX = "sec"
+        self._sweepLabelY = adc_units
+        if adc_units in ["A", "pA", "nA", "uA"]:
+            self._recordingMode = recordingModes.vclamp
+        elif adc_units in ["mV", "uv", "V"]:
+            self._recordingMode = recordingModes.iclamp
+        else:
+            logger.warning(f'did not understand adcUnit "{adc_units}"')
 
-                # not needed
-                self._abf.setSweep(0)
+        self._userList = self._abf.userList
+        if loadData:
+            self._load_sweep_arrays(self._abf)
 
-            # get v from pyAbf
-            self._dataPointsPerMs = self._abf.dataPointsPerMs
-
-            # turned back on when implementing Santana rabbit Ca kymographs
-            abfDateTime = self._abf.abfDateTime  # 2019-01-14 15:20:48.196000
-            
-            acqDate = abfDateTime.strftime("%Y-%m-%d")
-            acqTime = abfDateTime.strftime("%H:%M:%S")
-
-            self.setAcqDate(acqDate)
-            self.setAcqTime(acqTime)
-            self.setAcqDateTime(abfDateTime.isoformat(sep=" "))
-            
-            self._numChannels = len(self._abf.adcUnits)
-            if self._numChannels > 1:
-                logger.warning(
-                    f"    SanPy does not work with multi-channel recordings numChannels is {self._numChannels} {self._path}"
-                )
-                # logger.warning('    Will default to channel 0')
-
-            # self.sweepUnitsY = self.adcUnits[channel]
-            channel = 0
-            # dacUnits = self._abf.dacUnits[channel]
-            adcUnits = self._abf.adcUnits[channel]
-            # print('  adcUnits:', adcUnits)  # 'mV'
-            self._sweepLabelY = adcUnits
-            self._sweepLabelX = "sec"
-
-            # self._sweepLabelX = self._abf.sweepLabelX
-            # self._sweepLabelY = self._abf.sweepLabelY
-            if self._sweepLabelY in ["A", "pA", "nA", "uA"]:
-                self._recordingMode = recordingModes.vclamp  # 'V-Clamp'
-                # self._sweepY_label = self._abf.sweepUnitsY
-            elif self._sweepLabelY in ["mV", "uv", "V"]:
-                self._recordingMode = recordingModes.iclamp  #'I-Clamp'
-                # self._sweepY_label = self._abf.sweepUnitsY
-            else:
-                logger.warning(f'did not understand adcUnit "{adcUnits}"')
-
-            # 20240125 ownanalysis (see dropbox/sanpy-users/porter)
-            self._userList = self._abf.userList
-            if self._userList is not None:
-                logger.info(f'owen/porter data _userList:{self._userList}')
-                
-        #
         self.myFileType = "abf"
-
-        # base sanpy does not keep the abf around
-        # logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
         self._abf = None
 
-if __name__ == '__main__':
-    path = '/Users/cudmore/Dropbox/data/wu-lab-stanford/tang/R1_S1_IC_AP_Family.abf'
-    
-    abf = pyabf.ABF(path)
+    def _build_epoch_tables(
+        self, abf: pyabf.ABF
+    ) -> list[SanPyEpochTable] | None:
+        """Build SanPy epoch tables from ABF header structures.
+
+        Args:
+            abf: Header-loaded pyABF recording.
+
+        Returns:
+            One epoch table per sweep, or ``None`` when headers have no usable
+            epoch description.
+        """
+        try:
+            pyabf_table = PyAbfEpochTable(abf, 0)
+        except (AttributeError, IndexError, ValueError) as error:
+            logger.warning(
+                f"Could not read ABF epoch headers from {self.filepath}: {error}"
+            )
+            return None
+
+        tables: list[SanPyEpochTable] = []
+        for sweep, waveform in enumerate(pyabf_table.epochWaveformsBySweep):
+            abf.sweepNumber = sweep
+            abf.sweepEpochs = waveform
+            tables.append(SanPyEpochTable(abf))
+        return tables
+
+    def _load_sweep_arrays(self, abf: pyabf.ABF) -> None:
+        """Materialize ABF time, recording, and command arrays.
+
+        Args:
+            abf: pyABF recording whose signal data may be loaded on demand.
+        """
+        abf.setSweep(0, channel=0)
+        row_count = abf.sweepX.shape[0]
+        sweep_count = len(self._sweepList)
+        self._sweepX = np.zeros((row_count, 1))
+        self._sweepY = np.zeros((row_count, sweep_count))
+        self._sweepC = np.zeros((row_count, sweep_count))
+
+        for sweep in self._sweepList:
+            abf.setSweep(sweepNumber=sweep, channel=0)
+            if sweep == 0:
+                self._sweepX[:, 0] = abf.sweepX
+            self._sweepY[:, sweep] = abf.sweepY
+            try:
+                self._sweepC[:, sweep] = abf.sweepC
+            except ValueError as error:
+                logger.warning(
+                    f"Could not load command sweep {sweep} from "
+                    f"{self.filepath}: {error}"
+                )
+
+        abf.setSweep(0, channel=0)

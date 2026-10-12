@@ -69,7 +69,7 @@ class bAnalysis:
         Args:
             filepath: Path to a recording supported by a registered file loader.
             byteStream: Reserved for compatibility and currently unused.
-            loadData: Whether to build filtered data after the recording loads.
+            loadData: Whether the file loader should materialize raw sweep arrays.
             fileLoaderDict: File-loader definitions keyed by file extension. When
                 omitted, SanPy discovers the available loaders.
             stimulusFileFolder: Reserved for compatibility and currently unused.
@@ -135,12 +135,13 @@ class bAnalysis:
         # TODO (cudmore) need to parse folder of file loaders in fileloders/ and determine
         # class to use to load file (using fileLoader.filetype
         self._fileLoader = None
-        if filepath is not None and not os.path.isfile(filepath):
+        self._kymAnalysis = None
+        if filepath is None:
+            pass
+        elif not os.path.isfile(filepath):
             logger.error(f'File does not exist: "{filepath}"')
             self.loadError = True
-        elif loadData:  # abb 20261012 implementing lazy loading
-
-            logger.warning('abb, 202610 loading data from file')
+        else:
             if fileLoaderDict is None:
                 fileLoaderDict = (
                     sanpy.fileloaders.getFileLoaders()
@@ -151,7 +152,7 @@ class bAnalysis:
                 if verbose:
                     logger.info(f"Loading file with extension: {_ext}")
                 constructorObject = fileLoaderDict[_ext]["constructor"]
-                self._fileLoader = constructorObject(filepath)
+                self._fileLoader = constructorObject(filepath, loadData=loadData)
 
                 if self._fileLoader._loadError:
                     logger.error(f'load error in file loader for ext: "{_ext}"')
@@ -161,7 +162,6 @@ class bAnalysis:
                 logger.error(f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}')
                 self.loadError = True
             
-            self._kymAnalysis = None
             if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
                 # Kymograph support is optional, so avoid loading its plotting
                 # dependencies during ordinary electrophysiology imports.

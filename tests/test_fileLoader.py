@@ -25,6 +25,31 @@ def test_file_loader_abf(test_data_dir: Path) -> None:
     assert loader.filteredDeriv.shape == loader.sweepX.shape
 
 
+def test_file_loader_abf_reads_metadata_without_raw_arrays(
+    test_data_dir: Path,
+) -> None:
+    """Read ABF table metadata without materializing recording arrays.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    loader = fileLoader_abf(
+        str(test_data_dir / "2021_07_20_0010.abf"),
+        loadData=False,
+    )
+
+    assert not loader.getLoadError()
+    assert loader.recordingDur == 0.16
+    assert loader.numChannels == 2
+    assert loader.numSweeps == 18
+    assert loader.numEpochs == 5
+    assert loader.recordingFrequency == 10.0
+    assert loader.recordingMode.value == "I-Clamp"
+    assert loader._sweepX is None
+    assert loader._sweepY is None
+    assert loader._sweepC is None
+
+
 def test_get_sweep_y_ignores_current_sweep() -> None:
     """Return the requested sweep column without reading currentSweep."""
 
@@ -82,3 +107,20 @@ def test_new_b_analysis(test_data_dir: Path) -> None:
     analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
 
     assert not analysis.loadError
+
+
+def test_b_analysis_retains_header_only_loader(test_data_dir: Path) -> None:
+    """Retain file metadata while deferring raw ABF arrays.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    analysis = sanpy.bAnalysis(
+        str(test_data_dir / "19114001.abf"),
+        loadData=False,
+    )
+
+    assert not analysis.loadError
+    assert analysis.fileLoader is not None
+    assert analysis.fileLoader.recordingDur == 60.0
+    assert analysis.fileLoader._sweepY is None

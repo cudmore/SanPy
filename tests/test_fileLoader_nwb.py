@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -187,6 +188,55 @@ def test_loads_intracellular_recordings_table(tmp_path: Path) -> None:
     np.testing.assert_allclose(loader.get_sweep_c(1), np.full(_POINTS, 0.4))
 
 
+def test_reads_nwb_metadata_without_materializing_raw_arrays(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Read NWB table metadata without invoking raw-value helpers.
+
+    Args:
+        monkeypatch: Pytest fixture used to block raw-value helper calls.
+        tmp_path: Temporary directory for the generated NWB file.
+    """
+    nwbfile, electrode = _new_nwbfile()
+    for sweep_number in (0, 1):
+        nwbfile.add_intracellular_recording(
+            electrode=electrode,
+            response=_response(
+                electrode,
+                sweep_number,
+                -0.060,
+                name=f"response_{sweep_number}",
+            ),
+            stimulus=_stimulus(
+                electrode,
+                sweep_number,
+                2e-10,
+                name=f"stimulus_{sweep_number}",
+            ),
+        )
+    path = _write(nwbfile, tmp_path / "metadata-only.nwb")
+    read_values = Mock(side_effect=AssertionError("raw values were read"))
+    read_timestamps = Mock(side_effect=AssertionError("full timestamps were read"))
+    monkeypatch.setattr(fileLoader_nwb, "_reference_values", read_values)
+    monkeypatch.setattr(fileLoader_nwb, "_reference_timestamps", read_timestamps)
+
+    loader = fileLoader_nwb(str(path), loadData=False)
+
+    assert not loader.getLoadError()
+    assert loader.recordingDur == pytest.approx(0.004)
+    assert loader.numChannels == 1
+    assert loader.numSweeps == 2
+    assert loader.numEpochs is None
+    assert loader.recordingFrequency == pytest.approx(1.0)
+    assert loader.recordingMode.value == "I-Clamp"
+    assert loader._sweepX is None
+    assert loader._sweepY is None
+    assert loader._sweepC is None
+    read_values.assert_not_called()
+    read_timestamps.assert_not_called()
+
+
 def test_legacy_pairs_by_sweep_number_not_insertion_order(tmp_path: Path) -> None:
     """Pair legacy responses and stimuli by numeric sweep number.
 
@@ -197,7 +247,7 @@ def test_legacy_pairs_by_sweep_number_not_insertion_order(tmp_path: Path) -> Non
         tmp_path,
         response_sweeps=[3, 1, 2],
         stimulus_sweeps=[2, 3, 1],
-        metadata={"animal_id": "CG134"},
+        # metadata={"animal_id": "CG134"},  # abb metadata is now in banalysis
     )
 
     loader = fileLoader_nwb(str(path))
@@ -214,7 +264,7 @@ def test_legacy_pairs_by_sweep_number_not_insertion_order(tmp_path: Path) -> Non
         np.testing.assert_allclose(
             loader.get_sweep_x(column), np.arange(_POINTS) / _RATE_HZ
         )
-    assert loader.metadata["animal_id"] == "CG134"
+    # assert loader.metadata["animal_id"] == "CG134"
 
 
 def test_legacy_missing_stimulus_inserts_zero_command(tmp_path: Path) -> None:
