@@ -418,6 +418,11 @@ class SanPyApp(QtWidgets.QApplication):
         #         action.triggered.connect(partial(self._windowsMenuAction, _widget, myHumanName))
         #         self.windowsMenu.addAction(action)
 
+    def get_open_first_widget(self) -> "openFirstWidget":
+        """Get the open first widget.
+        """
+        return self._openFirstWidget
+    
     def _openFirstWidgetAction(self):
         self._openFirstWidget.show()
         self._openFirstWidget.raise_()

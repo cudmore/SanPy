@@ -132,7 +132,7 @@ class bAnalysis:
         # will be overwritten by existing uuid in self._loadFromDf()
         self.uuid = sanpy._util.getNewUuid()
 
-        # TODO (cudmore) need to parse folder of file loaders in fileloders/ and determine
+        # need to parse folder of file loaders in fileloders/ and determine
         # class to use to load file (using fileLoader.filetype
         self._fileLoader = None
         self._kymAnalysis = None
@@ -183,26 +183,6 @@ class bAnalysis:
             #     # we need to so file loader meta data can set ba (Self) dirty when changed
             #     self.fileLoader.metadata._ba = self
 
-
-        """
-        if byteStream is not None:
-            self._loadAbf(byteStream=byteStream,
-                    loadData=loadData,
-                    stimulusFileFolder=stimulusFileFolder)
-        elif file is not None and file.endswith('.abf'):
-            self._loadAbf(loadData=loadData)
-        elif file is not None and file.endswith('.atf'):
-            self._loadAtf(loadData=loadData)
-        elif file is not None and file.endswith('.tif'):
-            self._loadTif()
-        elif file is not None and file.endswith('.csv'):
-            self._loadCsv()
-        else:
-            pass
-            #logger.error(f'Can only open abf/csv/tif/stream files: {file}')
-            #self.loadError = True
-        """
-
         # get default derivative
         if loadData and not self.loadError:
             self._rebuildFiltered()
@@ -211,9 +191,7 @@ class bAnalysis:
 
     @property
     def metaData(self):
-        # sept 9, moved to file loader
         return self._metaData
-        # return self.fileLoader.metadata
     
     @property
     def kymAnalysis(self):

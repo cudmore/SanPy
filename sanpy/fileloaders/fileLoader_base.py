@@ -202,8 +202,8 @@ class fileLoader_base(ABC):
 
         super().__init__()
 
-        logger.info(filepath)
-        logger.info(f'  loadData:{loadData}')
+        # logger.info(filepath)
+        # logger.info(f'  loadData:{loadData}')
 
         self._loadError = False
 

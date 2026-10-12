@@ -1149,11 +1149,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
         
         fileLoaderDict = self.getSanPyApp().getFileLoaderDict()
+        _open_first_widget = self.getSanPyApp().get_open_first_widget()
         self.myAnalysisDir = sanpy.analysisDir(
             path,
+            sanPyWindow=_open_first_widget,  # abb, sanpywindow does not exist yet (is not shown)
             folderDepth=folderDepth,
             fileLoaderDict=fileLoaderDict
         )
+
+        # clear open first status
+        if _open_first_widget is not None:
+            _open_first_widget.slot_updateStatus('Ready')
+
+        # abb, try and select first file -> not working
 
         # file
         if os.path.isfile(path):
@@ -1299,19 +1307,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.repaint()
         # self.update()
         QtWidgets.qApp.processEvents()
-
-    def _old_slot_setDetectionParams(self, row, cellType):
-        """Set detection parameters to presets.
-
-        Parameters
-        ----------
-        row : int
-            Selected row in file table
-        cellType : str
-            One of ('SA Node Params', 'Ventricular Params', 'Neuron Params')
-        """
-        logger.info(f"row:{row} cellType:{cellType}")
-        self.myModel.mySetDetectionParams(row, cellType)
 
     def slot_detect(self, ba):
         """Respond to spike detection.
@@ -1473,13 +1468,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         logger.info(f"not implemented, index:{index} sender:{sender}")
         pass
-
-    def _old_openLog(self):
-        """Open sanpy.log"""
-        logFilePath = sanpy.sanpyLogger.getLoggerFile()
-        logFilePath = "file://" + logFilePath
-        url = QtCore.QUrl(logFilePath)
-        QtGui.QDesktopServices.openUrl(url)
 
     def _onHelpMenuAction(self, name: str):
         if name == "SanPy Help (Opens In Browser)":

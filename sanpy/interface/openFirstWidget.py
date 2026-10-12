@@ -250,8 +250,24 @@ class openFirstWidget(QtWidgets.QMainWindow):
         layout.addLayout(row)
         self._icon_labels.append((icon_label, icon_name))
 
+    def slot_updateStatus(self, text: str) -> None:
+        """Update the bottom status bar.
+
+        Args:
+            text: Message to display.
+        """
+        # logger.info(text)
+        self.statusBar().showMessage(text)
+        # self.statusBar.repaint()
+        # self.repaint()
+        QtWidgets.qApp.processEvents()
+
     def _buildUI(self) -> None:
         """Build the launcher controls and recent-path tables."""
+
+        # self.statusBar = QtWidgets.QStatusBar()
+        # self.setStatusBar(self.statusBar)
+
         # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
         _mainWidget = QtWidgets.QWidget()
         _mainVLayout = QtWidgets.QVBoxLayout()
