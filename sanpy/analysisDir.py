@@ -796,7 +796,7 @@ class analysisDir:
         listOfDict = []
         for rowIdx, fullFilePath in enumerate(fileList):
             status_message = (
-                f'Loading file {rowIdx+1} of {_numFilesToLoad} "{fullFilePath}"'
+                f'Loading file {rowIdx+1} of {_numFilesToLoad} "{_normalized_file_key(self.path, fullFilePath)}"'
             )
             if status_callback is None:
                 logger.info(status_message)

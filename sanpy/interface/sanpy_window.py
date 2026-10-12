@@ -991,14 +991,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         File List : sanpy.interface.fileListWidget
         Detection Widget: sanpy.interface.bDetectionWidget
         """
-        # self.toggleStyleSheet(buildingInterface=True)
-
-        # if self.path is None:
-        #     # build a file loder widget
-        #     return
-        
-        self.statusBar = QtWidgets.QStatusBar()
-        self.setStatusBar(self.statusBar)
 
         # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
         _mainWidget = QtWidgets.QWidget()
@@ -1305,12 +1297,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         logger.info(text)
 
         # having trouble with an immediate update?
-        self.statusBar.showMessage(text)
-        self.statusBar.repaint()
-        # self.statusBar.update()
-        self.repaint()
-        # self.update()
-        QtWidgets.qApp.processEvents()
+        self.statusBar().showMessage(text)
+        # QtWidgets.qApp.processEvents()
 
     def slot_detect(self, ba):
         """Respond to spike detection.
