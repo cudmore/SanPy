@@ -3,6 +3,10 @@ from .fileLoader_atf import fileLoader_atf
 
 from .fileLoader_csv import fileLoader_text
 
+from importlib.util import find_spec
+if find_spec("pynwb") is not None:
+    from .fileLoader_nwb import fileLoader_nwb
+
 from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 if DO_KYMOGRAPH_ANALYSIS:
     from .fileLoader_tif import fileLoader_tif

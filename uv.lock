@@ -495,6 +495,22 @@ wheels = [
 ]
 
 [[package]]
+name = "hdmf"
+version = "6.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "h5py" },
+    { name = "jsonschema" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "ruamel-yaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ed/0d/1d41f54b7bc2232b168bdfc84d3f46958b40f086081e04d24378f2bc573d/hdmf-6.2.0.tar.gz", hash = "sha256:47dd0d0ebdf834b0cc5d1fdbe6b73d718549cffa489e47f68f638a4add20b65d", size = 16703812, upload-time = "2026-08-19T14:52:50.954Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/97/c6db59c49643f10bf1d9185a23263be78e54205d881a6004c898573624fa/hdmf-6.2.0-py3-none-any.whl", hash = "sha256:303e5c066a175448b3176b3377389e5d16bb4c5fc753f2dca540d6bd7b118b7c", size = 366628, upload-time = "2026-08-19T14:52:48.53Z" },
+]
+
+[[package]]
 name = "hpack"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1583,6 +1599,23 @@ wheels = [
 ]
 
 [[package]]
+name = "pynwb"
+version = "4.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "h5py" },
+    { name = "hdmf" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "platformdirs" },
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a7/30/cceb14ab8ffb1702b062845e2f54358955378057660d811e973687ded1c2/pynwb-4.2.0.tar.gz", hash = "sha256:681e86b73cf21fc607003936ac9e575efdb64d3d01001bfa351862d40f9b5e7e", size = 36416898, upload-time = "2026-09-02T22:53:50.971Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/be/455b569cf15d7478a36d6ca4c7d5992f6af273edd1d56f3c34ace34c01ec/pynwb-4.2.0-py3-none-any.whl", hash = "sha256:9710364ecac03b6e6b8693d9eeaeb9f3dc6e61195baa88adb251def901655445", size = 1415526, upload-time = "2026-09-02T22:53:48.082Z" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1897,6 +1930,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ruamel-yaml"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz", hash = "sha256:53eb66cd27849eff968ebf8f0bf61f46cdac2da1d1f3576dd4ccee9b25c31993", size = 142709, upload-time = "2026-01-02T16:50:31.84Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl", hash = "sha256:27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93", size = 118102, upload-time = "2026-01-02T16:50:29.201Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.16.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1951,6 +1993,9 @@ gui = [
     { name = "qtpy" },
     { name = "seaborn" },
 ]
+nwb = [
+    { name = "pynwb" },
+]
 plot = [
     { name = "matplotlib" },
     { name = "seaborn" },
@@ -1995,6 +2040,7 @@ requires-dist = [
     { name = "platformdirs", specifier = ">=4.3,<5" },
     { name = "pyabf", specifier = "==2.3.8" },
     { name = "pyarrow", specifier = ">=19,<24" },
+    { name = "pynwb", marker = "extra == 'nwb'", specifier = ">=4.2,<5" },
     { name = "pyqt5", marker = "extra == 'gui'", specifier = "==5.15.11" },
     { name = "pyqtdarktheme-fork", marker = "extra == 'gui'", specifier = "==2.3.6" },
     { name = "pyqtgraph", marker = "extra == 'gui'", specifier = ">=0.13.7,<1" },
@@ -2008,7 +2054,7 @@ requires-dist = [
     { name = "tifffile", specifier = ">=2025.1,<2027" },
     { name = "zarr", specifier = ">=3.1,<4" },
 ]
-provides-extras = ["plot", "gui"]
+provides-extras = ["nwb", "plot", "gui"]
 
 [package.metadata.requires-dev]
 dev = [

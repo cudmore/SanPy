@@ -43,6 +43,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+nwb = [
+    "pynwb>=4.2,<5",
+]
 plot = [
     "matplotlib>=3.9,<4",
     "seaborn>=0.13,<1",
