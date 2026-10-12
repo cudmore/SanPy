@@ -183,6 +183,14 @@ class bAnalysis:
             #     # we need to so file loader meta data can set ba (Self) dirty when changed
             #     self.fileLoader.metadata._ba = self
 
+        if (
+            self._fileLoader is not None
+            and not self.loadError
+            and self._fileLoader._sweepY is not None
+        ):
+            for sweep in self._fileLoader.sweepList:
+                self._sweep_conditions.setdefault(sweep, "")
+
         # get default derivative
         if loadData and not self.loadError:
             self._rebuildFiltered()
