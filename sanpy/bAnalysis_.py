@@ -9,7 +9,7 @@ import io
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 
 # import h5py
 
@@ -85,11 +85,21 @@ class bAnalysis:
         """
         """str: File path."""
 
+        # abb 20261012
+        self._file_path = filepath
+
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
 
         # sept 9, moving this to file loader
         # fileloader holds meta data
         #self._metaData = MetaData(self)  #self.getMetaDataDict()
+        # abb 202610 moved back to banalysis
+        self._metaData = sanpy.metaData.MetaData()
+
+        # abb 20261012 moved from fileloader
+        # only assign when fileloader data is loaded
+        self._sweep_conditions: Dict[int, str] = {}
+        self._sweep_conditions_dirty: bool = False
 
         self._isAnalyzed: bool = False
 
@@ -98,9 +108,6 @@ class bAnalysis:
 
         # self.detectionDict = None  # remember the parameters of our last detection
         """dict: Dictionary specifying detection parameters, see bDetection.getDefaultDetection."""
-
-        # self._abf = None
-        """pyAbf: If loaded from binary .abf file"""
 
         self.dateAnalyzed: str = None
         """str: Date Time of analysis. TODO: make a property."""
@@ -112,8 +119,6 @@ class bAnalysis:
             sanpy.bAnalysisResults.analysisResultList()
         )
         # class to store all analysis results
-
-        # self._spikesPerSweep : int = None
 
         self.spikeClips = []  # created in self.spikeDetect()
         self.spikeClips_x = []  #
@@ -127,38 +132,27 @@ class bAnalysis:
         # will be overwritten by existing uuid in self._loadFromDf()
         self.uuid = sanpy._util.getNewUuid()
 
-        # self.tifData = None
-        # when we have a tif kymograph
-
-        # self.isBytesIO = False
-        # when we are running in the cloud
-
         # TODO (cudmore) need to parse folder of file loaders in fileloders/ and determine
         # class to use to load file (using fileLoader.filetype
         self._fileLoader = None
         if filepath is not None and not os.path.isfile(filepath):
             logger.error(f'File does not exist: "{filepath}"')
             self.loadError = True
-        else:
+        elif loadData:  # abb 20261012 implementing lazy loading
 
+            logger.warning('abb, 202610 loading data from file')
             if fileLoaderDict is None:
                 fileLoaderDict = (
                     sanpy.fileloaders.getFileLoaders()
                 )  # EXPENSIVE, to do, pass in from app
-            # print('2 fileLoaderDict:', fileLoaderDict)
-
-            # print('1 fileLoaderDict:')
-            # for _k,_v in fileLoaderDict.items():
-            #     print(_k,_v)
 
             _ext = os.path.splitext(filepath)[1]
-            # _ext = _ext[1:]
             try:
                 if verbose:
                     logger.info(f"Loading file with extension: {_ext}")
                 constructorObject = fileLoaderDict[_ext]["constructor"]
                 self._fileLoader = constructorObject(filepath)
-                # may 2, 2023
+
                 if self._fileLoader._loadError:
                     logger.error(f'load error in file loader for ext: "{_ext}"')
                     self.loadError = True
@@ -184,9 +178,10 @@ class bAnalysis:
                     self.fileLoader.tifHeader,
                 )
 
-            if self._fileLoader is not None:
-                # we need to so file loader meta data can set ba (Self) dirty when changed
-                self.fileLoader.metadata._ba = self
+            # abb 202610 moving metadata back to banalysis
+            # if self._fileLoader is not None:
+            #     # we need to so file loader meta data can set ba (Self) dirty when changed
+            #     self.fileLoader.metadata._ba = self
 
 
         """
@@ -214,15 +209,11 @@ class bAnalysis:
 
         self._detectionDirty = False
 
-        """
-        self.setSweep()
-        """
-
     @property
     def metaData(self):
         # sept 9, moved to file loader
-        # return self._metaData
-        return self.fileLoader.metadata
+        return self._metaData
+        # return self.fileLoader.metadata
     
     @property
     def kymAnalysis(self):
@@ -240,7 +231,7 @@ class bAnalysis:
         return self._fileLoader
 
     def getFileName(self):
-        return self.fileLoader.filename
+        return os.path.basename(self._file_path)
 
     def asDataFrame(self, regenerateAnalysisDataFrame=False):
         """Return analysis as a Pandas DataFrame.
@@ -266,12 +257,8 @@ class bAnalysis:
 
     def __str__(self):
         """Get a brief str representation. Usefull for print()."""
-        # if self.isBytesIO:
-        #      filename = '<BytesIO>'
-        # else:
-        #     filename = self.getFileName()
-        fileLoadStr = self.fileLoader.__str__()
-        txt = f"fileLoader: {fileLoadStr} spikes:{self.numSpikes}"
+        # fileLoadStr = self.fileLoader.__str__()
+        txt = f"file: {self.getFileName()} spikes:{self.numSpikes}"
         return txt
 
     def _saveHdf_pytables(self, hdfPath: Union[str, os.PathLike]) -> bool:
@@ -291,7 +278,7 @@ class bAnalysis:
 
 
         detection_dirty = self.detectionDirty
-        sweep_conditions_dirty = self.fileLoader.sweepConditionsDirty
+        sweep_conditions_dirty = self.sweepConditionsDirty
         if not detection_dirty and not sweep_conditions_dirty:
             logger.info(f"NOT SAVING, is not dirty {self}")
             return False
@@ -309,7 +296,7 @@ class bAnalysis:
             {
                 "sweep": self.fileLoader.sweepList,
                 "condition": [
-                    self.fileLoader.getSweepCondition(sweep)
+                    self.getSweepCondition(sweep)
                     for sweep in self.fileLoader.sweepList
                 ],
             }
@@ -340,16 +327,13 @@ class bAnalysis:
             key = uuid + "/" + "sweep_conditions"
             dfSweepConditions.to_hdf(hdfStore, key=key)
             
-            # logger.warning('=== saving dfMetaData')
-            # print(dfMetaData)
-
             if detection_dirty and len(self.spikeDict) > 0:
                 key = uuid + "/" + "analysisList"
                 dfAnalysis.to_hdf(hdfStore, key=key)
 
         # we saved, detection is not dirty
         self._detectionDirty = False
-        self.fileLoader.clearSweepConditionsDirty()
+        self.clearSweepConditionsDirty()
 
         return True
 
@@ -398,8 +382,8 @@ class bAnalysis:
         if uuid is None:
             uuid = self._findUuid(hdfPath)
             if uuid is None:
-                logger.warning(f'did not find a uuid for {self.fileLoader.filename} in h5 file {hdfPath}')
-                logger.warning(f'this usually happens when the analysis was not saved')
+                logger.warning(f'did not find a uuid for {self.getFileName()} in h5 file {hdfPath}')
+                logger.warning(f'  this usually happens when the analysis was not saved')
                 return
             
         # logger.info(f"loading {uuid} from {hdfPath}")
@@ -439,7 +423,7 @@ class bAnalysis:
             loadedSweepConditions = True
         except KeyError:
             logger.info(
-                f'No saved sweep conditions for "{self.fileLoader.filename}"; using defaults'
+                f'No saved sweep conditions for "{self.getFileName()}"; using defaults'
             )
 
         # if didLoad:
@@ -455,26 +439,14 @@ class bAnalysis:
                 self._detectionDict = detectionDict
 
             if loadedMetaData:
-                # create a child MEtaData object
-                #logger.info('creating child MetaData')
-                #self.metaData = sanpy.MetaData(self)
-                #self.fileLoader.metadata = sanpy.MetaData()
-
-                #metaDataDict = self.metaData.getMetaDataDict()  # default
+                # get default
                 metaDataDict = sanpy.MetaData.getMetaDataDict()
                 
                 loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[
                     0
-                ]  # one dict
+                ]
                 # we need to load current meta data dict with all current keys
                 # saved file may be out of date
-
-                # bug during implementing meta data code
-                # if loadedMetaDataDict['sex'] == '':
-                #     loadedMetaDataDict['sex'] = 'unknown'
-
-                # logger.info('loadedMetaDataDict')
-                # logger.info(loadedMetaDataDict)
 
                 for k,v in loadedMetaDataDict.items():
                     if not k in metaDataDict.keys():
@@ -492,7 +464,7 @@ class bAnalysis:
                 requiredColumns = {"sweep", "condition"}
                 if not requiredColumns.issubset(dfSweepConditions.columns):
                     logger.warning(
-                        f'Ignoring malformed sweep conditions for "{self.fileLoader.filename}"'
+                        f'Ignoring malformed sweep conditions for "{self.getFileName()}"'
                     )
                 else:
                     for row in dfSweepConditions.itertuples(index=False):
@@ -515,8 +487,12 @@ class bAnalysis:
                                 f"Ignoring non-string saved condition for sweep {sweep}"
                             )
                             continue
-                        self.fileLoader.setSweepCondition(sweep, condition)
-                self.fileLoader.clearSweepConditionsDirty()
+
+                        # abb todo move sweep condition from fileloader to banalysis
+                        self.setSweepCondition(sweep, condition)
+                
+                #  abb todo move sweep condition from fileloader to banalysis
+                self.clearSweepConditionsDirty()
 
             # convert to a list of dict
             if loadedAnalysis:
@@ -524,7 +500,6 @@ class bAnalysis:
                     "records", into=OrderedDict
                 )  # list of dict
                 self.spikeDict.setFromListDict(analysisList)
-                # pprint(analysisList[0])
 
                 # recreate spike analysis dataframe
                 # self._dfReportForScatter = dfAnalysis
@@ -562,7 +537,6 @@ class bAnalysis:
         """
         thresholdSec = self.getStat("thresholdSec", sweepNumber=sweep)
         return len(thresholdSec)
-        # return self._spikesPerSweep[sweep]
 
     @property
     def numErrors(self) -> int:
@@ -574,17 +548,6 @@ class bAnalysis:
         else:
             return len(self.dfError)
         
-    def _old_getAbsSpikeFromSweep(self, sweepSpikeIdx: int, sweep: int) -> int:
-        """Given a spike index within a sweep, get the absolute spike index.
-
-        See getSweepSpikeFromAbsolute()
-        """
-        absIdx = 0
-        for sweepIdx in range(sweep):
-            absIdx += self._spikesPerSweep[sweepIdx]
-        absIdx += sweepSpikeIdx
-        return absIdx
-
     def getSweepSpikeFromAbsolute(self, absSpikeIdx: int, sweep: int) -> int:
         """Get sweep spike from absolute spike.
 
@@ -593,15 +556,9 @@ class bAnalysis:
         sweepSpikeNum = self.spikeDict[absSpikeIdx]["sweepSpikeNumber"]
         return sweepSpikeNum
 
-        # absIdx = 0
-        # for oneSweep in range(sweep):
-        #     absIdx += self._spikesPerSweep[oneSweep]
-        # sweepSpike = absSpikeIdx - absIdx
-        # return sweepSpike
-
     def isDirty(self):
         """Return True if analysis has been modified but not save."""
-        return self._detectionDirty or self.fileLoader.sweepConditionsDirty
+        return self._detectionDirty or self.sweepConditionsDirty
 
     def isAnalyzed(self):
         """Return True if this bAnalysis has been analyzed, False otherwise."""
@@ -698,74 +655,6 @@ class bAnalysis:
         #
         logger.info(f'Given {len(spikeList)} and set {count}')
         """
-
-    def _old_getSweepStats(
-        self, statName: str, decimals=3, asDataFrame=False, df: pd.DataFrame = None
-    ):
-        """
-
-        Args:
-            df (pd.DataFrame): For kymograph we sometimes have to convert (peak) values to molar
-        """
-
-        if df is None:
-            df = self.spikeDict.asDataFrame()
-
-        sweepStatList = []
-
-        for sweep in range(self.fileLoader.numSweeps):
-            oneDf = df[df["sweep"] == sweep]
-            theValues = oneDf[statName]
-
-            theCount = np.count_nonzero(~np.isnan(theValues))
-            theMin = np.min(theValues)
-            theMax = np.max(theValues)
-            theMean = np.nanmean(theValues)
-
-            theMin = round(theMin, decimals)
-            theMax = round(theMax, decimals)
-            theMean = round(theMean, decimals)
-
-            if theCount > 2:
-                theMedian = np.nanmedian(theValues)
-                theSEM = scipy.stats.sem(theValues)
-                theSD = np.nanstd(theValues)
-                theVar = np.nanvar(theValues)
-                theCV = theSD / theVar
-
-                theMedian = round(theMedian, decimals)
-                theSEM = round(theSEM, decimals)
-                theSD = round(theSD, decimals)
-                theVar = round(theVar, decimals)
-                theCV = round(theCV, decimals)
-
-            else:
-                theMedian = None
-                theSEM = None
-                theSD = None
-                theVar = None
-                theCV = None
-
-            oneDict = {
-                statName + "_sweep": sweep,
-                statName + "_count": theCount,
-                statName + "_min": theMin,
-                statName + "_max": theMax,
-                statName + "_mean": theMean,
-                statName + "_median": theMedian,
-                statName + "_sem": theSEM,
-                statName + "_std": theSD,
-                statName + "_var": theVar,
-                statName + "_cv": theCV,
-            }
-
-            sweepStatList.append(oneDict)
-
-        #
-        if asDataFrame:
-            return pd.DataFrame(sweepStatList)
-        else:
-            return sweepStatList
 
     def getStat(
         self,
@@ -1246,11 +1135,11 @@ class bAnalysis:
         Can't use self.getSpikeStat() because it is not created yet.
             We are in the middle of analysis
         """
-        sec = self.fileLoader.pnt2Sec_(pnt)  # pnt / self.dataPointsPerMs / 1000
-        sec = round(sec, 4)
 
-        # print(f'  spikeNumber: {spikeNumber} {type(spikeNumber)}')
-        # print('    sweep:', self.getSpikeStat([spikeNumber], 'sweep'))
+        # abb we might not have a fileloader yet
+        # sec = self.fileLoader.pnt2Sec_(pnt)  # pnt / self.dataPointsPerMs / 1000
+        # sec = round(sec, 4)
+        sec = 0
 
         eDict = {
             "Spike": spikeNumber,
@@ -1547,8 +1436,6 @@ class bAnalysis:
         # we are filling this in, one dict for each spike
         # self.spikeDict = [] # we are filling this in, one dict for each spike
 
-        # self._spikesPerSweep = [0] * self.fileLoader.numSweeps
-
         # abb 20260912
         sanpyProvenance = getSanPyProvenance()
 
@@ -1693,7 +1580,7 @@ class bAnalysis:
             spikeDict[i]["sanpy_git_commit"] = sanpyProvenance.commit or ""
             spikeDict[i]["sanpy_git_dirty"] = sanpyProvenance.git_dirty
 
-            spikeDict[i]["file"] = self.fileLoader.filename
+            spikeDict[i]["file"] = self.getFileName()
 
             spikeDict[i]["detectionType"] = detectionType
 
@@ -1713,7 +1600,7 @@ class bAnalysis:
             spikeDict[i]["epochLevel"] = epochLevel
 
             # abb 202609
-            spikeDict[i]["sweepCondition"] = self.fileLoader.getSweepCondition(sweepNumber)
+            spikeDict[i]["sweepCondition"] = self.getSweepCondition(sweepNumber)
 
             # keep track of per sweep spike and total spike
             spikeDict[i]["sweepSpikeNumber"] = i
@@ -2156,9 +2043,6 @@ class bAnalysis:
         self.spikeDict.appendAnalysis(spikeDict)
         # print('   now have', len(self.spikeDict))
         # print(self.spikeDict)
-
-        # keep track of spikes per sweep (expensive to calculate)
-        # self._spikesPerSweep[sweepNumber] = len(spikeDict)
 
         # run all user analysis ... what if this fails ???
         sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
@@ -2615,53 +2499,6 @@ class bAnalysis:
 
         return dfError
 
-    def _old_to_csv(self):
-        """Save as a CSV text file with name <path>_analysis.csv'"""
-        savefile = os.path.splitext(self._path)[0]
-        savefile += "_analysis.csv"
-        saveExcel = False
-        alsoSaveTxt = True
-        logger.info(f'Saving "{savefile}"')
-
-        be = bExport(self)
-        be.saveReport(savefile, saveExcel=saveExcel, alsoSaveTxt=alsoSaveTxt)
-
-    def _old__normalizeData(self, data):
-        """Calculate normalized data for detection from Kymograph. Is NOT for df/d0."""
-        return (data - np.min(data)) / (np.max(data) - np.min(data))
-
-    def _not_used_loadAnalysis(self):
-        """Not used."""
-        saveBase = self._getSaveBase()
-
-        # load detection parameters
-        # self.detectionClass.load(saveBase)
-
-        # load analysis
-        # self.spikeDict.load(saveBase)
-
-        saveBase = self._getSaveBase()
-        savePath = saveBase + "-analysis.json"
-
-        if not os.path.isfile(savePath):
-            # logger.error(f'Did not find file: {savePath}')
-            return
-
-        logger.info(f"Loading from saved analysis: {savePath}")
-
-        with open(savePath, "r") as f:
-            # self._dDict = json.load(f)
-            loadedDict = json.load(f)
-
-        dDict = loadedDict["detection"]
-        self.detectionClass._dDict = dDict
-
-        analysisList = loadedDict["analysis"]
-        self.spikeDict._myList = analysisList
-
-        self._detectionDirty = False
-        self._isAnalyzed = True
-
     def saveAnalysis_tocsv(self, path : str = None, verbose=False):
         """Save analysis to csv.
         
@@ -2771,6 +2608,53 @@ class bAnalysis:
         if self.spikeDict is not None:
             return self.spikeDict.analysisTime()
 
+    def setSweepCondition(self, sweep: int, condition: str) -> None:
+        """Set the condition string for a loaded sweep.
+
+        Args:
+            sweep: Sweep index that already has a condition entry.
+            condition: Condition label to store for that sweep.
+        """
+        if sweep not in self._sweep_conditions:
+            logger.warning(
+                f"Cannot set sweep condition; sweep {sweep} is not loaded in {self.getFileName()}"
+            )
+            return
+        if not isinstance(condition, str):
+            logger.warning(
+                f"Cannot set sweep condition; condition for sweep {sweep} must be a string"
+            )
+            return
+        if self._sweep_conditions[sweep] == condition:
+            return
+        self._sweep_conditions[sweep] = condition
+        self._sweep_conditions_dirty = True
+
+    def getSweepCondition(self, sweep: int) -> str:
+        """Return the condition string for a loaded sweep.
+
+        Args:
+            sweep: Sweep index that already has a condition entry.
+
+        Returns:
+            The stored condition, or an empty string when the sweep is not loaded.
+        """
+        if sweep not in self._sweep_conditions:
+            logger.warning(
+                f"Cannot get sweep condition; sweep {sweep} is not loaded in {self.getFileName()}"
+            )
+            return ""
+        return self._sweep_conditions[sweep]
+
+    @property
+    def sweepConditionsDirty(self) -> bool:
+        """Return whether sweep conditions have changed since loading or saving."""
+        return self._sweep_conditions_dirty
+
+    def clearSweepConditionsDirty(self) -> None:
+        """Mark the current sweep conditions as loaded or successfully saved."""
+        self._sweep_conditions_dirty = False
+
     def _api_getHeader(self):
         """Get header as a dict.
 
@@ -2788,7 +2672,7 @@ class bAnalysis:
             "loadError": self.loadError,
             #'detectionDict': self.detectionClass,
             "path": self._path,
-            "file": self.fileLoader.filename,
+            "file": self.getFileName(),
             "dateAnalyzed": self.dateAnalyzed,
             #'detectionType': self.detectionType,
             "acqDate": self.acqDate,

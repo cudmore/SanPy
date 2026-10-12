@@ -114,7 +114,7 @@ class SetMetaData(sanpyPlugin):
         self._sweepConditionsGroup.setEnabled(True)
         for sweep in self.ba.fileLoader.sweepList:
             condition_edit = QtWidgets.QLineEdit(
-                self.ba.fileLoader.getSweepCondition(sweep)
+                self.ba.getSweepCondition(sweep)
             )
             condition_edit.editingFinished.connect(
                 partial(self._setSweepCondition, sweep, condition_edit)
@@ -133,7 +133,7 @@ class SetMetaData(sanpyPlugin):
         """
         if self.ba is None:
             return
-        self.ba.fileLoader.setSweepCondition(sweep, condition_edit.text())
+        self.ba.setSweepCondition(sweep, condition_edit.text())
 
     def _buildUI(self) -> None:
         """Build the panel title, metadata editors, and sweep-condition group."""

@@ -7,6 +7,27 @@ import matplotlib.pyplot as plt
 import sanpy
 from sanpy.analysisPlot import bAnalysisPlot
 
+def analyze_folder():
+
+    detection_parameters = sanpy.bDetection().getDetectionDict("Fast Neuron")
+
+    folder_path  = '/Users/cudmore/data/nwb/001261-draft'
+    analysis_dir = sanpy.analysisDir(folder_path)
+
+    for row_index in range(analysis_dir.numFiles):
+        analysis = analysis_dir.getAnalysis(row_index)
+        if analysis is None:
+            print(f"Failed to load row {row_index}")
+            continue
+        # print(analysis)
+        analysis.spikeDetect(detection_parameters)
+
+        # debug
+        # if row_index == 5:
+        #     break
+
+    # save hdf5
+    analysis_dir.saveHdf()
 
 def main() -> None:
     """Analyze an example recording and plot detected thresholds and peaks.
@@ -46,4 +67,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    analyze_folder()

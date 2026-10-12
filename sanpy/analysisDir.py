@@ -705,7 +705,8 @@ class analysisDir:
                 logger.info(f"    Retreiving uuid from hdf file {uuid}")
 
             # load from abf
-            ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
+            # ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
+            ba = sanpy.bAnalysis(path, loadData=allowAutoLoad, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
 
             if ba.loadError:
                 logger.error('Unable to load recording "%s"', path)
@@ -927,7 +928,8 @@ class analysisDir:
 
     def isAnalyzed(self, rowIdx):
         isAnalyzed = False
-        ba = self._df.loc[rowIdx, "_ba"]
+        # abb 20261012 type hinting
+        ba : sanpy.bAnalysis = self._df.loc[rowIdx, "_ba"]
         if ba is not None:
             try:
                 isAnalyzed = ba.isAnalyzed()
@@ -1050,9 +1052,9 @@ class analysisDir:
         if not os.path.isfile(path):
             logger.warning(f'Did not find file "{path}"')
             return None, None
+
         fileType = os.path.splitext(path)[1]
-        # if fileType:
-        #     fileType = fileType[1:]  # [1:] to strip period
+
         if fileType not in self.theseFileTypes:  
             logger.warning(f'Did not load file type "{fileType}"')
             return None, None
@@ -1079,12 +1081,10 @@ class analysisDir:
         
         rowDict["File"] = ba.fileLoader.filename  # os.path.split(ba.path)[1]
         rowDict["Dur(s)"] = ba.fileLoader.recordingDur
-
         rowDict["Channels"] = ba.fileLoader.numChannels  # Theanne
-
         rowDict["Sweeps"] = ba.fileLoader.numSweeps
 
-        # TODO: here, we do not get an epoch table until the file is loaded !!!
+        # here, we do not get an epoch table until the file is loaded !!!
         rowDict["Epochs"] = ba.fileLoader.numEpochs  # Theanne, data has to be loaded
 
         rowDict["kHz"] = ba.fileLoader.recordingFrequency
@@ -1282,7 +1282,11 @@ class analysisDir:
         """
         frames: list[pd.DataFrame] = []
         for row_idx in self._df.index:
-            ba = self.getAnalysis(row_idx, allowAutoLoad=True)
+            
+            # abb, this loads raw data -> we do not want that
+            # ba = self.getAnalysis(row_idx, allowAutoLoad=True)
+            ba = self.getAnalysis(row_idx, allowAutoLoad=False)
+            
             if ba is None or not ba.isAnalyzed():
                 continue
             one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
@@ -1296,7 +1300,7 @@ class analysisDir:
             one_df = one_df.copy()
             one_df["file_number"] = int(row_idx)
             one_df["file_key"] = self.get_file_key(int(row_idx))
-            self.signalWindow(f'Adding "{ba.fileLoader.filename}"')
+            # self.signalWindow(f'Adding "{ba.fileLoader.filename}"')
             frames.append(one_df)
         if not frames:
             return None

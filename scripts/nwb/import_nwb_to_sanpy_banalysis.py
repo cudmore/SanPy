@@ -430,6 +430,9 @@ class fileLoader_nwb(fileLoader_base):
         Args:
             nwbfile: Open PyNWB ``NWBFile`` instance.
         """
+        logger.warning('moved experimental metadata back to bAnalysis (from file loader)')
+        return
+        
         scratch = nwbfile.scratch
         name = "sanpy_metadata_json"
         if name not in scratch:

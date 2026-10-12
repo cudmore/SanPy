@@ -287,6 +287,9 @@ class fileLoader_nwb(fileLoader_base):
             recording_frame = recordings.to_dataframe(
                 ignore_category_ids=True,
             )
+
+            print(f'abb recording_frame:{recording_frame}')
+
             response_column = ("responses", "response")
             stimulus_column = ("stimuli", "stimulus")
             template_column = ("stimuli", "stimulus_template")
@@ -355,6 +358,17 @@ class fileLoader_nwb(fileLoader_base):
                 raise ValueError(
                     f"Legacy NWB data has multiple stimuli for sweep {sweep_number}"
                 )
+
+            # abb, how do i get current amplitude?
+            # print(f'abb series:{series}')
+            # print(f'abb series.electrode:{series.electrode}')
+            # print(f'abb series.data:{series.data}')
+            # from matplotlib import pyplot as plt
+            # # raw_data are current for all sweeps
+            # raw_data = np.asarray(series.data[...], dtype=np.float64)
+            # plt.plot(raw_data)
+            # plt.show()
+
             stimuli[sweep_number] = series
 
         orphan_sweeps = sorted(set(stimuli).difference(responses))
