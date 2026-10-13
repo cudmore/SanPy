@@ -12,12 +12,18 @@ import sanpy
 from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
 from sanpy.interface.window_state import WindowState
+from sanpy.metaData import MetaData
 from sanpy.sanpyLogger import get_logger
 
 
 logger = get_logger(__name__)
 
-_IDENTITY_COLUMNS: tuple[str, ...] = ("file", "include")
+_FILE_COLUMN_DEFINITION: dict[str, Any] = {
+    "axis_label": "File",
+    "category": "acquisition",
+    "type": "str",
+    "is_categorical": True,
+}
 _PREFILTER_COLUMNS: tuple[str, ...] = ("sweep", "epoch", "include")
 _PLOT_COLUMN_KEYS: tuple[str, ...] = ("groupColumn", "yColumn", "xColumn")
 # _DEFAULT_PRESET_NAME = "FI Plot"
@@ -131,36 +137,27 @@ def prepare_nicepool_data(
     if "spikeNumber" not in dataframe.columns:
         raise ValueError("SanPy spike results are missing the spikeNumber column")
 
-    definitions = get_plot_result_definitions()
-
-    # Build selected_names in NicePool column order: identity columns first,
-    # then plot-menu results present in this dataframe, each projected once.
-    selected_names: list[str] = []
-    seen_names: set[str] = set()
-    for name in (*_IDENTITY_COLUMNS, *definitions):
-        if name not in dataframe.columns or name in seen_names:
-            continue
-        seen_names.add(name)
-        selected_names.append(name)
+    # Column order is file, experimental metadata, then plot-menu results.
+    # Only scalar columns are listed; NicePool rejects list values.
+    definitions: dict[str, dict[str, Any]] = {
+        "file": _FILE_COLUMN_DEFINITION,
+        **{
+            name: {
+                "axis_label": str(metadata["display_name"]),
+                "category": "metadata",
+                "type": "str",
+                "is_categorical": True,
+            }
+            for name, metadata in MetaData.getMetaDataDefinitions().items()
+        },
+        **get_plot_result_definitions(),
+    }
+    selected_names = [name for name in definitions if name in dataframe.columns]
     projected = dataframe.loc[:, selected_names].copy()
 
-    identity_definitions: dict[str, dict[str, Any]] = {
-        "file": {
-            "axis_label": "File",
-            "category": "acquisition",
-            "type": "str",
-            "is_categorical": True,
-        },
-        "include": {
-            "axis_label": "Included",
-            "category": "metadata",
-            "type": "str",
-            "is_categorical": True,
-        },
-    }
     schema = []
     for name in selected_names:
-        definition = definitions[name] if name in definitions else identity_definitions[name]
+        definition = definitions[name]
         category = definition["category"]
         category_name = getattr(category, "value", category)
         if not isinstance(category_name, str) or not category_name:
@@ -290,6 +287,7 @@ class NicePoolPlugin(sanpyPlugin):
             None if window is None else window.state
         )
         self._highlight_spikes: list[int] | None = None
+        self._keep_view_on_apply: bool = False
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
         self._status_label.setWordWrap(True)
@@ -388,12 +386,29 @@ class NicePoolPlugin(sanpyPlugin):
 
         self._apply_spike_results(self._spike_results())
 
+    def slot_metaDataChanged(self, event: dict[str, object]) -> None:
+        """Refresh NicePool data, keeping the current view, after a metadata edit.
+
+        Args:
+            event: Payload with ``ba``, ``key``, and ``value``.
+        """
+        if self._nicepool is None or event.get("ba") is not self.ba:
+            return
+        self._keep_view_on_apply = True
+        self.replot()
+
     def _apply_spike_results(self, dataframe: pd.DataFrame | None) -> None:
         """Replace NicePool data with one prepared spike-results table.
+
+        A refresh requested by :meth:`slot_metaDataChanged` replaces rows while
+        keeping NicePool's plots, filters, and selection. If NicePool rejects
+        that view for the new rows, the table is reloaded with SanPy presets.
 
         Args:
             dataframe: Spike results to display, or ``None`` for an empty state.
         """
+        keep_view = self._keep_view_on_apply
+        self._keep_view_on_apply = False
         if dataframe is None or dataframe.empty:
             self._row_id_to_spike = {}
             self._current_file_number = None
@@ -465,15 +480,34 @@ class NicePoolPlugin(sanpyPlugin):
                 if compatible_presets
                 else None
             )
-            self._nicepool.set_dataframe(
-                projected,
-                row_id_column=row_id_column,
-                schema=schema,
-                pre_filter_columns=prefilters,
-                preset_definitions=compatible_presets,
-                default_preset=default_preset,
-            )
-            self.selectSpikeList()
+
+            def load_with_presets(_error: str | None = None) -> None:
+                """Load the table and SanPy presets, resetting NicePool's view.
+
+                Args:
+                    _error: Error from a rejected replace, when used as a fallback.
+                """
+                self._nicepool.set_dataframe(
+                    projected,
+                    row_id_column=row_id_column,
+                    schema=schema,
+                    pre_filter_columns=prefilters,
+                    preset_definitions=compatible_presets,
+                    default_preset=default_preset,
+                )
+                self.selectSpikeList()
+
+            if keep_view:
+                self._nicepool.replace_dataframe(
+                    projected,
+                    row_id_column=row_id_column,
+                    schema=schema,
+                    pre_filter_columns=prefilters,
+                    error_callback=load_with_presets,
+                )
+                self.selectSpikeList()
+            else:
+                load_with_presets()
         except (TypeError, ValueError) as error:
             logger.error("Unable to prepare SanPy results for NicePool: %s", error)
             self._row_id_to_spike = {}

@@ -76,6 +76,17 @@ class NicePoolPoolPlugin(NicePoolPlugin):
             partial(self._pool_next_row, generation),
         )
 
+    def slot_metaDataChanged(self, event: dict[str, object]) -> None:
+        """Re-pool, keeping the current view, after any file's metadata changes.
+
+        Args:
+            event: Payload with ``ba``, ``key``, and ``value``.
+        """
+        if self._nicepool is None:
+            return
+        self._keep_view_on_apply = True
+        self.replot()
+
     def slot_window_state(self, state: WindowState) -> None:
         """Track the selected file and selection without rebuilding the pool.
 

@@ -90,7 +90,150 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
     assert schema_by_name["file"]["category"] == "acquisition"
     assert schema_by_name["include"]["type"] == "string"
     assert schema_by_name["include"]["category"] == "metadata"
-    assert schema_by_name["include"]["axis_label"] == "Included"
+    assert schema_by_name["include"]["axis_label"] == "Include"
+
+
+def test_prepare_nicepool_data_projects_experimental_metadata() -> None:
+    """Offer every experimental-metadata column as a categorical metadata group."""
+    source = pd.DataFrame(
+        {
+            "file": ["cell.abf"],
+            "spikeNumber": [3],
+            "include": ["no"],
+            "sex": ["female"],
+            "condition": ["control"],
+            "cell_type": ["SAN"],
+            "note": [""],
+            "errors": [[{"Type": "t"}]],
+        }
+    )
+
+    projected, schema, _prefilters = prepare_nicepool_data(source)
+
+    assert projected.columns.tolist() == [
+        "file",
+        "include",
+        "cell_type",
+        "sex",
+        "condition",
+        "note",
+        "spikeNumber",
+    ]
+    schema_by_name = {entry["name"]: entry for entry in schema}
+    for name, label in (
+        ("sex", "Sex"),
+        ("condition", "Condition"),
+        ("cell_type", "Cell Type"),
+    ):
+        assert schema_by_name[name] == {
+            "name": name,
+            "type": "string",
+            "axis_label": label,
+            "category": "metadata",
+            "categorical": True,
+        }
+
+
+def _plugin_for_apply(keep_view: bool) -> NicePoolPlugin:
+    """Build a single-file plugin ready to push one table to a mocked NicePool.
+
+    Args:
+        keep_view: Whether the next push should keep NicePool's current view.
+
+    Returns:
+        A plugin with a mocked NicePool widget and status label.
+    """
+    plugin = NicePoolPlugin.__new__(NicePoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._status_label = MagicMock()
+    plugin._keep_view_on_apply = keep_view
+    plugin._highlight_spikes = None
+    plugin._handling_nicepool_selection = False
+    plugin._current_file_number = None
+    plugin._row_id_to_file_key = {}
+    plugin._selectedSpikeList = []
+    window = SimpleNamespace(state=WindowState("cell.abf", 0, None))
+    plugin.getSanPyWindow = lambda: window
+    return plugin
+
+
+_APPLY_SOURCE = pd.DataFrame(
+    {
+        "file": ["cell.abf"],
+        "spikeNumber": [0],
+        "sweep": [0],
+        "include": ["no"],
+        "spikeFreq_hz": [2.0],
+    }
+)
+
+
+def test_metadata_refresh_replaces_rows_and_keeps_view() -> None:
+    """Replace rows without resetting NicePool's plots and filters."""
+    plugin = _plugin_for_apply(keep_view=True)
+
+    plugin._apply_spike_results(_APPLY_SOURCE)
+
+    plugin._nicepool.replace_dataframe.assert_called_once()
+    plugin._nicepool.set_dataframe.assert_not_called()
+    assert plugin._keep_view_on_apply is False
+
+
+def test_rejected_metadata_refresh_reloads_with_presets() -> None:
+    """Reload with SanPy presets when NicePool rejects the kept view."""
+    plugin = _plugin_for_apply(keep_view=True)
+
+    plugin._apply_spike_results(_APPLY_SOURCE)
+    error_callback = plugin._nicepool.replace_dataframe.call_args.kwargs[
+        "error_callback"
+    ]
+    error_callback("invalid state")
+
+    plugin._nicepool.set_dataframe.assert_called_once()
+    assert plugin._nicepool.set_dataframe.call_args.kwargs["default_preset"] == (
+        "Sweep Plot"
+    )
+
+
+def test_plain_replot_loads_with_presets() -> None:
+    """Load with SanPy presets when no metadata refresh is pending."""
+    plugin = _plugin_for_apply(keep_view=False)
+
+    plugin._apply_spike_results(_APPLY_SOURCE)
+
+    plugin._nicepool.set_dataframe.assert_called_once()
+    plugin._nicepool.replace_dataframe.assert_not_called()
+
+
+def test_metadata_change_refreshes_only_the_shown_file() -> None:
+    """Refresh the single-file plugin only for its own recording's metadata."""
+    plugin = NicePoolPlugin.__new__(NicePoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._ba = MagicMock()
+    plugin._keep_view_on_apply = False
+    plugin.replot = MagicMock()
+
+    plugin.slot_metaDataChanged({"ba": MagicMock(), "key": "include", "value": "no"})
+    plugin.replot.assert_not_called()
+    assert plugin._keep_view_on_apply is False
+
+    plugin.slot_metaDataChanged({"ba": plugin._ba, "key": "include", "value": "no"})
+    plugin.replot.assert_called_once_with()
+    assert plugin._keep_view_on_apply is True
+
+
+def test_pool_metadata_change_refreshes_for_any_file() -> None:
+    """Re-pool after a metadata edit to any recording in the folder."""
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._ba = MagicMock()
+    plugin._keep_view_on_apply = False
+    plugin.replot = MagicMock()
+
+    plugin.slot_metaDataChanged({"ba": MagicMock(), "key": "sex", "value": "male"})
+
+    plugin.replot.assert_called_once_with()
+    assert plugin._keep_view_on_apply is True
 
 
 def test_prepare_nicepool_data_requires_spike_identity() -> None:
