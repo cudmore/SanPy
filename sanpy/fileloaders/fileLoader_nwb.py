@@ -345,6 +345,15 @@ class fileLoader_nwb(fileLoader_base):
         epoch starts wherever the stored command value changes, and every
         epoch is a ``Step``. Ramps and other waveform shapes are not detected.
 
+        A flat sweep, whose command never changes, is assumed to be a step
+        whose amplitude equals the holding command (for example a 0 nA step).
+        When every stepped sweep has identical boundaries, each flat sweep is
+        given those boundaries so all sweeps share one epoch count, as in
+        ABF protocols. A flat sweep's boundaries are therefore copied from the
+        other sweeps, not observed in its own command. When stepped sweeps
+        disagree, or every sweep is flat, each sweep keeps its own detected
+        epochs. Different epoch counts per sweep are not handled here.
+
         Args:
             sweep_commands: Command in nanoamps for each sweep, or ``None``
                 for a sweep whose NWB stimulus is missing.
@@ -354,14 +363,33 @@ class fileLoader_nwb(fileLoader_base):
             One epoch table per sweep, with ``None`` for sweeps without a
             command.
         """
-        tables: list[Optional[epochTable]] = []
-        for sweep, command in enumerate(sweep_commands):
+        boundaries_by_sweep: list[Optional[np.ndarray]] = []
+        for command in sweep_commands:
             if command is None:
-                tables.append(None)
+                boundaries_by_sweep.append(None)
                 continue
             # DC steps only: any change in the stored value starts a new epoch.
             transitions = np.flatnonzero(np.diff(command) != 0) + 1
-            boundaries = np.concatenate(([0], transitions, [len(command)]))
+            boundaries_by_sweep.append(
+                np.concatenate(([0], transitions, [len(command)]))
+            )
+
+        # Flat sweeps have only [0, n]; borrow boundaries from stepped sweeps
+        # only when every stepped sweep agrees.
+        stepped = [b for b in boundaries_by_sweep if b is not None and len(b) > 2]
+        if stepped and all(np.array_equal(b, stepped[0]) for b in stepped):
+            boundaries_by_sweep = [
+                stepped[0] if b is not None and len(b) == 2 else b
+                for b in boundaries_by_sweep
+            ]
+
+        tables: list[Optional[epochTable]] = []
+        for sweep, (command, boundaries) in enumerate(
+            zip(sweep_commands, boundaries_by_sweep)
+        ):
+            if command is None or boundaries is None:
+                tables.append(None)
+                continue
             table = epochTable()
             for start_point, stop_point in zip(boundaries[:-1], boundaries[1:]):
                 table.addEpoch(

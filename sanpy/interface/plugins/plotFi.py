@@ -153,10 +153,6 @@ class plotFi(sanpyPlugin):
         self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
         self.toggleResponseOptions(ResponseType.setAxis, False)
 
-        num_epochs = None if self.ba is None else self.ba.fileLoader.numEpochs
-        if num_epochs is not None and num_epochs > 0:
-            self._epochNumber = 2
-
         self.setDefaultPlot()
 
         self.df_fi = None
@@ -351,11 +347,11 @@ class plotFi(sanpyPlugin):
         return _topToolbar
 
     def _refresh_fi_epoch_combo_box(self) -> None:
-        """Refresh Plot FI's numeric-only epoch selector."""
-        self._populate_epoch_combo_box(self._fiEpochComboBox, include_all=False)
+        """Refresh Plot FI's epoch selector, including an ``All`` choice."""
+        self._populate_epoch_combo_box(self._fiEpochComboBox, include_all=True)
 
     def _on_fi_epoch_combo_box(self, index: int) -> None:
-        """Replot after the user selects a numeric epoch.
+        """Replot after the user selects ``All`` or a numeric epoch.
 
         Args:
             index: Selected combo-box row, or ``-1`` when no epoch is valid.
@@ -364,8 +360,8 @@ class plotFi(sanpyPlugin):
             return
 
         epoch = self._fiEpochComboBox.itemData(index)
-        if not isinstance(epoch, int):
-            logger.error("Plot FI epoch selector returned a non-numeric value.")
+        if epoch != "All" and not isinstance(epoch, int):
+            logger.error("Plot FI epoch selector returned an invalid value.")
             return
 
         self._epochNumber = epoch
@@ -488,7 +484,7 @@ class plotFi(sanpyPlugin):
         rowDict: Optional[dict[str, object]] = None,
         replot: bool = True,
     ) -> None:
-        """Switch recordings while preserving the selected FI epoch.
+        """Switch recordings while preserving a selected numeric FI epoch.
 
         Args:
             ba: Newly selected analysis.
@@ -497,14 +493,16 @@ class plotFi(sanpyPlugin):
         """
         selected_epoch = self.epochNumber
 
-        # The shared implementation resets sweep and epoch state. Preserve the
-        # chosen epoch only when the new recording provides epoch information.
+        # The shared implementation resets the epoch to "All". Restore a
+        # numeric epoch only when the new recording provides epoch information.
         super().slot_switchFile(ba, rowDict, replot=False)
         num_epochs = ba.fileLoader.numEpochs
-        if num_epochs is not None and num_epochs > 0:
-            self._epochNumber = (
-                selected_epoch if isinstance(selected_epoch, int) else 2
-            )
+        if (
+            isinstance(selected_epoch, int)
+            and num_epochs is not None
+            and num_epochs > 0
+        ):
+            self._epochNumber = selected_epoch
         self._updateTopToolbar()
         self._refresh_fi_epoch_combo_box()
 
@@ -546,8 +544,8 @@ class plotFi(sanpyPlugin):
 
         num_epochs = self.ba.fileLoader.numEpochs
         has_epochs = num_epochs is not None and num_epochs > 0
-        if has_epochs:
-            epoch_number = self.epochNumber
+        epoch_number = self.epochNumber
+        if has_epochs and epoch_number != "All":
             if not isinstance(epoch_number, int) or isinstance(epoch_number, bool):
                 logger.warning("Plot FI requires one numeric epoch.")
                 self._show_plot_message("Select one epoch to plot")
@@ -565,8 +563,9 @@ class plotFi(sanpyPlugin):
             x_label = "Current Step (pA)"
         else:
             epoch_number = None
-            # Recordings without epoch tables store NaN epochLevel values. Sweep
-            # is the only reliable grouped X coordinate for an all-event FI plot.
+            # All-event FI plots group by sweep. Recordings without epoch tables
+            # store NaN epochLevel values, and with "All" each sweep's
+            # epochLevel would come from whichever epoch its first spike is in.
             x_stat = "sweep"
             x_label = "Sweep"
 

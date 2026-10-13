@@ -320,6 +320,48 @@ def test_builds_epoch_table_from_dc_step_command(tmp_path: Path) -> None:
     assert loader.getEpochTable(0).findEpoch(4) == 2
 
 
+def test_flat_sweep_borrows_epochs_from_stepped_sweeps(tmp_path: Path) -> None:
+    """Give a flat 0 nA sweep the stepped sweeps' epoch boundaries.
+
+    Args:
+        tmp_path: Temporary directory for the generated NWB file.
+    """
+    nwbfile, electrode = _new_nwbfile()
+    commands = (
+        np.array([0.0, 0.0, 1e-10, 1e-10, 0.0]),
+        np.zeros(_POINTS),
+    )
+    for sweep_number, data in enumerate(commands):
+        nwbfile.add_intracellular_recording(
+            electrode=electrode,
+            response=_response(
+                electrode, sweep_number, -0.060, name=f"response_{sweep_number}"
+            ),
+            stimulus=CurrentClampStimulusSeries(
+                name=f"stimulus_{sweep_number}",
+                data=data,
+                electrode=electrode,
+                unit="amperes",
+                rate=_RATE_HZ,
+                starting_time=float(sweep_number),
+                sweep_number=np.uint64(sweep_number),
+            ),
+        )
+    path = _write(nwbfile, tmp_path / "flat-and-stepped.nwb")
+
+    loader = fileLoader_nwb(str(path))
+
+    assert not loader.getLoadError()
+    assert loader.numEpochs == 3
+    flat_epochs = loader.getEpochTable(1).getEpochList()
+    assert [(e["startPoint"], e["stopPoint"]) for e in flat_epochs] == [
+        (0, 2),
+        (2, 4),
+        (4, 5),
+    ]
+    assert [e["level"] for e in flat_epochs] == [0.0, 0.0, 0.0]
+
+
 def test_missing_stimulus_sweep_has_no_epoch_table(tmp_path: Path) -> None:
     """Store ``None`` for a sweep whose stimulus is missing.
 

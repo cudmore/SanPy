@@ -171,8 +171,8 @@ def test_get_stat_fi_includes_all_events_without_epoch_filter() -> None:
 
 @pytest.mark.parametrize(
     ("selected_epoch", "num_epochs", "expected_epoch"),
-    [(2, 3, 2), (2, None, "All"), ("All", 3, 2)],
-    ids=["preserved", "epochs-unavailable", "default-for-new-file"],
+    [(2, 3, 2), (2, None, "All"), ("All", 3, "All")],
+    ids=["preserved", "epochs-unavailable", "all-preserved"],
 )
 def test_plot_fi_uses_epoch_availability_when_switching_files(
     qtbot: Any,
@@ -256,8 +256,8 @@ def test_plot_fi_uses_epoch_availability_when_switching_files(
     ]
 
 
-def test_plot_fi_epoch_selector_lists_only_numeric_epochs(qtbot: Any) -> None:
-    """Populate Plot FI's local selector without an unsupported All item.
+def test_plot_fi_epoch_selector_lists_all_and_numeric_epochs(qtbot: Any) -> None:
+    """Populate Plot FI's local selector with All followed by each epoch.
 
     Args:
         qtbot: Pytest-Qt widget lifecycle helper.
@@ -279,7 +279,7 @@ def test_plot_fi_epoch_selector_lists_only_numeric_epochs(qtbot: Any) -> None:
     assert [
         plugin._fiEpochComboBox.itemText(index)
         for index in range(plugin._fiEpochComboBox.count())
-    ] == ["0", "1", "2", "3"]
+    ] == ["All", "0", "1", "2", "3"]
     assert plugin._fiEpochComboBox.currentData() == 2
     # 20260912, this is way to specific for a unit test
     # assert plugin._fiEpochComboBox.minimumContentsLength() == 4
@@ -288,9 +288,11 @@ def test_plot_fi_epoch_selector_lists_only_numeric_epochs(qtbot: Any) -> None:
     #     >= plugin._fiEpochComboBox.minimumSizeHint().width()
     # )
 
-    plugin._fiEpochComboBox.setCurrentIndex(1)
+    plugin._fiEpochComboBox.setCurrentIndex(2)
     assert plugin.epochNumber == 1
-    plugin.replot.assert_called_once_with()
+    plugin._fiEpochComboBox.setCurrentIndex(0)
+    assert plugin.epochNumber == "All"
+    assert plugin.replot.call_count == 2
 
 
 def test_plot_fi_epoch_selector_leaves_unavailable_epoch_unselected(
@@ -375,20 +377,25 @@ def test_plot_fi_clears_stale_output_for_unavailable_epoch(qtbot: Any) -> None:
     plugin.static_canvas.draw.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    "num_epochs", [None, 3], ids=["without-epochs", "all-selected"]
+)
 def test_plot_fi_uses_all_events_and_sweep_axis_without_epochs(
     qtbot: Any,
+    num_epochs: int | None,
 ) -> None:
-    """Plot every event by sweep when the recording has no epoch information.
+    """Plot every event by sweep without epochs or when All is selected.
 
     Args:
         qtbot: Pytest-Qt widget lifecycle helper.
+        num_epochs: Epoch count reported by the recording.
     """
     plugin = plotFi.__new__(plotFi)
     QtWidgets.QWidget.__init__(plugin)
     qtbot.addWidget(plugin)
     plugin._epochNumber = "All"
     plugin._ba = SimpleNamespace(
-        fileLoader=SimpleNamespace(numEpochs=None),
+        fileLoader=SimpleNamespace(numEpochs=num_epochs),
         spikeDict=SimpleNamespace(
             asDataFrame=lambda: pd.DataFrame(
                 {
