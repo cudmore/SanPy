@@ -24,9 +24,9 @@ class _InconsistentEpochLoader(fileLoader_base):
         self.setLoadedData(sweep_x, sweep_y, xLabel="sec", yLabel="mV")
         first = epochTable()
         second = epochTable()
-        first.addEpoch(0, 0.0, 0.004, 1, 0.0)
-        second.addEpoch(1, 0.0, 0.002, 1, 0.0)
-        second.addEpoch(1, 0.002, 0.004, 1, 1.0)
+        first.addEpoch(0, 0, 4, 1, 0.0)
+        second.addEpoch(1, 0, 2, 1, 0.0)
+        second.addEpoch(1, 2, 4, 1, 1.0)
         self._epochTableList = [first, second]
 
 

@@ -623,8 +623,8 @@ class plotFi(sanpyPlugin):
             filename=_filename,
         )
 
-        logger.info("generated new fi table self.df_fi:")
-        print(self.df_fi)
+        # logger.info("generated new fi table self.df_fi:")
+        # print(self.df_fi)
 
         if self.df_fi.empty:
             logger.warning("No FI summary was generated for epoch %s.", epoch_number)

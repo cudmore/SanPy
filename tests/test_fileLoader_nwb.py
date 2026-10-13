@@ -282,6 +282,61 @@ def test_legacy_missing_stimulus_inserts_zero_command(tmp_path: Path) -> None:
     np.testing.assert_allclose(loader.get_sweep_c(1), np.full(_POINTS, 0.1))
 
 
+def test_builds_epoch_table_from_dc_step_command(tmp_path: Path) -> None:
+    """Split a DC step command into one epoch per constant level.
+
+    Args:
+        tmp_path: Temporary directory for the generated NWB file.
+    """
+    nwbfile, electrode = _new_nwbfile()
+    stimulus = CurrentClampStimulusSeries(
+        name="stimulus_0",
+        data=np.array([0.0, 0.0, 1e-10, 1e-10, 0.0]),
+        electrode=electrode,
+        unit="amperes",
+        rate=_RATE_HZ,
+        starting_time=0.0,
+        sweep_number=np.uint64(0),
+    )
+    nwbfile.add_intracellular_recording(
+        electrode=electrode,
+        response=_response(electrode, 0, -0.060, name="response_0"),
+        stimulus=stimulus,
+    )
+    path = _write(nwbfile, tmp_path / "stepped.nwb")
+
+    loader = fileLoader_nwb(str(path))
+
+    assert not loader.getLoadError()
+    assert loader.numEpochs == 3
+    epochs = loader.getEpochTable(0).getEpochList()
+    assert [(e["startPoint"], e["stopPoint"]) for e in epochs] == [
+        (0, 2),
+        (2, 4),
+        (4, 5),
+    ]
+    np.testing.assert_allclose([e["level"] for e in epochs], [0.0, 0.1, 0.0])
+    assert {e["type"] for e in epochs} == {"Step"}
+    assert loader.getEpochTable(0).findEpoch(4) == 2
+
+
+def test_missing_stimulus_sweep_has_no_epoch_table(tmp_path: Path) -> None:
+    """Store ``None`` for a sweep whose stimulus is missing.
+
+    Args:
+        tmp_path: Temporary directory for the generated NWB file.
+    """
+    path = _write_legacy(tmp_path, response_sweeps=[0, 1], stimulus_sweeps=[1])
+
+    loader = fileLoader_nwb(str(path))
+
+    assert not loader.getLoadError()
+    assert loader.getEpochTable(0) is None
+    epochs = loader.getEpochTable(1).getEpochList()
+    assert len(epochs) == 1
+    assert epochs[0]["level"] == pytest.approx(0.1)
+
+
 @pytest.mark.parametrize(
     ("response_sweeps", "stimulus_sweeps"),
     (

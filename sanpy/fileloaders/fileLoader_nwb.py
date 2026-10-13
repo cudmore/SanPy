@@ -18,6 +18,7 @@ from pynwb.icephys import (
     PatchClampSeries,
 )
 
+from sanpy.fileloaders.epochTable import epochTable
 from sanpy.fileloaders.fileLoader_base import fileLoader_base, recordingModes
 from sanpy.sanpyLogger import get_logger
 
@@ -327,7 +328,51 @@ class fileLoader_nwb(fileLoader_base):
                     xLabel="seconds",
                     yLabel="mv",
                 )
+                if sweep_c is not None:
+                    self._epochTableList = self._build_epoch_tables(
+                        sweep_commands, self._dataPointsPerMs
+                    )
                 self._restore_optional_sanpy_metadata(nwbfile)
+
+    @staticmethod
+    def _build_epoch_tables(
+        sweep_commands: list[Optional[np.ndarray]],
+        data_points_per_ms: float,
+    ) -> list[Optional[epochTable]]:
+        """Build one epoch table per sweep from its current command.
+
+        Assumes every command is a piecewise-constant DC step waveform. A new
+        epoch starts wherever the stored command value changes, and every
+        epoch is a ``Step``. Ramps and other waveform shapes are not detected.
+
+        Args:
+            sweep_commands: Command in nanoamps for each sweep, or ``None``
+                for a sweep whose NWB stimulus is missing.
+            data_points_per_ms: Sampling rate in points per millisecond.
+
+        Returns:
+            One epoch table per sweep, with ``None`` for sweeps without a
+            command.
+        """
+        tables: list[Optional[epochTable]] = []
+        for sweep, command in enumerate(sweep_commands):
+            if command is None:
+                tables.append(None)
+                continue
+            # DC steps only: any change in the stored value starts a new epoch.
+            transitions = np.flatnonzero(np.diff(command) != 0) + 1
+            boundaries = np.concatenate(([0], transitions, [len(command)]))
+            table = epochTable()
+            for start_point, stop_point in zip(boundaries[:-1], boundaries[1:]):
+                table.addEpoch(
+                    sweepNumber=sweep,
+                    startPoint=int(start_point),
+                    stopPoint=int(stop_point),
+                    dataPointsPerMs=data_points_per_ms,
+                    level=float(command[start_point]),
+                )
+            tables.append(table)
+        return tables
 
     @staticmethod
     def _collect_sweep_references(

@@ -672,10 +672,14 @@ class fileLoader_base(ABC):
         return theRet
 
     def getEpochTable(self, sweep: int):
-        """Only proper abf files will have an epoch table.
+        """Return the epoch table stored for one sweep.
 
-        TODO: Make all file loders have an epoch table.
-            Make API so derived file loaders can create their own
+        Args:
+            sweep: Zero-based sweep index into the loader's epoch table list.
+
+        Returns:
+            The sweep's epoch table, or ``None`` when the loader stored no
+            epoch table list or stored ``None`` for that sweep.
         """
         if self._epochTableList is not None:
             return self._epochTableList[sweep]

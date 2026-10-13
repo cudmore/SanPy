@@ -31,15 +31,35 @@ class epochTable():
     def __str__(self):
         return self.getEpochList(asDataFrame=True).to_string()
 
-    def addEpoch(self, sweepNumber, startSec, stopSec, dataPointsPerMs : int, level, type : str = 'Step'):
+    def addEpoch(
+        self,
+        sweepNumber: int,
+        startPoint: int,
+        stopPoint: int,
+        dataPointsPerMs: float,
+        level: float,
+        type: str = "Step",
+    ) -> None:
+        """Append one epoch defined by sample points.
+
+        Points are stored as given. Seconds are derived from points, the same
+        way ``_builFromAbf`` derives them.
+
+        Args:
+            sweepNumber: Sweep the epoch belongs to.
+            startPoint: First sample point of the epoch.
+            stopPoint: Exclusive stop sample point of the epoch.
+            dataPointsPerMs: Sampling rate in points per millisecond.
+            level: Command level of the epoch.
+            type: Epoch type label.
+        """
         newEpochIdx = self.numEpochs()
-        
-        p1 = (startSec * 1000) * dataPointsPerMs
-        p1 = int(p1)
-        
-        p2 = (stopSec * 1000) * dataPointsPerMs
-        p2 = int(p2)
-        
+
+        p1 = int(startPoint)
+        p2 = int(stopPoint)
+        startSec = p1 / dataPointsPerMs / 1000
+        stopSec = p2 / dataPointsPerMs / 1000
+
         epochDict = {
             "sweepNumber": sweepNumber,
             "index": newEpochIdx,

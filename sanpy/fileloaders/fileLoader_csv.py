@@ -167,26 +167,13 @@ class fileLoader_text(fileLoader_base):
                         f"command for sweep {sweep}, epoch {epoch_index} is not constant"
                     )
 
-                start_sec = float(start_point * sample_interval)
-                stop_sec = float(stop_point * sample_interval)
                 table.addEpoch(
                     sweepNumber=sweep,
-                    startSec=start_sec,
-                    stopSec=stop_sec,
+                    startPoint=int(start_point),
+                    stopPoint=int(stop_point),
                     dataPointsPerMs=data_points_per_ms,
                     level=level,
                 )
-                added_epoch = table.getEpochList()[-1]
-                if (
-                    added_epoch["startPoint"] != start_point
-                    or added_epoch["stopPoint"] != stop_point
-                ):
-                    raise ValueError(
-                        "epoch boundary conversion mismatch for "
-                        f"sweep {sweep}, epoch {epoch_index}: expected "
-                        f"[{start_point}, {stop_point}), got "
-                        f"[{added_epoch['startPoint']}, {added_epoch['stopPoint']})"
-                    )
             tables.append(table)
 
         return tables
