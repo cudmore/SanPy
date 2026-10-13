@@ -286,6 +286,7 @@ class NicePoolPlugin(sanpyPlugin):
         self._row_id_to_spike: dict[str, int] = {}
         self._row_id_to_file_key: dict[str, str] = {}
         self._current_file_number: int | None = None
+        self._handling_nicepool_selection: bool = False
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
         self._status_label.setWordWrap(True)
@@ -339,7 +340,11 @@ class NicePoolPlugin(sanpyPlugin):
         """
         if self.ba is None:
             return
-        logger.info(f"NicePool selection: {selection}")
+        
+        logger.info(f"NicePool selection:")
+        logger.info(f"  primaryRowId: {selection['primaryRowId']}")
+        logger.info(f"  selectedRowIds len: {len(selection['selectedRowIds'])}")
+        
         window = self.getSanPyWindow()
         current_state = None if window is None else window.state
         if current_state is None:
@@ -351,8 +356,15 @@ class NicePoolPlugin(sanpyPlugin):
             window.myAnalysisDir,
             current_state,
         )
-        if state is not None:
+        if state is None:
+            return
+        # The window applies the request synchronously and calls back into
+        # slot_window_state; NicePool already shows this selection.
+        self._handling_nicepool_selection = True
+        try:
             self.request_window_state(state)
+        finally:
+            self._handling_nicepool_selection = False
 
     def _spike_results(self) -> pd.DataFrame | None:
         """Return spike results for the current file.
@@ -471,7 +483,7 @@ class NicePoolPlugin(sanpyPlugin):
 
     def selectSpikeList(self) -> None:
         """Apply SanPy's current spike selection to NicePool."""
-        if self._nicepool is None:
+        if self._nicepool is None or self._handling_nicepool_selection:
             return
         selected: list[str] = []
         for spike in self.getSelectedSpikes():

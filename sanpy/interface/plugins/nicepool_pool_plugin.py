@@ -38,8 +38,24 @@ class NicePoolPoolPlugin(NicePoolPlugin):
             self.defer_initial_display()
 
     def replot(self) -> None:
-        """Start a new incremental pool build for the open folder."""
+        """Start a new incremental pool build for the open folder.
+
+        While the window applies this plugin's own NicePool selection, only
+        the current file number is refreshed and the existing pool is kept.
+        """
         if self._nicepool is None:
+            return
+
+        if self._handling_nicepool_selection:
+            # The pool already holds every file; only the current file moved.
+            window = self.getSanPyWindow()
+            analysis_dir = None if window is None else window.myAnalysisDir
+            state = None if window is None else window.state
+            if analysis_dir is not None and state is not None:
+                self._current_file_number = analysis_dir.get_row_for_file_key(
+                    state.file_key
+                )
+            logger.info(f"  early return with current_file_number: {self._current_file_number}")
             return
 
         self._pool_generation += 1
@@ -55,6 +71,7 @@ class NicePoolPoolPlugin(NicePoolPlugin):
             self._pool_row_indices = []
             self._apply_spike_results(None)
             self._finish_initial_pool()
+            logger.info(f'early return when analysis_dir is None')
             return
 
         state = window.state
@@ -65,6 +82,10 @@ class NicePoolPoolPlugin(NicePoolPlugin):
         self._pool_row_indices = [
             int(row_idx) for row_idx in analysis_dir.getDataFrame().index
         ]
+        logger.info(f'  _current_file_number: {self._current_file_number}')
+        logger.info(f'  _pool_row_indices len: {len(self._pool_row_indices)}')
+        logger.info(f'  calling QTimer.singleShot self._pool_next_row with generation:{generation}')
+
         QtCore.QTimer.singleShot(
             0,
             partial(self._pool_next_row, generation),

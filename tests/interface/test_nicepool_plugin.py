@@ -168,6 +168,7 @@ def test_nicepool_pool_plugin_builds_rows_incrementally(
     plugin._pool_position = 0
     plugin._initial_pool_complete = False
     plugin._current_file_number = None
+    plugin._handling_nicepool_selection = False
     plugin._row_id_to_file_key = {}
     plugin._apply_spike_results = MagicMock()
     plugin.mark_initial_display_ready = MagicMock()
@@ -197,6 +198,7 @@ def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
     plugin._nicepool = MagicMock()
     plugin._current_file_number = 4
+    plugin._handling_nicepool_selection = False
     plugin._row_id_to_spike = {"4:2": 2, "4:3": 3, "5:2": 2}
     plugin._selectedSpikeList = [3, 2]
 
@@ -206,6 +208,79 @@ def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
         "4:3",
         ["4:3", "4:2"],
     )
+
+
+def test_nicepool_selection_is_not_echoed_back_to_nicepool() -> None:
+    """Skip the NicePool push while the window applies NicePool's own request."""
+    window = SimpleNamespace(
+        state=WindowState("cell.abf", 0, None),
+        myAnalysisDir=MagicMock(),
+    )
+    plugin = NicePoolPlugin.__new__(NicePoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._ba = MagicMock()
+    plugin._current_file_number = None
+    plugin._handling_nicepool_selection = False
+    plugin._row_id_to_spike = {"2": 2, "3": 3}
+    plugin._row_id_to_file_key = {"2": "cell.abf", "3": "cell.abf"}
+    plugin._selectedSpikeList = [2, 3]
+    plugin.getSanPyWindow = lambda: window
+    window.myAnalysisDir.get_analysis_for_file_key.return_value.getSpikeStat.return_value = [0]
+
+    def echo_state(_state: WindowState, _do_zoom: bool = False) -> None:
+        """Mimic the window calling back into the plugin synchronously.
+
+        Args:
+            _state: Requested window state.
+            _do_zoom: Whether zoom was requested.
+        """
+        plugin.selectSpikeList()
+
+    plugin.request_window_state = MagicMock(side_effect=echo_state)
+
+    plugin._on_nicepool_selection({"primaryRowId": "2", "selectedRowIds": ["2", "3"]})
+
+    plugin.request_window_state.assert_called_once_with(
+        WindowState("cell.abf", 0, (2, 3))
+    )
+    plugin._nicepool.set_selection.assert_not_called()
+    assert plugin._handling_nicepool_selection is False
+    plugin.selectSpikeList()
+    plugin._nicepool.set_selection.assert_called_once_with("2", ["2", "3"])
+
+
+def test_nicepool_pool_own_selection_keeps_pool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Refresh only the current file number for NicePool's own cross-file pick.
+
+    Args:
+        monkeypatch: Pytest fixture used to detect pool timer scheduling.
+    """
+    timers = MagicMock()
+    monkeypatch.setattr(QtCore.QTimer, "singleShot", timers)
+    analysis_dir = MagicMock()
+    analysis_dir.get_row_for_file_key.return_value = 5
+    window = SimpleNamespace(
+        state=WindowState("nested/second.abf", 0, (8,)),
+        myAnalysisDir=analysis_dir,
+    )
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._pool_generation = 3
+    plugin._current_file_number = 1
+    plugin._handling_nicepool_selection = True
+    plugin._apply_spike_results = MagicMock()
+    plugin.getSanPyWindow = lambda: window
+
+    plugin.replot()
+
+    assert plugin._current_file_number == 5
+    assert plugin._pool_generation == 3
+    analysis_dir.get_row_for_file_key.assert_called_once_with("nested/second.abf")
+    timers.assert_not_called()
+    plugin._apply_spike_results.assert_not_called()
+    plugin._nicepool.set_dataframe.assert_not_called()
 
 
 def test_nicepool_pool_without_a_folder_shows_empty_state() -> None:
@@ -218,6 +293,7 @@ def test_nicepool_pool_without_a_folder_shows_empty_state() -> None:
     plugin._pool_position = 0
     plugin._initial_pool_complete = False
     plugin._current_file_number = 3
+    plugin._handling_nicepool_selection = False
     plugin._row_id_to_file_key = {}
     plugin._apply_spike_results = MagicMock()
     plugin.mark_initial_display_ready = MagicMock()
