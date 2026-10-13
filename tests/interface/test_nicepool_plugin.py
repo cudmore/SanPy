@@ -58,7 +58,7 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
             "sweep": [0],
             "epoch": [1],
             "epochLevel": [10.0],
-            "include": [True],
+            "include": ["yes"],
             "thresholdVal": [-42.5],
             "halfHeights": [[10, 50, 90]],
         }
@@ -88,6 +88,7 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
     assert schema_by_name["epochLevel"]["category"] == "acquisition"
     assert schema_by_name["epochLevel"]["axis_label"] == "Epoch level"
     assert schema_by_name["file"]["category"] == "acquisition"
+    assert schema_by_name["include"]["type"] == "string"
     assert schema_by_name["include"]["category"] == "metadata"
     assert schema_by_name["include"]["axis_label"] == "Included"
 
@@ -371,7 +372,7 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
             "sweep": [0, 0],
             "epoch": [0, 0],
             "epochLevel": [10.0, 10.0],
-            "include": [True, True],
+            "include": ["yes", "yes"],
             "thresholdVal": [-42.5, -40.0],
             "spikeFreq_hz": [20.0, 25.0],
         }

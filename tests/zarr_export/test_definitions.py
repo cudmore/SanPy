@@ -62,7 +62,7 @@ def test_spike_condition_is_a_distinct_per_spike_result() -> None:
     """Keep the per-spike condition separate from file-level condition."""
     result = analysisResult().asDict()
 
-    assert "condition" in result
+    assert "condition" not in result
     assert "spike_condition" in result
     assert result["spike_condition"] == ""
     assert analysisResultDict["spike_condition"]["type"] == "str"

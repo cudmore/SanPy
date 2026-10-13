@@ -303,51 +303,18 @@ analysisResultDict[key][
 ###############################################################################
 # METADATA PROPERTIES
 ###############################################################################
-key = "include"
+key = "spike_include"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "bool"
-analysisResultDict[key]["default"] = True
+analysisResultDict[key]["type"] = "str"
+analysisResultDict[key]["default"] = "yes"
 analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Included"
+analysisResultDict[key]["axis_label"] = "Spike included"
 analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
-] = "Boolean to include or not."
-
-key = "cellType"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Cell type"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "User specified cell type"
-
-key = "sex"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sex"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "User specified sex"
-
-key = "condition"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Condition"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "User specified condition"
+] = "Whether an individual spike is included (yes or no)."
 
 key = "file_number"
 analysisResultDict[key] = getDefaultDict()

@@ -4,6 +4,8 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pandas as pd
+import pytest
+
 import sanpy
 
 
@@ -73,41 +75,88 @@ def test_constructor_reports_scan_progress(
     assert str(target) not in statuses[0]
 
 
-def test_pool_spike_dataframe_caches_saved_frames_without_loading_raw_data() -> None:
-    """Reuse cached saved spike results without retaining a temporary analysis."""
+def _saved_folder(path: Path, rel_path: str, uuid: str) -> sanpy.analysisDir:
+    """Return an ``analysisDir`` for one unloaded row saved in ``path``.
+
+    Args:
+        path: Folder holding the folder HDF5 file.
+        rel_path: File-table relative path of the row.
+        uuid: Saved analysis key of the row.
+
+    Returns:
+        Directory with one unloaded row and an empty pool cache.
+    """
     directory = sanpy.analysisDir.__new__(sanpy.analysisDir)
-    directory.path = "/recordings"
+    directory.path = str(path)
+    directory.dbFile = "sanpy_recording_db.csv"
     directory._pool_frame_cache = {}
     directory._df = pd.DataFrame(
-        {
-            "relPath": ["nested/cell.abf"],
-            "uuid": ["saved-uuid"],
-            "_ba": [None],
-        }
+        {"relPath": [rel_path], "uuid": [uuid], "_ba": [None]}
     )
-    analysis = MagicMock()
-    analysis.isAnalyzed.return_value = True
-    analysis.asDataFrame.return_value = pd.DataFrame({"spikeNumber": [2]})
-    directory.loadOneAnalysis = MagicMock(return_value=analysis)
+    return directory
+
+
+def test_pool_spike_dataframe_caches_saved_frames_without_loading_raw_data(
+    tmp_path: Path,
+) -> None:
+    """Read saved results from HDF5 once without opening the recording.
+
+    Args:
+        tmp_path: Temporary folder for the folder HDF5 file.
+    """
+    hdf_path = tmp_path / "sanpy_recording_db.h5"
+    pd.DataFrame({"spikeNumber": [2]}).to_hdf(hdf_path, key="saved-uuid/analysisList")
+    pd.DataFrame([{"condition": "drug"}]).to_hdf(
+        hdf_path, key="saved-uuid/metaDataDict"
+    )
+    directory = _saved_folder(tmp_path, "nested/cell.abf", "saved-uuid")
+    directory.loadOneAnalysis = MagicMock()
     statuses: list[str] = []
 
     first = directory.pool_spike_dataframe(status_callback=statuses.append)
     assert first is not None
     first.loc[0, "spikeNumber"] = 99
+    hdf_path.unlink()
     second = directory.pool_spike_dataframe()
 
     assert second is not None
     assert second.loc[0, "spikeNumber"] == 2
+    assert second.loc[0, "condition"] == "drug"
     assert second.loc[0, "file_number"] == 0
     assert second.loc[0, "file_key"] == "nested/cell.abf"
     assert second.loc[0, "row_id"] == "0:2"
     assert directory._df.at[0, "_ba"] is None
-    directory.loadOneAnalysis.assert_called_once_with(
-        "/recordings/nested/cell.abf",
-        "saved-uuid",
-        allowAutoLoad=False,
-    )
+    directory.loadOneAnalysis.assert_not_called()
     assert statuses == ['Pooling file 1 of 1 "nested/cell.abf"']
+
+
+def test_pool_saved_frame_matches_analysis_dataframe(
+    test_data_dir: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Build the same table from HDF5 as ``bAnalysis.asDataFrame()``.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+        tmp_path: Temporary folder for the folder HDF5 file.
+        monkeypatch: Pytest fixture used to skip the per-recording CSV export.
+    """
+    analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
+    analysis.spikeDetect(sanpy.bDetection().getDetectionDict("SA Node"))
+    analysis.metaData.setMetaData("condition", "drug")
+    monkeypatch.setattr(analysis, "saveAnalysis_tocsv", lambda *args, **kwargs: None)
+    assert analysis._saveHdf_pytables(str(tmp_path / "sanpy_recording_db.h5"))
+    directory = _saved_folder(tmp_path, "19114001.abf", analysis.uuid)
+
+    pooled = directory.spike_dataframe_for_row(0)
+
+    assert pooled is not None
+    expected = analysis.asDataFrame(regenerateAnalysisDataFrame=True)
+    pd.testing.assert_frame_equal(
+        pooled.drop(columns=["file_number", "file_key", "row_id"]),
+        expected.drop(columns=["file_number"]),
+    )
 
 
 def test_pool_spike_dataframe_prefers_live_analysis_and_evicts_cache() -> None:

@@ -6,7 +6,7 @@ from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
-EDITABLE_SPIKE_RESULTS = ("spike_condition", "userType", "include")
+EDITABLE_SPIKE_RESULTS = ("spike_condition", "userType", "spike_include")
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
@@ -54,7 +54,7 @@ class SetSpikeStat(sanpyPlugin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.trueFalseItems = ["True", "False"]
+        self.trueFalseItems = ["yes", "no"]
         
         # for now, only allow a few user types, we run out of plot markers
         self.userTypeItems = ["0", "1", "2", "3"]
@@ -145,14 +145,14 @@ class SetSpikeStat(sanpyPlugin):
         colStr = self._statComboBox.currentText()
 
         # like a radio button, either one or the other but not both (disjoint)
-        trueFalseEnabled = colStr in ["include", "userType"]
+        trueFalseEnabled = colStr in ["spike_include", "userType"]
         self._lineEdit.setEnabled(not trueFalseEnabled)
         self._valueComboBox.setEnabled(trueFalseEnabled)
 
         # switch items in combobox
         if "userType" in colStr:
             items = self.userTypeItems
-        elif colStr == "include":
+        elif colStr == "spike_include":
             items = self.trueFalseItems
         else:
             items = None
@@ -170,13 +170,7 @@ class SetSpikeStat(sanpyPlugin):
         """Respond to user clicking the 'set' button."""
         colStr = self._statComboBox.currentText()
 
-        if colStr in ["include"]:
-            value = self._valueComboBox.currentText()
-            if value == 'True':
-                value = True
-            else:
-                value = False
-        elif colStr in ["userType"]:
+        if colStr in ["spike_include", "userType"]:
             value = self._valueComboBox.currentText()
         else:
             value = self._lineEdit.text()

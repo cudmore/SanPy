@@ -120,7 +120,7 @@ def getPlotMarkersAndColors(
         # cm = ListedColormap([_color_dict[x] for x in _color_dict.keys()])
         # self.lines.set_cmap(cm)
 
-        goodSpikes = ba.getSpikeStat(spikeList, "include")
+        goodSpikes = ba.getSpikeStat(spikeList, "spike_include")
         #print('goodSpikes:', goodSpikes)
         userTypeList = ba.getSpikeStat(spikeList, "userType")
 
@@ -134,7 +134,7 @@ def getPlotMarkersAndColors(
         # faceColors is used to set_facecolor() and set_color
         if goodSpikes is not None:
             faceColors = [
-                _color_dict["good"] if x else _color_dict["bad"]
+                _color_dict["good"] if x == "yes" else _color_dict["bad"]
                 for idx, x in enumerate(goodSpikes)  # x is (good, bad), (1,0)
             ]
         #faceColors = np.array(faceColors)
@@ -1155,15 +1155,15 @@ class plotScatter(sanpyPlugin):
         if text == "Accept":
             # print('Set selected spikes to include (not isbad)')
             # self.ba.setSpikeStat(_selectedSpikes, "include", False)
-            setSpikeStatEvent["colStr"] = 'include'  # colStr
-            setSpikeStatEvent["value"] = True  # value
+            setSpikeStatEvent["colStr"] = 'spike_include'  # colStr
+            setSpikeStatEvent["value"] = "yes"  # value
             # self.replot()
             handled = True
         elif text == "Reject":
             # print('Set selected spikes to reject (isbad)')
             # self.ba.setSpikeStat(_selectedSpikes, "include", True)
-            setSpikeStatEvent["colStr"] = 'include'  # colStr
-            setSpikeStatEvent["value"] = False  # value
+            setSpikeStatEvent["colStr"] = 'spike_include'  # colStr
+            setSpikeStatEvent["value"] = "no"  # value
             # self.replot()
             handled = True
         elif text == "User Type 1":
@@ -1217,7 +1217,7 @@ class plotScatter(sanpyPlugin):
         spikeTimeSec = self.getStat("thresholdSec")
         xStat = self.getStat(self.xStatName)
         yStat = self.getStat(self.yStatName)
-        goodSpikes = self.getStat("include")
+        goodSpikes = self.getStat("spike_include")
         userType = self.getStat("userType")
         file = self.getStat("file")
 

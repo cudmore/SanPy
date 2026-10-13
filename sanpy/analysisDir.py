@@ -1284,8 +1284,9 @@ class analysisDir:
         """Return pooled spike results for one file-table row.
 
         A loaded analysis is always authoritative. For an unloaded row, a
-        matching cached frame is reused or the saved analysis is loaded without
-        raw sweep arrays. Temporary analyses are not stored in the file table.
+        matching cached frame is reused or the saved spike results and file
+        metadata are read from the folder HDF5 file without opening the
+        recording.
 
         Args:
             row_idx: File-table row index.
@@ -1304,6 +1305,9 @@ class analysisDir:
 
         if not cache_result:
             self._pool_frame_cache.pop(file_key, None)
+            if not ba.isAnalyzed():
+                return None
+            one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
         else:
             cached = self._pool_frame_cache.get(file_key)
             if cached is not None:
@@ -1313,12 +1317,24 @@ class analysisDir:
                 self._pool_frame_cache.pop(file_key, None)
             if not uuid:
                 return None
-            file_path = self.getPathFromRelPath(file_key)
-            ba = self.loadOneAnalysis(file_path, uuid, allowAutoLoad=False)
+            with pd.HDFStore(self._getHdfFile(), mode="r") as store:
+                analysis_key = f"/{uuid}/analysisList"
+                if analysis_key not in store:
+                    return None
+                spikes = sanpy.bAnalysisResults.analysisResultList()
+                spikes.setFromListDict(store[analysis_key].to_dict("records"))
+                metadata = MetaData()
+                metadata_key = f"/{uuid}/metaDataDict"
+                if metadata_key in store:
+                    saved = store[metadata_key].to_dict("records")[0]
+                    metadata.fromDict(
+                        {k: v for k, v in saved.items() if k in metadata},
+                        triggerDirty=False,
+                    )
+            one_df = sanpy.bAnalysis_.analysis_dataframe(
+                spikes.asDataFrame(), metadata
+            )
 
-        if ba is None or not ba.isAnalyzed():
-            return None
-        one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
         if one_df is None or one_df.empty:
             if cache_result:
                 self._pool_frame_cache[file_key] = (uuid, pd.DataFrame())

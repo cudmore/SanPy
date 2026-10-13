@@ -38,6 +38,20 @@ from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+
+def analysis_dataframe(spike_df: pd.DataFrame, metadata: Dict[str, str]) -> pd.DataFrame:
+    """Return spike results with one column per file metadata value.
+
+    Args:
+        spike_df: One row per spike, as built by ``analysisResultList``.
+        metadata: File metadata values keyed by metadata name.
+
+    Returns:
+        ``spike_df`` with each metadata value copied into a column of the same name.
+    """
+    return spike_df.assign(**metadata)
+
+
 class bAnalysis:
     """Represent a loaded recording and its analysis results.
 
@@ -1570,10 +1584,6 @@ class bAnalysis:
 
             spikeDict[i]["detectionType"] = detectionType
 
-            spikeDict[i]["cellType"] = dDict["cellType"]
-            spikeDict[i]["sex"] = dDict["sex"]
-            spikeDict[i]["condition"] = dDict["condition"]
-
             spikeDict[i]["sweep"] = sweepNumber
 
             epoch = float("nan")
@@ -1592,7 +1602,7 @@ class bAnalysis:
             spikeDict[i]["sweepSpikeNumber"] = i
             spikeDict[i]["spikeNumber"] = self.numSpikes + i
 
-            spikeDict[i]["include"] = True
+            spikeDict[i]["spike_include"] = "yes"
 
             # todo: make this a byte encoding so we can have multiple user tyes per spike
             spikeDict[i]["userType"] = 0  # One userType (int) that can have values
@@ -2053,28 +2063,12 @@ class bAnalysis:
 
         ## done
 
-    def regenerateAnalysisDataFrame(self):
+    def regenerateAnalysisDataFrame(self) -> None:
+        """Rebuild the analysis table from spike results and file metadata."""
         if self.numSpikes > 0:
-            # exportObject = sanpy.bExport(self)
-            # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
-            self._dfReportForScatter = self.spikeDict.asDataFrame()
-
-            # get rid of analysis results columns, we get these from file metadata
-            #  - include
-            #  - cellType
-            #  - sex
-            #  - condition
-            self._dfReportForScatter = self._dfReportForScatter.drop('include', axis=1)
-            self._dfReportForScatter = self._dfReportForScatter.drop('cellType', axis=1)
-            self._dfReportForScatter = self._dfReportForScatter.drop('sex', axis=1)
-            # 202401 removed
-            # self._dfReportForScatter = self._dfReportForScatter.drop('condition', axis=1)
-
-            # add all file meta data to df
-            for k,v in self.metaData.items():
-                # logger.info(f'   adding metadata {k} {v}')
-                self._dfReportForScatter[k] = v
-
+            self._dfReportForScatter = analysis_dataframe(
+                self.spikeDict.asDataFrame(), self.metaData
+            )
         else:
             self._dfReportForScatter = None
 

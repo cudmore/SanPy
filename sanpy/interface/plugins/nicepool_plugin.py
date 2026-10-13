@@ -134,9 +134,7 @@ def prepare_nicepool_data(
     definitions = get_plot_result_definitions()
 
     # Build selected_names in NicePool column order: identity columns first,
-    # then plot-menu results present in this dataframe. Keep the first
-    # occurrence so a name such as "include", which is both an identity
-    # column and a plot-menu result, is projected once.
+    # then plot-menu results present in this dataframe, each projected once.
     selected_names: list[str] = []
     seen_names: set[str] = set()
     for name in (*_IDENTITY_COLUMNS, *definitions):
@@ -156,7 +154,7 @@ def prepare_nicepool_data(
         "include": {
             "axis_label": "Included",
             "category": "metadata",
-            "type": "bool",
+            "type": "str",
             "is_categorical": True,
         },
     }

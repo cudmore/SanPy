@@ -31,14 +31,13 @@ def test_set_spike_stat_updates_annotation_fields() -> None:
 
     analysis.setSpikeStat([0, 1], "spike_condition", "drug")
     analysis.setSpikeStat([0, 1], "userType", 3)
-    analysis.setSpikeStat([0, 1], "include", False)
+    analysis.setSpikeStat([0, 1], "spike_include", "no")
 
-    assert EDITABLE_SPIKE_RESULTS == ("spike_condition", "userType", "include")
+    assert EDITABLE_SPIKE_RESULTS == ("spike_condition", "userType", "spike_include")
     for spike in analysis.spikeDict:
         assert spike["spike_condition"] == "drug"
-        assert spike["condition"] == ""
         assert spike["userType"] == 3
-        assert spike["include"] is False
+        assert spike["spike_include"] == "no"
         assert spike["modDate"]
         assert spike["modTime"]
     assert analysis._detectionDirty

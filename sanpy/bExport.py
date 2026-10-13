@@ -75,7 +75,7 @@ class bExport:
         # print('bExport.report()')
         # print(df.head())
         tmpNewCol = "CellTypeSex"
-        cellTypeStr = df["cellType"].iloc[0]
+        cellTypeStr = df["cell_type"].iloc[0]
         sexStr = df["sex"].iloc[0]
         # print('cellTypeStr:', cellTypeStr, 'sexStr:', sexStr)
         regSexEncoding = cellTypeStr + sexStr
@@ -252,9 +252,9 @@ class bExport:
         headerDict["File Name"] = [fileName]
         headerDict["File Path"] = [filePath]
 
-        headerDict["Cell Type"] = [dDict["cellType"]]
-        headerDict["Sex"] = [dDict["sex"]]
-        headerDict["Condition"] = [dDict["condition"]]
+        headerDict["Cell Type"] = [self.ba.metaData["cell_type"]]
+        headerDict["Sex"] = [self.ba.metaData["sex"]]
+        headerDict["Condition"] = [self.ba.metaData["condition"]]
 
         headerDict["Date Analyzed"] = [
             self.ba.analysisDate
@@ -424,9 +424,9 @@ class bExport:
             headerDict["File Name"] = [fileName]
             headerDict["File Path"] = [filePath]
 
-            headerDict["Cell Type"] = [dDict["cellType"]]
-            headerDict["Sex"] = [dDict["sex"]]
-            headerDict["Condition"] = [dDict["condition"]]
+            headerDict["Cell Type"] = [self.ba.metaData["cell_type"]]
+            headerDict["Sex"] = [self.ba.metaData["sex"]]
+            headerDict["Condition"] = [self.ba.metaData["condition"]]
 
             # todo: get these params in ONE dict inside self.ba
             # dateAnalyzed, timeAnalyzed = self.ba.dateAnalyzed.split(' ')
@@ -635,8 +635,6 @@ class bExport:
         """
         filePath, fileName = os.path.split(os.path.abspath(savefile))
 
-        dDict = self.ba.getDetectionDict()
-
         # make an analysis folder
         filePath = os.path.join(filePath, "analysis")
         if not os.path.isdir(filePath):
@@ -646,37 +644,6 @@ class bExport:
         textFileBaseName, tmpExtension = os.path.splitext(fileName)
         textFilePath = os.path.join(filePath, textFileBaseName + ".csv")
 
-        # save header
-        textFileHeader = OrderedDict()
-        textFileHeader["file"] = self.ba.fileLoader.filename
-        textFileHeader["cellType"] = dDict["cellType"]
-        textFileHeader["sex"] = dDict["sex"]
-        textFileHeader["condition"] = dDict["condition"]
-        #
-        textFileHeader["dateAnalyzed"] = self.ba.dateAnalyzed
-        textFileHeader["detectionType"] = dDict["detectionType"]
-        textFileHeader["dvdtThreshold"] = [dDict["dvdtThreshold"]]
-        textFileHeader["mvThreshold"] = [dDict["mvThreshold"]]
-        # textFileHeader['medianFilter'] = self.ba.medianFilter
-        textFileHeader["startSeconds"] = "%.2f" % (theMin)
-        textFileHeader["stopSeconds"] = "%.2f" % (theMax)
-        # textFileHeader['startSeconds'] = self.ba.startSeconds
-        # textFileHeader['stopSeconds'] = self.ba.stopSeconds
-        textFileHeader["currentSweep"] = "Default 0"  # self.ba.currentSweep
-        textFileHeader["numSweeps"] = self.ba.fileLoader.numSweeps
-        # textFileHeader['theMin'] = theMin
-        # textFileHeader['theMax'] = theMax
-
-        # 20210125, this is not needed, we are saviing pandas df below ???
-        headerStr = ""
-        for k, v in textFileHeader.items():
-            headerStr += k + "=" + str(v) + ";"
-        headerStr += "\n"
-        # print('headerStr:', headerStr)
-        with open(textFilePath, "w") as f:
-            f.write(headerStr)
-
-        # df = self.report(theMin, theMax)
         df = self.ba.asDataFrame()
 
         # we need a column indicating (path), the original .abf file

@@ -36,7 +36,7 @@ class _ScatterAnalysis:
         values = {
             "sweep": [0, 0, 3],
             "spike_condition": ["control", "drug", "control"],
-            "include": [True, False, True],
+            "spike_include": ["yes", "no", "yes"],
             "userType": [0, 1, 0],
         }
         return [values[stat][index] for index in spike_list]

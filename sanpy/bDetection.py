@@ -159,39 +159,6 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     theDict[key]["errors"] = ""
     theDict[key]["description"] = "Stop seconds of analysis"
 
-    key = "cellType"
-    theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.GENERAL
-    theDict[key]["defaultValue"] = ""
-    theDict[key]["type"] = "string"
-    theDict[key]["allowNone"] = False
-    theDict[key]["units"] = ""
-    theDict[key]["humanName"] = "Cell Type"
-    theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Cell Type"
-
-    key = "sex"
-    theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.GENERAL
-    theDict[key]["defaultValue"] = ""
-    theDict[key]["type"] = "string"
-    theDict[key]["allowNone"] = False
-    theDict[key]["units"] = ""
-    theDict[key]["humanName"] = "Sex"
-    theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Sex"
-
-    key = "condition"
-    theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.GENERAL
-    theDict[key]["defaultValue"] = ""
-    theDict[key]["type"] = "string"
-    theDict[key]["allowNone"] = False
-    theDict[key]["units"] = ""
-    theDict[key]["humanName"] = "Condition"
-    theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Condition"
-
     key = "userType"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.GENERAL
@@ -1093,10 +1060,6 @@ def test_0():
     ok1_5 = bd.setValue("mvThreshold", None)
     if not ok1_5:
         print("failure ok ok1_5:", ok1_5)
-
-    ok2 = bd.setValue("cellType", "111")
-    if not ok2:
-        print("ok2:", ok2)
 
     # for setting list, check that (i) not empty and (ii) list[i] == expected type
     ok3 = bd.setValue("halfHeights", [])
