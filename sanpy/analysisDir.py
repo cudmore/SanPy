@@ -592,7 +592,7 @@ class analysisDir:
         hdfFile = os.path.splitext(self.dbFile)[0] + ".h5"
         hdfFilePath = pathlib.Path(self.path) / hdfFile
 
-        logger.info(f"Saving db (will be compressed) {hdfFilePath}")
+        logger.info(f"Saving h5 db (will be compressed) {hdfFilePath}")
 
         # save each bAnalysis
         for row in range(len(df)):
@@ -601,7 +601,6 @@ class analysisDir:
                 didSave = ba._saveHdf_pytables(hdfFilePath)
                 if didSave:
                     # we are now saved into h5 file, remember uuid to load
-                    # print('xxx SETTING dir uuid')
                     df.at[row, "uuid"] = ba.uuid
                     self._pool_frame_cache.pop(self.get_file_key(row), None)
 

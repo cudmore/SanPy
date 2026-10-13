@@ -1,7 +1,7 @@
 from .fileLoader_abf import fileLoader_abf
 from .fileLoader_atf import fileLoader_atf
 
-from .fileLoader_csv import fileLoader_text
+from .fileLoader_sanpy import fileLoader_sanpy
 
 from importlib.util import find_spec
 if find_spec("pynwb") is not None:

@@ -1300,7 +1300,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def saveFilesTable(self):
         """Save the folder HDF5 file, raising if the save does not complete."""
-        # logger.info('')
         self.myAnalysisDir.saveHdf()
         self.slot_updateStatus(f"Save analysis for folder: {self.myAnalysisDir.path}")
         return True

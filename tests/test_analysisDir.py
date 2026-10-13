@@ -145,7 +145,10 @@ def test_pool_saved_frame_matches_analysis_dataframe(
     analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
     analysis.spikeDetect(sanpy.bDetection().getDetectionDict("SA Node"))
     analysis.metaData.setMetaData("condition", "drug")
+
+    # Guard: keep _saveHdf_pytables from writing a per-recording CSV into test_data_dir.
     monkeypatch.setattr(analysis, "saveAnalysis_tocsv", lambda *args, **kwargs: None)
+
     assert analysis._saveHdf_pytables(str(tmp_path / "sanpy_recording_db.h5"))
     directory = _saved_folder(tmp_path, "19114001.abf", analysis.uuid)
 

@@ -104,13 +104,8 @@ class bAnalysis:
 
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
 
-        # sept 9, moving this to file loader
-        # fileloader holds meta data
-        #self._metaData = MetaData(self)  #self.getMetaDataDict()
-        # abb 202610 moved back to banalysis
-        self._metaData = sanpy.metaData.MetaData()
+        self._metaData = sanpy.metaData.MetaData()  # experimental metadata
 
-        # abb 20261012 moved from fileloader
         # only assign when fileloader data is loaded
         self._sweep_conditions: Dict[int, str] = {}
         self._sweep_conditions_dirty: bool = False
@@ -283,8 +278,10 @@ class bAnalysis:
             logger.info(f"NOT SAVING, is not dirty {self}")
             return False
 
-        if detection_dirty:
-            self.saveAnalysis_tocsv()
+        # abb removed 20261013, do not contaminate users data folder
+        # all our needed info is saved in h5 file
+        # if detection_dirty:
+        #     self.saveAnalysis_tocsv()
 
         # when making df from dict, need to pass it a list
         # o.w. key values that are lists get expanded into rows
@@ -2511,10 +2508,6 @@ class bAnalysis:
         df = self.asDataFrame()  # pd.DataFrame(self.spikeDict)
         if df is not None:
             df.to_csv(path, mode="a")
-        # else:
-            # happens when user sets metaDat but does not do analysis
-            # logger.warning(f'asDataFrame() returned None')
-            # logger.warning(f'  did not save: {self}')
 
     def saveAnalysis(self, forceSave=False):
         """Not used.

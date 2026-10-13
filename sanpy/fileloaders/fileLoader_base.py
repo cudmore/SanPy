@@ -179,13 +179,6 @@ class fileLoader_base(ABC):
     """
 
     loadFileType: str = ""
-    # @property
-    # @abstractmethod
-    # def loadFileType(self) -> str:
-    #     """Derived classes must return the file type to handle.
-    #     For example, 'csv', or 'm', or 'dat'
-    #     """
-    #     pass
 
     @abstractmethod
     def loadFile(self) -> None:
@@ -209,14 +202,6 @@ class fileLoader_base(ABC):
 
         self._path = filepath
         self._loadData = loadData
-
-        # abb 202610 moved back to banalysis
-        # per file experimentalmetadata
-        # self._metaData = sanpy.metaData.MetaData()
-
-        # abb 202610 moved into banalysis
-        # self._sweep_conditions: Dict[int, str] = {}
-        # self._sweep_conditions_dirty: bool = False
 
         self._fileMetadata: Optional[FileMetadata] = None
         self._acqDate: str = ""

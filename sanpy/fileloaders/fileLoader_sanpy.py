@@ -60,7 +60,7 @@ def _parse_sanpy_columns(
     return recording_token, recording_columns, command_columns, has_epoch_index
 
 
-class fileLoader_text(fileLoader_base):
+class fileLoader_sanpy(fileLoader_base):
     """Load a canonical ``.sanpy`` recording without raising into the GUI."""
 
     loadFileType = ".sanpy"
