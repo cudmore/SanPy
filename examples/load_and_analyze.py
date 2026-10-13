@@ -20,6 +20,15 @@ def analyze_folder():
             print(f"Failed to load row {row_index}")
             continue
         # print(analysis)
+
+        # set banalysis experimental metadata based on file name
+        # name begins with 'sub-c'' -> condiiton = 'sub-c'
+        # name begins with 'sub-m'' -> condiiton = 'sub-m'
+        file_name = analysis.getFileName().lower()
+        for condition in ("sub-c", "sub-m"):
+            if file_name.startswith(condition):
+                analysis.metaData.setMetaData("condition", condition)
+
         analysis.spikeDetect(detection_parameters)
 
         # debug

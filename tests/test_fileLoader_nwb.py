@@ -320,17 +320,40 @@ def test_builds_epoch_table_from_dc_step_command(tmp_path: Path) -> None:
     assert loader.getEpochTable(0).findEpoch(4) == 2
 
 
-def test_flat_sweep_borrows_epochs_from_stepped_sweeps(tmp_path: Path) -> None:
-    """Give a flat 0 nA sweep the stepped sweeps' epoch boundaries.
+@pytest.mark.parametrize(
+    ("commands", "expected_bounds", "expected_levels"),
+    (
+        (
+            (np.array([0.0, 0.0, 1e-10, 1e-10, 0.0]), np.zeros(_POINTS)),
+            [(0, 2), (2, 4), (4, 5)],
+            ([0.0, 0.1, 0.0], [0.0, 0.0, 0.0]),
+        ),
+        (
+            (
+                np.array([0.0, 1e-10, 1e-10, 0.0, 0.0]),
+                np.array([0.0, 0.0, 0.0, 2e-10, 0.0]),
+            ),
+            [(0, 1), (1, 3), (3, 4), (4, 5)],
+            ([0.0, 0.1, 0.0, 0.0], [0.0, 0.0, 0.2, 0.0]),
+        ),
+    ),
+    ids=("flat-sweep", "no-sweep-shows-every-change"),
+)
+def test_sweeps_share_union_of_change_points(
+    tmp_path: Path,
+    commands: tuple[np.ndarray, ...],
+    expected_bounds: list[tuple[int, int]],
+    expected_levels: tuple[list[float], ...],
+) -> None:
+    """Give every sweep the union of change points across all sweeps.
 
     Args:
         tmp_path: Temporary directory for the generated NWB file.
+        commands: Stimulus in amperes for each sweep.
+        expected_bounds: Shared epoch start and stop points.
+        expected_levels: Expected epoch levels in nanoamps for each sweep.
     """
     nwbfile, electrode = _new_nwbfile()
-    commands = (
-        np.array([0.0, 0.0, 1e-10, 1e-10, 0.0]),
-        np.zeros(_POINTS),
-    )
     for sweep_number, data in enumerate(commands):
         nwbfile.add_intracellular_recording(
             electrode=electrode,
@@ -347,19 +370,16 @@ def test_flat_sweep_borrows_epochs_from_stepped_sweeps(tmp_path: Path) -> None:
                 sweep_number=np.uint64(sweep_number),
             ),
         )
-    path = _write(nwbfile, tmp_path / "flat-and-stepped.nwb")
+    path = _write(nwbfile, tmp_path / "union.nwb")
 
     loader = fileLoader_nwb(str(path))
 
     assert not loader.getLoadError()
-    assert loader.numEpochs == 3
-    flat_epochs = loader.getEpochTable(1).getEpochList()
-    assert [(e["startPoint"], e["stopPoint"]) for e in flat_epochs] == [
-        (0, 2),
-        (2, 4),
-        (4, 5),
-    ]
-    assert [e["level"] for e in flat_epochs] == [0.0, 0.0, 0.0]
+    assert loader.numEpochs == len(expected_bounds)
+    for sweep, levels in enumerate(expected_levels):
+        epochs = loader.getEpochTable(sweep).getEpochList()
+        assert [(e["startPoint"], e["stopPoint"]) for e in epochs] == expected_bounds
+        np.testing.assert_allclose([e["level"] for e in epochs], levels)
 
 
 def test_missing_stimulus_sweep_has_no_epoch_table(tmp_path: Path) -> None:
