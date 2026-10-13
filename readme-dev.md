@@ -1,3 +1,19 @@
+## Run the dev GUI (PyQt, NWB, NicePool) on macOS
+
+From a new Terminal:
+
+```
+cd ~/Sites/SanPy
+
+uv pip install --python .venv/bin/python --editable ../cs_project/mapmanager-web-components/integrations/nicepool-pyqt5
+
+uv run --extra gui --extra nwb sanpy
+```
+
+- Always run the `uv pip install` line. `uv sync` removes the editable NicePool install because it is not in `uv.lock`; `uv run` does not.
+- After changing NicePool frontend code, rebuild it first:
+  `(cd ../cs_project/mapmanager-web-components && npm run build --workspace @mapmanager/nicepool-pyqt5-frontend)`
+
 ## 20230726
 
 - file loaders

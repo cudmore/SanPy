@@ -124,3 +124,20 @@ def test_b_analysis_retains_header_only_loader(test_data_dir: Path) -> None:
     assert analysis.fileLoader is not None
     assert analysis.fileLoader.recordingDur == 60.0
     assert analysis.fileLoader._sweepY is None
+
+
+def test_b_analysis_header_only_keeps_sweep_conditions(test_data_dir: Path) -> None:
+    """Accept saved sweep conditions when raw arrays are not loaded.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    analysis = sanpy.bAnalysis(
+        str(test_data_dir / "19114001.abf"),
+        loadData=False,
+    )
+    sweep = analysis.fileLoader.sweepList[0]
+
+    assert analysis.getSweepCondition(sweep) == ""
+    analysis.setSweepCondition(sweep, "drug")
+    assert analysis.getSweepCondition(sweep) == "drug"

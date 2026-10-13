@@ -9,6 +9,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtGui
 
 from sanpy.interface.plugins.nicepool_plugin import NicePoolPlugin
+from sanpy.interface.window_state import WindowState
 from sanpy.sanpyLogger import get_logger
 
 
@@ -38,24 +39,8 @@ class NicePoolPoolPlugin(NicePoolPlugin):
             self.defer_initial_display()
 
     def replot(self) -> None:
-        """Start a new incremental pool build for the open folder.
-
-        While the window applies this plugin's own NicePool selection, only
-        the current file number is refreshed and the existing pool is kept.
-        """
+        """Start a new incremental pool build for the open folder."""
         if self._nicepool is None:
-            return
-
-        if self._handling_nicepool_selection:
-            # The pool already holds every file; only the current file moved.
-            window = self.getSanPyWindow()
-            analysis_dir = None if window is None else window.myAnalysisDir
-            state = None if window is None else window.state
-            if analysis_dir is not None and state is not None:
-                self._current_file_number = analysis_dir.get_row_for_file_key(
-                    state.file_key
-                )
-            logger.info(f"  early return with current_file_number: {self._current_file_number}")
             return
 
         self._pool_generation += 1
@@ -90,6 +75,34 @@ class NicePoolPoolPlugin(NicePoolPlugin):
             0,
             partial(self._pool_next_row, generation),
         )
+
+    def slot_window_state(self, state: WindowState) -> None:
+        """Track the selected file and selection without rebuilding the pool.
+
+        Args:
+            state: State already validated and rendered by the main window.
+        """
+        window = self.getSanPyWindow()
+        analysis_dir = None if window is None else window.myAnalysisDir
+        if analysis_dir is None:
+            return
+        ba = analysis_dir.get_analysis_for_file_key(state.file_key)
+        if ba is None:
+            return
+        self._ba = ba
+        self._current_file_number = analysis_dir.get_row_for_file_key(state.file_key)
+        self._selectedSpikeList = list(state.spike_selection or ())
+        self.selectedSpike = (
+            self._selectedSpikeList[0] if self._selectedSpikeList else None
+        )
+
+        logger.info(f'  _current_file_number: {self._current_file_number}')
+        logger.info(f'  _selectedSpikeList len: {len(self._selectedSpikeList)}')
+        logger.info(f'  self.selectedSpike: {self.selectedSpike}')
+
+        self._mySetWindowTitle()
+        self._updateTopToolbar()
+        self.selectSpikeList()
 
     def _pool_next_row(self, generation: int) -> None:
         """Process one file and schedule the next pooling turn.

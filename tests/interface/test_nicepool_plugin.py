@@ -249,38 +249,42 @@ def test_nicepool_selection_is_not_echoed_back_to_nicepool() -> None:
     plugin._nicepool.set_selection.assert_called_once_with("2", ["2", "3"])
 
 
-def test_nicepool_pool_own_selection_keeps_pool(
+def test_nicepool_pool_file_change_keeps_pool(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Refresh only the current file number for NicePool's own cross-file pick.
+    """Track a new current file and its selection without rebuilding the pool.
 
     Args:
         monkeypatch: Pytest fixture used to detect pool timer scheduling.
     """
     timers = MagicMock()
     monkeypatch.setattr(QtCore.QTimer, "singleShot", timers)
+    second = MagicMock()
     analysis_dir = MagicMock()
+    analysis_dir.get_analysis_for_file_key.return_value = second
     analysis_dir.get_row_for_file_key.return_value = 5
-    window = SimpleNamespace(
-        state=WindowState("nested/second.abf", 0, (8,)),
-        myAnalysisDir=analysis_dir,
-    )
+    window = SimpleNamespace(myAnalysisDir=analysis_dir)
     plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
     plugin._nicepool = MagicMock()
+    plugin._ba = MagicMock()
     plugin._pool_generation = 3
     plugin._current_file_number = 1
-    plugin._handling_nicepool_selection = True
-    plugin._apply_spike_results = MagicMock()
+    plugin._handling_nicepool_selection = False
+    plugin._row_id_to_spike = {"5:8": 8, "1:8": 8}
+    plugin._selectedSpikeList = []
+    plugin._mySetWindowTitle = MagicMock()
+    plugin._updateTopToolbar = MagicMock()
     plugin.getSanPyWindow = lambda: window
 
-    plugin.replot()
+    plugin.slot_window_state(WindowState("nested/second.abf", 0, (8,)))
 
+    assert plugin.ba is second
     assert plugin._current_file_number == 5
+    assert plugin.selectedSpike == 8
     assert plugin._pool_generation == 3
-    analysis_dir.get_row_for_file_key.assert_called_once_with("nested/second.abf")
     timers.assert_not_called()
-    plugin._apply_spike_results.assert_not_called()
     plugin._nicepool.set_dataframe.assert_not_called()
+    plugin._nicepool.set_selection.assert_called_once_with("5:8", ["5:8"])
 
 
 def test_nicepool_pool_without_a_folder_shows_empty_state() -> None:

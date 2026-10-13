@@ -186,7 +186,7 @@ class bAnalysis:
         if (
             self._fileLoader is not None
             and not self.loadError
-            and self._fileLoader._sweepY is not None
+            and self._fileLoader.sweepList is not None
         ):
             for sweep in self._fileLoader.sweepList:
                 self._sweep_conditions.setdefault(sweep, "")
