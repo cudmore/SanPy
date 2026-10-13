@@ -415,7 +415,7 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     assert applied_state["layout"] == "1x2"
     for plot in applied_state["plots"][:2]:
         assert plot["plotType"] == "swarm"
-        assert plot["groupColumn"] == "epochLevel"
+        assert plot["groupColumn"] == "sweep"
         assert plot["yColumn"] == "spikeFreq_hz"
         assert plot["showPlotlyToolbar"] is False
     presets: list[object] = []

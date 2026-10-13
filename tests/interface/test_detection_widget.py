@@ -155,7 +155,7 @@ def test_invalid_spike_still_applies_valid_file_and_sweep(
 
     assert window.state == WindowState(file_key, 1, None)
     assert window.myDetectionWidget.sweepNumber == 1
-    assert "Ignoring invalid spike selection" in window.statusBar.currentMessage()
+    assert "Ignoring invalid spike selection" in window.statusBar().currentMessage()
 
 def test_theme_switch_updates_existing_recording_plots(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
