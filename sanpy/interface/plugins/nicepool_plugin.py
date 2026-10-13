@@ -285,6 +285,11 @@ class NicePoolPlugin(sanpyPlugin):
         self._row_id_to_file_key: dict[str, str] = {}
         self._current_file_number: int | None = None
         self._handling_nicepool_selection: bool = False
+        window = self.getSanPyWindow()
+        self._last_window_state: WindowState | None = (
+            None if window is None else window.state
+        )
+        self._highlight_spikes: list[int] | None = None
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
         self._status_label.setWordWrap(True)
@@ -479,17 +484,58 @@ class NicePoolPlugin(sanpyPlugin):
         self._status_label.hide()
         self._nicepool.show()
 
+    def slot_window_state(self, state: WindowState) -> None:
+        """Apply a window transition, highlighting the sweep on a sweep change.
+
+        Args:
+            state: State already validated and rendered by the main window.
+        """
+        self._update_highlight(state)
+        super().slot_window_state(state)
+
+    def _file_highlight_spikes(self) -> list[int] | None:
+        """Return the spikes to highlight after a new file is selected.
+
+        Returns:
+            ``None`` so a new file shows only the window's spike selection.
+        """
+        return None
+
+    def _update_highlight(self, state: WindowState) -> None:
+        """Classify a window transition and store the spikes it highlights.
+
+        A spike selection takes precedence, then a file change, then a sweep
+        change. The highlight is display-only and never sent back to the window.
+
+        Args:
+            state: State already validated and rendered by the main window.
+        """
+        previous = self._last_window_state
+        self._last_window_state = state
+        self._highlight_spikes = None
+        if state.spike_selection is not None or previous is None or self.ba is None:
+            return
+        if previous.file_key != state.file_key:
+            self._highlight_spikes = self._file_highlight_spikes()
+        elif previous.sweep != state.sweep:
+            self._highlight_spikes = [
+                int(spike)
+                for spike in self.ba.getStat("spikeNumber", sweepNumber=state.sweep)
+            ]
+
     def selectSpikeList(self) -> None:
-        """Apply SanPy's current spike selection to NicePool."""
+        """Apply SanPy's spike selection, or the file or sweep highlight, to NicePool."""
         if self._nicepool is None or self._handling_nicepool_selection:
             return
+        highlight = self._highlight_spikes
+        spikes = self.getSelectedSpikes() if highlight is None else highlight
         selected: list[str] = []
-        for spike in self.getSelectedSpikes():
+        for spike in spikes:
             if self._current_file_number is None:
                 row_id = str(spike)
             else:
                 row_id = f"{self._current_file_number}:{spike}"
             if row_id in self._row_id_to_spike:
                 selected.append(row_id)
-        primary = selected[0] if selected else None
+        primary = selected[0] if selected and highlight is None else None
         self._nicepool.set_selection(primary, selected)

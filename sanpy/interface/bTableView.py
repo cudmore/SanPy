@@ -261,6 +261,10 @@ class bTableView(QtWidgets.QTableView):
         if real_row not in indexes:
             return
         self.selectRow(indexes.index(real_row))
+        # Bypass this class's scrollTo override, which ignores column 0.
+        super().scrollTo(
+            self.currentIndex(), QtWidgets.QAbstractItemView.EnsureVisible
+        )
         self.lastSeletedRow = real_row
 
     def _onLeftClick(self, realRow):

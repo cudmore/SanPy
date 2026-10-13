@@ -174,7 +174,10 @@ class SetMetaData(sanpyPlugin):
         self._sweepConditionsForm = QtWidgets.QFormLayout(
             self._sweepConditionsGroup
         )
-        layout.addWidget(self._sweepConditionsGroup)
-        layout.addStretch()
+        sweep_conditions_scroll = QtWidgets.QScrollArea()
+        sweep_conditions_scroll.setWidgetResizable(True)
+        sweep_conditions_scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        sweep_conditions_scroll.setWidget(self._sweepConditionsGroup)
+        layout.addWidget(sweep_conditions_scroll, 1)
         for widget in self._widgetDict.values():
             self._setFontSize(widget)

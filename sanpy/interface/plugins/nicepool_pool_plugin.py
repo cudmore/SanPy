@@ -95,6 +95,7 @@ class NicePoolPoolPlugin(NicePoolPlugin):
         self.selectedSpike = (
             self._selectedSpikeList[0] if self._selectedSpikeList else None
         )
+        self._update_highlight(state)
 
         logger.info(f'  _current_file_number: {self._current_file_number}')
         logger.info(f'  _selectedSpikeList len: {len(self._selectedSpikeList)}')
@@ -103,6 +104,16 @@ class NicePoolPoolPlugin(NicePoolPlugin):
         self._mySetWindowTitle()
         self._updateTopToolbar()
         self.selectSpikeList()
+
+    def _file_highlight_spikes(self) -> list[int] | None:
+        """Return every spike in the newly selected file.
+
+        Returns:
+            All spike numbers of the current analysis, or ``None`` without one.
+        """
+        if self.ba is None:
+            return None
+        return list(range(self.ba.numSpikes))
 
     def _pool_next_row(self, generation: int) -> None:
         """Process one file and schedule the next pooling turn.

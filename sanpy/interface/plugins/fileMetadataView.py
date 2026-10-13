@@ -15,7 +15,7 @@ class FileMetadataView(sanpyPlugin):
     """Display read-only file metadata."""
 
     myHumanName = "File Metadata"
-    showInMenu = True
+    showInMenu = False
 
     def __init__(self, **kwargs: Any) -> None:
         """Build the metadata form and show the current recording.

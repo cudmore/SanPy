@@ -202,6 +202,7 @@ def test_pool_sanpy_selection_uses_current_file_row_ids() -> None:
     plugin._handling_nicepool_selection = False
     plugin._row_id_to_spike = {"4:2": 2, "4:3": 3, "5:2": 2}
     plugin._selectedSpikeList = [3, 2]
+    plugin._highlight_spikes = None
 
     plugin.selectSpikeList()
 
@@ -225,6 +226,7 @@ def test_nicepool_selection_is_not_echoed_back_to_nicepool() -> None:
     plugin._row_id_to_spike = {"2": 2, "3": 3}
     plugin._row_id_to_file_key = {"2": "cell.abf", "3": "cell.abf"}
     plugin._selectedSpikeList = [2, 3]
+    plugin._highlight_spikes = None
     plugin.getSanPyWindow = lambda: window
     window.myAnalysisDir.get_analysis_for_file_key.return_value.getSpikeStat.return_value = [0]
 
@@ -273,6 +275,8 @@ def test_nicepool_pool_file_change_keeps_pool(
     plugin._handling_nicepool_selection = False
     plugin._row_id_to_spike = {"5:8": 8, "1:8": 8}
     plugin._selectedSpikeList = []
+    plugin._last_window_state = WindowState("first.abf", 0, None)
+    plugin._highlight_spikes = None
     plugin._mySetWindowTitle = MagicMock()
     plugin._updateTopToolbar = MagicMock()
     plugin.getSanPyWindow = lambda: window
@@ -286,6 +290,135 @@ def test_nicepool_pool_file_change_keeps_pool(
     timers.assert_not_called()
     plugin._nicepool.set_dataframe.assert_not_called()
     plugin._nicepool.set_selection.assert_called_once_with("5:8", ["5:8"])
+
+
+def _pool_plugin_for_window_state(
+    monkeypatch: pytest.MonkeyPatch,
+    previous: WindowState,
+    sweep_spikes: list[int],
+) -> NicePoolPoolPlugin:
+    """Build a pooled plugin whose window lookup returns one recording at row 5.
+
+    Args:
+        monkeypatch: Pytest fixture used to disable pool timer scheduling.
+        previous: Window state the plugin last received.
+        sweep_spikes: Spike numbers the recording reports for any sweep.
+
+    Returns:
+        A pooled plugin with a mocked NicePool widget.
+    """
+    monkeypatch.setattr(QtCore.QTimer, "singleShot", MagicMock())
+    ba = MagicMock()
+    ba.numSpikes = 3
+    ba.getStat.return_value = sweep_spikes
+    analysis_dir = MagicMock()
+    analysis_dir.get_analysis_for_file_key.return_value = ba
+    analysis_dir.get_row_for_file_key.return_value = 5
+    window = SimpleNamespace(myAnalysisDir=analysis_dir)
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._ba = ba
+    plugin._current_file_number = 5
+    plugin._handling_nicepool_selection = False
+    plugin._row_id_to_spike = {"5:0": 0, "5:1": 1, "5:2": 2, "1:0": 0}
+    plugin._selectedSpikeList = []
+    plugin._last_window_state = previous
+    plugin._highlight_spikes = None
+    plugin._mySetWindowTitle = MagicMock()
+    plugin._updateTopToolbar = MagicMock()
+    plugin.getSanPyWindow = lambda: window
+    return plugin
+
+
+def test_nicepool_pool_new_file_highlights_every_file_spike(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Highlight all pooled rows of a newly selected file without a primary row.
+
+    Args:
+        monkeypatch: Pytest fixture used to disable pool timer scheduling.
+    """
+    plugin = _pool_plugin_for_window_state(
+        monkeypatch, WindowState("first.abf", 0, None), [0]
+    )
+
+    plugin.slot_window_state(WindowState("second.abf", 0, None))
+
+    plugin._nicepool.set_selection.assert_called_once_with(
+        None, ["5:0", "5:1", "5:2"]
+    )
+    assert plugin.getSelectedSpikes() == []
+
+
+def test_nicepool_pool_sweep_change_highlights_sweep_spikes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Highlight the pooled rows of the newly selected sweep.
+
+    Args:
+        monkeypatch: Pytest fixture used to disable pool timer scheduling.
+    """
+    plugin = _pool_plugin_for_window_state(
+        monkeypatch, WindowState("second.abf", 0, None), [1, 2]
+    )
+
+    plugin.slot_window_state(WindowState("second.abf", 1, None))
+
+    plugin._ba.getStat.assert_called_once_with("spikeNumber", sweepNumber=1)
+    plugin._nicepool.set_selection.assert_called_once_with(None, ["5:1", "5:2"])
+
+
+def test_nicepool_pool_spike_selection_wins_over_file_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep the window's spike selection when it also changes the file.
+
+    Args:
+        monkeypatch: Pytest fixture used to disable pool timer scheduling.
+    """
+    plugin = _pool_plugin_for_window_state(
+        monkeypatch, WindowState("first.abf", 0, None), [0]
+    )
+
+    plugin.slot_window_state(WindowState("second.abf", 1, (2,)))
+
+    plugin._nicepool.set_selection.assert_called_once_with("5:2", ["5:2"])
+
+
+@pytest.mark.parametrize(
+    ("state", "expected"),
+    [
+        (WindowState("cell.abf", 1, None), (None, ["3", "4"])),
+        (WindowState("other.abf", 1, None), (None, [])),
+        (WindowState("cell.abf", 0, None), (None, [])),
+    ],
+)
+def test_nicepool_highlight_follows_sweep_but_not_file(
+    state: WindowState,
+    expected: tuple[str | None, list[str]],
+) -> None:
+    """Highlight a new sweep's spikes, but not a new file's, in the single-file plugin.
+
+    Args:
+        state: Window state following ``cell.abf`` sweep 0.
+        expected: Primary and selected row IDs pushed to NicePool.
+    """
+    plugin = NicePoolPlugin.__new__(NicePoolPlugin)
+    plugin._nicepool = MagicMock()
+    plugin._ba = MagicMock()
+    plugin._ba.getStat.return_value = [3, 4]
+    plugin._current_file_number = None
+    plugin._handling_nicepool_selection = False
+    plugin._row_id_to_spike = {"3": 3, "4": 4}
+    plugin._selectedSpikeList = []
+    plugin._last_window_state = WindowState("cell.abf", 0, None)
+    plugin._highlight_spikes = None
+
+    plugin._update_highlight(state)
+    plugin.selectSpikeList()
+
+    plugin._nicepool.set_selection.assert_called_once_with(*expected)
+    assert plugin._last_window_state == state
 
 
 def test_nicepool_pool_without_a_folder_shows_empty_state() -> None:

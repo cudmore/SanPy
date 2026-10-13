@@ -2460,6 +2460,9 @@ class bAnalysis:
                 #     logger.error(f"_spikeNumber:{_spikeNumber} sweep:{_sweep}")
                 #     #print(self.getOneSpikeDict(_spikeNumber))
                 
+                # Detection stores the within-sweep spike index in 'Spike'.
+                error = dict(error)
+                error['Spike'] = _spikeNumber
                 error['Sweep'] = self.getSpikeStat([_spikeNumber], 'sweep')[0]
                 error['Epoch'] = self.getSpikeStat([_spikeNumber], 'epoch')[0]
 

@@ -38,6 +38,7 @@ class SummarizeResults(sanpyPlugin):
         self.toggleTopToobar(True, show_response_options=False)
 
         self._reportType = 'Full Export'
+        self._requesting_spike: bool = False
         
         self.cardiacDf = None
 
@@ -88,7 +89,7 @@ class SummarizeResults(sanpyPlugin):
         self.myErrorTable.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.Interactive
         )
-        self.myErrorTable.horizontalHeader().setStretchLastSection(False)
+        self.myErrorTable.horizontalHeader().setStretchLastSection(True)
 
         layout.addWidget(self.myErrorTable)
 
@@ -117,10 +118,33 @@ class SummarizeResults(sanpyPlugin):
         if state is None:
             return
         sweep = int(self.ba.getSpikeStat([spike_number], "sweep")[0])
-        self.request_window_state(
-            WindowState(state.file_key, sweep, (spike_number,)),
-            do_zoom=do_zoom,
+        # The window applies the request synchronously and calls back into
+        # slot_window_state; keep this report's sweep (for example 'All').
+        self._requesting_spike = True
+        try:
+            self.request_window_state(
+                WindowState(state.file_key, sweep, (spike_number,)),
+                do_zoom=do_zoom,
+            )
+        finally:
+            self._requesting_spike = False
+
+    def slot_window_state(self, state: WindowState) -> None:
+        """Apply a window transition without echoing this plugin's own request.
+
+        Args:
+            state: State already validated and rendered by the main window.
+        """
+        if not self._requesting_spike:
+            super().slot_window_state(state)
+            return
+        self._selectedSpikeList = (
+            [] if state.spike_selection is None else list(state.spike_selection)
         )
+        self.selectedSpike = (
+            self._selectedSpikeList[0] if self._selectedSpikeList else None
+        )
+        self.selectSpikeList()
 
     def _on_radio_clicked(self, radioButton):
         """Respond to user click in radio buttons.
@@ -197,11 +221,7 @@ class SummarizeResults(sanpyPlugin):
     
         errorReportModel = sanpy.interface.bFileTable.pandasModel(self.cardiacDf)
         self.myErrorTable.setModel(errorReportModel)
-
-        for colIdx in range(len(self.cardiacDf.columns)):
-            if colIdx == 0:
-                continue
-            self.myErrorTable.setColumnWidth(colIdx, 170)
+        self.myErrorTable.resizeColumnsToContents()
 
         self.numSpikesLabel.setText(f"{len(self.cardiacDf)} spikes")
 
