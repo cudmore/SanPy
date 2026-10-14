@@ -160,7 +160,7 @@ class fileLoader_base(ABC):
 
     For some working examples of derived classes, see
     [fileLoader_abf](../../api/fileloader/fileLoader_abf.md) and
-    [fileLoader_csv](../../api/fileloader/fileLoader_csv.md)
+    [fileLoader_sanpy](../../api/fileloader/fileLoader_sanpy.md)
 
     To create a file loader
 

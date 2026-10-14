@@ -485,8 +485,8 @@ class NicePoolPlugin(sanpyPlugin):
             # projected.to_csv("/Users/cudmore/luo_et_al.csv", index=False)
 
             # abb temporary schema dump
-            import json
-            print(json.dumps(schema, indent=2))
+            # import json
+            # print(json.dumps(schema, indent=2))
 
             compatible_presets = [
                 preset

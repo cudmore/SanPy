@@ -1,8 +1,16 @@
 SanPy is software to perform analysis of whole-cell curent clamp recordings. It is designed to work on a range of excitable cells including cardiac myocytes and neurons.
 
-Historically, it was originally designed for spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes]. Now, we have extended it to include the analysis of neuronal action potentials.
+<!-- Historically, it was originally designed for spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes]. Now, we have extended it to include the analysis of neuronal action potentials. -->
 
-If you find the code in this repository interesting, please email Robert Cudmore at robert.cudmore@gmail.com and we can get you started. We are always looking for users and collaborators.
+If you find SanPy interesting, please email Robert Cudmore at robert.cudmore@gmail.com and we can get you started. We are always looking for users and collaborators.
+
+!!! note
+    As of the fall of 2026, I am back to improving SanPy. Stay tuned for some big and exciting changes.
+
+    - Load and save Neurodata Without Borders (nwb) files, then upload your data to the DANDI archive.
+    - Publish your results and figure on the web. See [SanPy-Web](https://mapmanager.github.io/sanpy-web) for a taste.
+
+    These new features are designed to make SanPy a true pipeline for visualization and analysis from your experimental rig, through in the lab analysis, to final publication and sharing.
 
 ## Key features:
 

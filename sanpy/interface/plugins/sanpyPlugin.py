@@ -128,14 +128,16 @@ class sanpyPlugin(QtWidgets.QWidget):
         ----------
         ba : sanpy.bAnalysis
             Object representing one file.
-        bPlugin : "sanpy.interface.bPlugin"
-            Used in PyQt to get SanPy App and to setup signal/slot.
+        sanPyWindow : sanpy.interface.SanPyWindow
+            SanPy window that owns this plugin.
         startStop : list(float)
             Start and stop (s) of x-axis.
         options : dict
             Depreciated.
             Dictionary of optional plugins.
                 Used by 'plot tool' to plot a pool using app analysisDir dfMaster.
+        parent : QtWidgets.QWidget
+            Qt parent widget.
         """
         super().__init__(parent)
 

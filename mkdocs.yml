@@ -16,6 +16,13 @@ exclude_docs: |
   /sanpy-kymograph/
   /site/
   /theme/
+  # Temporarily unpublished API pages
+  /api/bAnalysisUtil.md
+  /api/epochTable.md
+  /api/zarr-export.md
+  /api/bAnalysisResults.md
+  /api/analysisPlot.md
+  /api/bExport.md
 
 theme:
     name: material
@@ -91,24 +98,24 @@ nav:
     - Install From Command Line: install.md
     - API:
         - Overview: api/overview.md
-        - Zarr Export: api/zarr-export.md
+        # - Zarr Export: api/zarr-export.md
         - Getting Started: scripting.ipynb
         - Writing A File Loader: api/writing-a-file-loader.md
         - Writing A Plugin: api/writing-a-plugin.md
         - Writing New Analysis: api/writing-new-analysis.md
         - Adding To Core Analysis: api/adding-to-core-analysis.md
         - bAnalysis: api/bAnalysis.md
-        - bAnalysisResults: api/bAnalysisResults.md
-        - epochTable: api/epochTable.md
-        - analysisPlot: api/analysisPlot.md
+        # - bAnalysisResults: api/bAnalysisResults.md
+        # - epochTable: api/epochTable.md
+        # - analysisPlot: api/analysisPlot.md
         - analysisDir: api/analysisDir.md
-        - bExport: api/bExport.md
+        # - bExport: api/bExport.md
         - bDetection: api/bDetection.md
-        - bAnalysisUtil: api/bAnalysisUtil.md
+        # - bAnalysisUtil: api/bAnalysisUtil.md
         - fileLoader:
             - fileLoader_base: api/fileloader/fileLoader_base.md
             - fileLoader_abf: api/fileloader/fileLoader_abf.md
-            - fileLoader_csv: api/fileloader/fileLoader_csv.md
+            - fileLoader_sanpy: api/fileloader/fileLoader_sanpy.md
         - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md

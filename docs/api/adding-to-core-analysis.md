@@ -1,5 +1,8 @@
 # How to add to the core analysis
 
+!!! note
+    This page is out of date (SanPy 2.5, September 2026).
+
 Here we will add a `fast AHP` measurement to the core analysis. This requires the addition of a new detection parameter `fastAhpWindow_ms`. If a new detection parameters is not needed, the core analysis can be extended with a new [analysis plugin](writing-new-analysis.md).
 
 ### Add to `detection-presets/Fast Neuron.json`

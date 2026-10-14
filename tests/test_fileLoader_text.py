@@ -7,7 +7,7 @@ from pathlib import Path
 
 from sanpy.analysisDir import analysisDir
 from sanpy.fileloaders import getFileLoaders
-from sanpy.fileloaders.fileLoader_csv import fileLoader_text
+from sanpy.fileloaders.fileLoader_sanpy import fileLoader_sanpy
 
 
 def _write_sanpy(tmp_path, data: dict, name: str = "recording.sanpy"):
@@ -29,7 +29,7 @@ def test_loads_sweeps_commands_and_per_sweep_epochs(tmp_path):
         },
     )
 
-    loader = fileLoader_text(str(path))
+    loader = fileLoader_sanpy(str(path))
 
     assert not loader.getLoadError()
     assert loader.numSweeps == 2
@@ -55,7 +55,7 @@ def test_epoch_index_is_optional(tmp_path):
         },
     )
 
-    loader = fileLoader_text(str(path))
+    loader = fileLoader_sanpy(str(path))
 
     assert not loader.getLoadError()
     assert loader.getEpochTable(0) is None
@@ -68,7 +68,7 @@ def test_rejects_legacy_sec_column_without_raising(tmp_path: Path) -> None:
         {"sec": [0.0, 0.001], "mv_0": [-60.0, -59.0]},
         name="legacy-time-column.sanpy",
     )
-    loader = fileLoader_text(str(path))
+    loader = fileLoader_sanpy(str(path))
 
     assert loader.getLoadError()
     assert loader.sweepList is None
@@ -112,7 +112,7 @@ def test_rejects_invalid_epoch_indices(tmp_path, epoch_indices):
         },
     )
 
-    assert fileLoader_text(str(path)).getLoadError()
+    assert fileLoader_sanpy(str(path)).getLoadError()
 
 
 def test_rejects_nonconstant_command_within_epoch(tmp_path):
@@ -126,7 +126,7 @@ def test_rejects_nonconstant_command_within_epoch(tmp_path):
         },
     )
 
-    assert fileLoader_text(str(path)).getLoadError()
+    assert fileLoader_sanpy(str(path)).getLoadError()
 
 
 def test_rejects_noncanonical_column_order(tmp_path):
@@ -140,4 +140,4 @@ def test_rejects_noncanonical_column_order(tmp_path):
         },
     )
 
-    assert fileLoader_text(str(path)).getLoadError()
+    assert fileLoader_sanpy(str(path)).getLoadError()

@@ -12,14 +12,14 @@
 
 4) Call `self.setLoadedData(...)` with the results. 
 
-Here is some sample code based on the built-in SanPy CSV file loader
-[fileLoader_csv](fileloader/fileLoader_csv.md).
+Here is some sample code based on the built-in SanPy `.sanpy` file loader
+[fileLoader_sanpy](fileloader/fileLoader_sanpy.md).
 
 ```python
 import sanpy.fileloaders.fileLoader_base as fileLoader_base
 
-class fileLoader_csv(fileLoader_base):
-    loadFileType = 'csv'
+class fileLoader_sanpy(fileLoader_base):
+    loadFileType = '.sanpy'
     
     def loadFile(self):
         """Load file and call setLoadedData().

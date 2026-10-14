@@ -32,9 +32,11 @@ def test_named_presets_are_dataset_aware_override_definitions() -> None:
     assert _PRESET_FI_PLOT["state"]["layout"] == "1x2"
     assert _PRESET_SWEEP_PLOT["name"] == "Sweep Plot"
     assert _PRESET_SWEEP_PLOT["state"]["layout"] == "1x2"
-    for plot in _PRESET_FI_PLOT["state"]["plots"]:
-        assert plot["groupColumn"] == "epochLevel"
-        assert plot["yColumn"] == "spikeFreq_hz"
+    fi_axes = [
+        (plot["groupColumn"], plot["yColumn"])
+        for plot in _PRESET_FI_PLOT["state"]["plots"]
+    ]
+    assert fi_axes == [("epochLevel", "spikeFreq_hz"), ("condition", "timeToPeak_ms")]
     for plot in _PRESET_SWEEP_PLOT["state"]["plots"]:
         assert plot["groupColumn"] == "sweep"
         assert plot["yColumn"] == "spikeFreq_hz"
@@ -45,6 +47,8 @@ def test_preset_required_columns_come_from_assigned_keys() -> None:
     assert _preset_required_columns(_PRESET_FI_PLOT) == {
         "epochLevel",
         "spikeFreq_hz",
+        "condition",
+        "timeToPeak_ms",
     }
     assert _preset_required_columns(_PRESET_SWEEP_PLOT) == {"sweep", "spikeFreq_hz"}
 
@@ -693,13 +697,14 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
         assert plot["plotType"] == "swarm"
         assert plot["groupColumn"] == "sweep"
         assert plot["yColumn"] == "spikeFreq_hz"
-        assert plot["showPlotlyToolbar"] is False
+    assert applied_state["plots"][0]["showPlotlyToolbar"] is True
+    assert applied_state["plots"][1]["showPlotlyToolbar"] is False
     presets: list[object] = []
     collapsed: list[object] = []
     plugin._nicepool.get_presets(presets.append)
     plugin._nicepool.get_controls_collapsed(collapsed.append)
     qtbot.waitUntil(lambda: len(presets) == 1 and len(collapsed) == 1, timeout=5_000)
-    assert [preset["name"] for preset in presets[0]] == ["FI Plot", "Sweep Plot"]
+    assert [preset["name"] for preset in presets[0]] == ["Sweep Plot"]
     assert collapsed == [True]
 
     plugin.setSelectedSpikes([3, 2])
