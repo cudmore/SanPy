@@ -3,6 +3,40 @@
 
 SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
 
+## Recent changes - 2026-10-14
+
+### Desktop GUI
+
+#### Added
+
+- Files and folders open in the background. The launcher shows loading progress in its status bar and stays open until the load finishes.
+- Arrow keys in the file table select the next or previous recording.
+
+#### Changed
+
+- Plot Tool (Pool) loads files incrementally with progress in the status bar and reads saved analyses without loading raw recordings.
+- Plot Tool and Plot Tool (Pool) include experimental-metadata columns and refresh after metadata edits.
+
+### Added
+
+- NWB loader for single-electrode current-clamp `.nwb` recordings, with per-sweep epoch tables. It requires the new `nwb` extra (`pynwb`) and is registered only when `pynwb` is installed.
+- Development scripts in `scripts/nwb/` to export a SanPy analysis to NWB and import it back.
+- `examples/` scripts that load a recording, analyze it, and open a folder using the bundled example data.
+- `analysisDir` identifies recordings by a normalized path relative to the folder: `get_file_key()`, `get_row_for_file_key()`, and `get_analysis_for_file_key()`.
+- The documentation site is built and deployed by a GitHub Action. Detection-parameter and analysis-result tables in Methods are generated from the SanPy definitions.
+- CI runs the core tests on macOS and Windows without the `gui` extra.
+
+### Changed
+
+- ABF and NWB loaders read headers first and load raw sweeps only when `loadData=True`. `.sanpy` files are always loaded fully.
+- Experimental metadata and sweep conditions moved from the file loader to `bAnalysis`: `ba.metaData`, `ba.getSweepCondition()`, and `ba.setSweepCondition()`. `fileLoader.metadata` was removed.
+- Cell type, sex, and condition are no longer detection parameters or preset values. They come from file metadata (`cell_type`, `sex`, `condition`), including in `bExport` headers.
+- The per-spike `include` result is now `spike_include` with values `yes` or `no`, separate from the file-level `include` metadata.
+- `fileLoader_text` is now `fileLoader_sanpy` in `sanpy/fileloaders/fileLoader_sanpy.py`.
+- Moved folders: bundled example data is in `sanpy/user_files/SanPy-User-Files/example-data` (was `data/`), `sanpy/_userFiles` is `sanpy/user_files`, `manuscript-figures` is `examples/manuscript-figures`, and `sanpy/models` is `scripts/models`.
+- Documentation sources moved from `docs/docs/` to `docs/`, and `mkdocs.yml` is at the repository root.
+- Tests use a smaller `tests/data` set.
+
 ## [0.3.0] - 2026-09-30
 
 ### Desktop GUI

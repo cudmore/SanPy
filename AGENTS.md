@@ -55,10 +55,27 @@ propose the same layout change on a sibling widget unless the user asks.
 
 When updating `CHANGELOG.md`:
 
-- Use the newest annotated Git tag reachable from `HEAD` as the current version.
-- Convert `v0.2.9` to a heading such as `## [0.2.9] - YYYY-MM-DD`.
-- Obtain `YYYY-MM-DD` from the annotated tag's `taggerdate`.
-- Add new entries under that version heading, creating it above older entries if necessary.
-- Do not create an `Unreleased` section.
-- Preserve existing historical sections such as `## 20240126`.
-- If no annotated tag is available, ask which version and date to use.
+- Cover committed changes made after the last commit that changed
+  `CHANGELOG.md` (`git log -1 -- CHANGELOG.md`). Do not include uncommitted
+  work.
+- Add one new section, `## Recent changes - YYYY-MM-DD`, using today's date,
+  directly above the newest existing section.
+- Edit only that new section. Do not edit, merge into, rename, or reorder
+  existing sections, including earlier `Recent changes` sections, version
+  sections such as `## [0.3.0] - 2026-09-30`, and historical sections such as
+  `## 20240126`.
+- Group entries the way existing sections do: `### Desktop GUI` with
+  `#### Added`, `#### Changed`, and `#### Fixed`, then `### Added`,
+  `### Changed`, and `### Fixed`. Omit empty groups.
+- Include user-facing changes, technical and architectural changes (public
+  API, data formats, saved column names, module and folder layout), and
+  developer infrastructure (CI, tests and test data, documentation build,
+  packaging, dependencies).
+- Leave out internal implementation details that do not change how SanPy is
+  used, built, or developed, such as a helper returning a copy.
+- Fold incremental GUI fixes into one entry per feature, and leave out work
+  that was later reverted or replaced.
+- Do not repeat changes already described in an existing section.
+- Base each entry on the executed code in the diff, not on commit messages.
+- Add a version heading such as `## [0.3.1] - YYYY-MM-DD` only when the user
+  explicitly asks for one.
