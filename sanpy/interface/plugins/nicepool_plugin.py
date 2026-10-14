@@ -27,7 +27,7 @@ _FILE_COLUMN_DEFINITION: dict[str, Any] = {
 _PREFILTER_COLUMNS: tuple[str, ...] = ("sweep", "epoch", "include")
 _PLOT_COLUMN_KEYS: tuple[str, ...] = ("groupColumn", "yColumn", "xColumn")
 # _DEFAULT_PRESET_NAME = "FI Plot"
-_DEFAULT_PRESET_NAME = "Sweep Plot"
+_DEFAULT_PRESET_NAME = "FI Plot"
 
 _PRESET_FI_PLOT: dict[str, Any] = {
     "name": "FI Plot",
@@ -39,13 +39,17 @@ _PRESET_FI_PLOT: dict[str, Any] = {
                 "plotType": "swarm",
                 "groupColumn": "epochLevel",
                 "yColumn": "spikeFreq_hz",
-                "showPlotlyToolbar": False,
+                "showPlotlyToolbar": True,
+                "showLegend": False,
+                "showHorizontalGrid": False,
+                "showVerticalGrid": False,
             },
             {
                 "plotType": "swarm",
-                "groupColumn": "epochLevel",
-                "yColumn": "spikeFreq_hz",
+                "groupColumn": "condition",
+                "yColumn": "timeToPeak_ms",
                 "showPlotlyToolbar": False,
+                "showLegend": False,
             },
         ],
     },
@@ -61,13 +65,32 @@ _PRESET_SWEEP_PLOT: dict[str, Any] = {
                 "plotType": "swarm",
                 "groupColumn": "sweep",
                 "yColumn": "spikeFreq_hz",
-                "showPlotlyToolbar": False,
+                "showPlotlyToolbar": True,
+                "showLegend": False,
             },
             {
                 "plotType": "swarm",
                 "groupColumn": "sweep",
                 "yColumn": "spikeFreq_hz",
                 "showPlotlyToolbar": False,
+                "showLegend": False,
+            },
+        ],
+    },
+}
+
+_PRESET_SWARM_PLOT: dict[str, Any] = {
+    "name": "Swarm Plot",
+    "state": {
+        "layout": "1x1",
+        "activePlotIndex": 0,
+        "plots": [
+            {
+                "plotType": "swarm",
+                "groupColumn": "condition",
+                "yColumn": "timeToPeak_ms",
+                "showPlotlyToolbar": True,
+                "showLegend": False,
             },
         ],
     },
@@ -76,6 +99,7 @@ _PRESET_SWEEP_PLOT: dict[str, Any] = {
 _NAMED_PRESETS: tuple[dict[str, Any], ...] = (
     _PRESET_FI_PLOT,
     _PRESET_SWEEP_PLOT,
+    _PRESET_SWARM_PLOT,
 )
 
 
@@ -455,6 +479,15 @@ class NicePoolPlugin(sanpyPlugin):
                         str(spike): state.file_key
                         for spike in projected["spikeNumber"]
                     }
+
+            # abb temporary save of final pandas df
+            # logger.warning('abb saving tmp csv')
+            # projected.to_csv("/Users/cudmore/luo_et_al.csv", index=False)
+
+            # abb temporary schema dump
+            import json
+            print(json.dumps(schema, indent=2))
+
             compatible_presets = [
                 preset
                 for preset in _NAMED_PRESETS

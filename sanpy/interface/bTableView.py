@@ -230,6 +230,18 @@ class bTableView(QtWidgets.QTableView):
         rowDict = self.model().myGetRowDict(selectedRow)
         return rowDict
 
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        """Emit row selection when keyboard navigation changes the current row.
+
+        Args:
+            event: Key event forwarded to the base table view.
+        """
+        previousRow = self.currentIndex().row()
+        super().keyPressEvent(event)
+        currentIndex = self.currentIndex()
+        if currentIndex.isValid() and currentIndex.row() != previousRow:
+            self.onLeftClick(currentIndex)
+            
     def onLeftClick(self, item):
         """Hanlde user left-click on a row.
 

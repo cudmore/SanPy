@@ -1646,6 +1646,9 @@ class bAnalysis:
             tmpThresholdSec = spikeDict[i]["thresholdSec"]
             spikeDict[i]["timeToPeak_ms"] = (peakSec - tmpThresholdSec) * 1000
 
+            # logger.info(f'  peakSec:{peakSec} {type(peakSec)} tmpThresholdSec:{tmpThresholdSec} {type(tmpThresholdSec)}')
+            # logger.info(f'  peakSec - tmpThresholdSec:{peakSec - tmpThresholdSec} {type(peakSec - tmpThresholdSec)}')
+            
             # only append to spikeDict after we are done (accounting for spikes within a sweep)
             # self.spikeDict.append(spikeDict)
             # iIdx = len(self.spikeDict) - 1
