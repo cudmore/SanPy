@@ -7,6 +7,7 @@ from typing import Union, Dict, List, Tuple, Optional, Optional
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 import sanpy
+from sanpy.bDetection import getDefaultDetection
 from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
@@ -136,8 +137,12 @@ class detectionParams(sanpyPlugin):
         _vBoxLayout = self.getVBoxLayout()
         _vBoxLayout.addLayout(self.finalLayout)
 
-    def buildUI_2(self):
-        """Build a control for each detection parameter."""
+    def buildUI_2(self) -> QtWidgets.QGridLayout:
+        """Build a control for each detection parameter shown in the editor.
+
+        Returns:
+            Grid layout holding one row of controls per visible parameter.
+        """
         analysisDirDict = sanpy.analysisDir.sanpyColumns
 
         dDict = self._detectionObject.getMasterDict(self._currentDetectionName)
@@ -151,6 +156,9 @@ class detectionParams(sanpyPlugin):
         rowSpan = 1
         colSpan = 1
         for k, v in dDict.items():
+            if not v["show_in_editor"]:
+                continue
+
             col = 0
 
             try:
@@ -344,11 +352,20 @@ class detectionParams(sanpyPlugin):
         # logger.info(f'paramName:{paramName} value:"{value}" {type(value)}')
         self._setDict(paramName, value)
 
-    def detect(self):
+    def detect(self) -> None:
+        """Detect spikes in the current file with the editor's parameters.
+
+        Parameters hidden from the editor are reset to None so detection is
+        not limited by values the user cannot see.
+        """
         logger.info("detecting spikes")
 
         if self.ba is None:
             return
+
+        for k, v in getDefaultDetection().items():
+            if not v["show_in_editor"]:
+                self._detectionDict[k] = None
 
         # spike detect
         self.ba.spikeDetect(self._detectionDict)
@@ -432,12 +449,15 @@ class detectionParams(sanpyPlugin):
         else:
             logger.warning(f'Button "{buttonName}" not understood.')
 
-    def replot(self):
+    def replot(self) -> None:
+        """Refresh editor widgets from the current detection parameters."""
         detectionDict = self._detectionDict
 
         _masterDict = self._detectionObject.getMasterDict(self._currentDetectionName)
 
         for detectionParam in detectionDict.keys():
+            if not _masterDict[detectionParam]["show_in_editor"]:
+                continue
             if detectionParam not in self.widgetDict.keys():
                 logger.warning(
                     f'detectionParam missing "{detectionParam}" -->> not adding to display'
@@ -507,6 +527,9 @@ class detectionParams(sanpyPlugin):
 
     def save(self) -> None:
         """Save our current detection dict to a user file.
+
+        Parameters hidden from the editor are saved as None because they are
+        set per detection, not per preset.
         """
         sanpy_app = self.getSanPyApp()
         sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.SanPyPaths()
@@ -530,7 +553,12 @@ class detectionParams(sanpyPlugin):
 
         # with open(userSaveFile, "w") as f:
         # always over-write with no warning
+        saveDict = dict(self._detectionDict)
+        for k, v in getDefaultDetection().items():
+            if not v["show_in_editor"]:
+                saveDict[k] = None
+
         with open(savePath, "w") as f:
             # abb do not change the user specified name
             # self._detectionDict["userSaveName"] = filename
-            json.dump(self._detectionDict, f, indent=2)
+            json.dump(saveDict, f, indent=2)

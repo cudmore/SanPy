@@ -54,6 +54,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "detectionName"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.GENERAL
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = "default"  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
     theDict[key][
@@ -67,6 +68,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "userSaveName"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.GENERAL
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = ""  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
     theDict[key][
@@ -80,6 +82,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "detectionType"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = sanpy.bDetection.detectionTypes[
         "dvdt"
     ].value  # ('dvdt', 'mv')
@@ -97,6 +100,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "dvdtThreshold"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 20
     theDict[key]["type"] = "float"
     theDict[key][
@@ -112,6 +116,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "mvThreshold"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = -20
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -125,24 +130,30 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "startSeconds"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = False
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
     theDict[key]["units"] = "s"
     theDict[key]["humanName"] = "Start(s)"
     theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Start seconds of analysis"
+    theDict[key]["description"] = (
+        "Start seconds of analysis, set from the visible x-range when detecting"
+    )
 
     key = "stopSeconds"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = False
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
     theDict[key]["units"] = "s"
     theDict[key]["humanName"] = "Stop(s)"
     theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Stop seconds of analysis"
+    theDict[key]["description"] = (
+        "Stop seconds of analysis, set from the visible x-range when detecting"
+    )
 
     # abb 202610, userType does not belong in detection. it is a spike property
     # key = "userType"
@@ -159,6 +170,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "dvdt_percentOfMax"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 0.1
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -172,6 +184,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "onlyPeaksAbove_mV"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -183,6 +196,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "onlyPeaksBelow_mV"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -195,6 +209,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "doBackupSpikeVm"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.ADVANCED
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = False
     theDict[key]["type"] = "boolean"
     theDict[key]["allowNone"] = False
@@ -208,6 +223,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "refractory_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 170
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -221,6 +237,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "peakWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 100
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -232,6 +249,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "dvdtPreWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 10
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -245,6 +263,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "dvdtPostWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 20
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -258,6 +277,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "mdp_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 250
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -269,6 +289,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "avgWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 5
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -282,6 +303,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "lowEddRate_warning"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.ADVANCED
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -295,6 +317,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "halfHeights"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = [10, 20, 50, 80, 90]
     theDict[key]["type"] = "list"  # list of number
     theDict[key]["allowNone"] = False
@@ -308,6 +331,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "halfWidthWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 200
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -319,6 +343,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "preSpikeClipWidth_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 4
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -330,6 +355,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "postSpikeClipWidth_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -342,6 +368,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "fastAhpWindow_ms"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -353,6 +380,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "medianFilter"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.FILTERING
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 0
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = True  # 0 is no median filter (see SavitzkyGolay_pnts)
@@ -366,6 +394,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "SavitzkyGolay_pnts"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.FILTERING
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 5  # 20211001 was 5
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = True  # 0 is no filter
@@ -379,6 +408,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "SavitzkyGolay_poly"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.FILTERING
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 2
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = False
@@ -402,6 +432,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     key = "verbose"
     theDict[key] = {}
     theDict[key]["category"] = DetectionParameterCategory.ADVANCED
+    theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = False
     theDict[key]["type"] = "boolean"
     theDict[key]["allowNone"] = False

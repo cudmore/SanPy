@@ -26,6 +26,9 @@ def test_every_runtime_definition_has_a_category() -> None:
         for value in detection.values()
     )
     assert all(
+        isinstance(value["show_in_editor"], bool) for value in detection.values()
+    )
+    assert all(
         isinstance(value["category"], AnalysisResultCategory)
         for value in analysisResultDict.values()
     )
