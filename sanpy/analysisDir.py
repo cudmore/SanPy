@@ -32,6 +32,9 @@ from sanpy.metaData import MetaData
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+# Increment when the saved folder h5 layout changes.
+SANPY_H5_FORMAT_VERSION: int = 1
+
 
 def _experimental_metadata_columns() -> dict[str, dict[str, object]]:
     """Return file-table columns for canonical experimental metadata.
@@ -617,6 +620,8 @@ class analysisDir:
 
         # hdfStore[dbKey] = df  # save it
         df.to_hdf(hdfFilePath, key=dbKey)
+        with pd.HDFStore(hdfFilePath) as hdfStore:
+            hdfStore.get_storer(dbKey).attrs.sanpy_format_version = SANPY_H5_FORMAT_VERSION
 
         #
         self._isDirty = False  # if true, prompt to save on quit

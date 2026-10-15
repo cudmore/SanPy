@@ -32,6 +32,7 @@ import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
 from sanpy.bExport import bExport
+from sanpy.bDetection import getDefaultDetection
 
 from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 
@@ -430,9 +431,17 @@ class bAnalysis:
 
             # convert to a dict
             if loadedDetection:
-                detectionDict = dfDetection.to_dict("records", into=OrderedDict)[
-                    0
-                ]  # one dict
+                loadedDetectionDict = dfDetection.to_dict(
+                    "records", into=OrderedDict
+                )[0]
+                detectionDict = OrderedDict(
+                    (k, v["defaultValue"]) for k, v in getDefaultDetection().items()
+                )
+                for k, v in loadedDetectionDict.items():
+                    if k not in detectionDict:
+                        logger.warning(f'Ignoring unknown saved detection parameter "{k}"')
+                        continue
+                    detectionDict[k] = v
                 self._detectionDict = detectionDict
 
             if loadedMetaData:

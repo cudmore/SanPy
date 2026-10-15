@@ -1015,6 +1015,8 @@ class analysisResult:
 
         if theDict is not None:
             for k, v in theDict.items():
+                if k not in defaultDict:
+                    continue
                 self[k] = v  # calls __setitem__()
 
     def print(self):
