@@ -3611,9 +3611,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 self.detectionWidget.updateStatusBar(str)
                 return
             
-            # removed 20230419
-            # startSec = self.startSeconds.value()
-            # stopSec = self.stopSeconds.value()
             startSec = self._startSec
             stopSec = self._stopSec
 
@@ -3633,14 +3630,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
             dvdtThreshold = self.dvdtThreshold.value()
             mvThreshold = self.mvThreshold.value()
-            # print('    mvThreshold:', mvThreshold)
-            # passing dvdtThreshold=None we will detect suing mvThreshold
-
-            # was this, switching to detection class
-            # dvdtThreshold = None
-
-            # startSec = self.startSeconds.value()
-            # stopSec = self.stopSeconds.value()
             startSec = self._startSec
             stopSec = self._stopSec
 

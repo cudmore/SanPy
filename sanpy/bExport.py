@@ -434,14 +434,8 @@ class bExport:
             headerDict["Time Analyzed"] = [timeAnalyzed]
             headerDict["Detection Type"] = [dDict["detectionType"]]
             headerDict["dV/dt Threshold"] = [dDict["dvdtThreshold"]]
-            # headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
             headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
-            # headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
-            # headerDict["Analysis Version"] = [analysisVersion]
-            # headerDict["Interface Version"] = [interfaceVersion]
 
-            # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
-            # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
             headerDict["Sweep Number"] = ["Default 0"]  # [self.ba.currentSweep]
             headerDict["Number of Sweeps"] = [self.ba.fileLoader.numSweeps]
             headerDict["Export Start (sec)"] = [

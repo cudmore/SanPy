@@ -1016,6 +1016,7 @@ class analysisResult:
         if theDict is not None:
             for k, v in theDict.items():
                 if k not in defaultDict:
+                    logger.warning(f'  did not find key "{k}" in defaultDict keys: {defaultDict.keys()}')
                     continue
                 self[k] = v  # calls __setitem__()
 

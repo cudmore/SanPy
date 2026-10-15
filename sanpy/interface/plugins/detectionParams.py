@@ -65,7 +65,7 @@ class detectionParams(sanpyPlugin):
         _currentDetectionName = _detectionDict["detectionName"]
         self._currentDetectionName = _currentDetectionName
 
-        self._qLabelRed = "QLabel { background-color : #888822;}"
+        self._qLabelRed = "QLabel { background-color : #999922;}"
         self._qLabelBackground = "QLabel { background-color : #222222;}"
 
         self.buildUI()
@@ -76,13 +76,14 @@ class detectionParams(sanpyPlugin):
         self.vLayout = QtWidgets.QVBoxLayout()
 
         # top controls
+        hControlLayout0 = QtWidgets.QHBoxLayout()
         hControlLayout = QtWidgets.QHBoxLayout()
 
         fileName = "None"
         if self.ba is not None:
             fileName = self.ba.fileLoader.filename
         self.fileNameLabel = QtWidgets.QLabel(f"File: {fileName}")
-        hControlLayout.addWidget(self.fileNameLabel, alignment=QtCore.Qt.AlignLeft)
+        hControlLayout0.addWidget(self.fileNameLabel, alignment=QtCore.Qt.AlignLeft)
 
         aName = "Detect"
         aButton = QtWidgets.QPushButton(aName)
@@ -113,50 +114,12 @@ class detectionParams(sanpyPlugin):
 
         hControlLayout.addStretch()
 
-        """
-        aName = 'Set Defaults'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'SA Node'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'Ventricular'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'Ca++ Kymograph'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'Neuron'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'Subthreshold'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-
-        aName = 'Ca++ Spikes'
-        aButton = QtWidgets.QPushButton(aName)
-        aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
-        """
-
-        #
+        self.vLayout.addLayout(hControlLayout0)
         self.vLayout.addLayout(hControlLayout)
 
-        self.vLayoutParams = self.buildUI2()
+        self.vLayoutParams = self.buildUI_2()
         self.vLayout.addLayout(self.vLayoutParams)
 
-        #
         # scroll area again
         self._tmpWidget = QtWidgets.QWidget()
         self._tmpWidget.setLayout(self.vLayout)
@@ -173,9 +136,8 @@ class detectionParams(sanpyPlugin):
         _vBoxLayout = self.getVBoxLayout()
         _vBoxLayout.addLayout(self.finalLayout)
 
-    def buildUI2(self):
+    def buildUI_2(self):
         """Build a control for each detection parameter."""
-        # list of keys/columns in main analysis dir file list
         analysisDirDict = sanpy.analysisDir.sanpyColumns
 
         dDict = self._detectionObject.getMasterDict(self._currentDetectionName)
@@ -194,7 +156,7 @@ class detectionParams(sanpyPlugin):
             try:
                 currentValue = self._detectionDict[k]
             except (KeyError) as e:
-                logger.error('did not find key "{k}"')
+                logger.error('did not find key "{k}" in _detectionDict')
                 continue
 
             # k is the name in spike dictionary
@@ -222,29 +184,11 @@ class detectionParams(sanpyPlugin):
             )  # added to list so we can later set color
             col += 1
 
-            # for debugging
-            """
-            aLabel = QtWidgets.QLabel(paramName)
-            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
-            col += 1
-            """
-
             humanNameLabel = QtWidgets.QLabel(humanName)
             vLayoutParams.addWidget(nameLabel, row, col, rowSpan, colSpan)
             if flagWithRed:
                 humanNameLabel.setStyleSheet(self._qLabelRed)
             vLayoutParams.addWidget(humanNameLabel, row, col, rowSpan, colSpan)
-            col += 1
-
-            # for debugging
-            """
-            aLabel = QtWidgets.QLabel(valueType)
-            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
-            col += 1
-            """
-
-            aLabel = QtWidgets.QLabel(units)
-            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
             col += 1
 
             aWidget = None
@@ -295,7 +239,9 @@ class detectionParams(sanpyPlugin):
             elif valueType == "string":
                 # text edit
                 aWidget = QtWidgets.QLineEdit(currentValue)
-                aWidget.setReadOnly(True)  # for now our 1 edit widget is not editable
+                # logger.info(f'paramName:{paramName}')
+                _allow_edit = paramName == 'userSaveName'  # abb so user can specify name to save
+                aWidget.setReadOnly(not _allow_edit)
                 # aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
                 # aWidget.setValidator(QIntValidator())
                 # aWidget.setMaxLength(4)
@@ -327,6 +273,11 @@ class detectionParams(sanpyPlugin):
 
                 vLayoutParams.addWidget(aWidget, row, col, rowSpan, colSpan)
             #
+            col += 1
+
+            # units
+            aLabel = QtWidgets.QLabel(units)
+            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
             col += 1
 
             # add a 'None' button for detection parameters that allow it
@@ -383,7 +334,7 @@ class detectionParams(sanpyPlugin):
 
     def on_text_edit(self, aWidget, paramName):
         text = aWidget.text()
-        # logger.info(f'paramName:{paramName} text:"{text}"')
+        logger.info(f'paramName:{paramName} text:"{text}"')
         self._setDict(paramName, text)
 
     def on_spin_box(self, paramName, value):
@@ -482,18 +433,10 @@ class detectionParams(sanpyPlugin):
             logger.warning(f'Button "{buttonName}" not understood.')
 
     def replot(self):
-        # if self.ba is None:
-        #    return
-
-        logger.info("")
-
-        # was this
-        # detectionClass = self.detectionClass
         detectionDict = self._detectionDict
 
         _masterDict = self._detectionObject.getMasterDict(self._currentDetectionName)
 
-        # for detectionParam in detectionClass.keys():
         for detectionParam in detectionDict.keys():
             if detectionParam not in self.widgetDict.keys():
                 logger.warning(
@@ -501,10 +444,7 @@ class detectionParams(sanpyPlugin):
                 )
                 continue
 
-            # currentValue = v['currentValue']
-            # currentValue = detectionClass.getValue(detectionParam)
             currentValue = detectionDict[detectionParam]
-
             defaultValue = _masterDict[detectionParam]["defaultValue"]
             flagWithRed = defaultValue != currentValue
 
@@ -566,7 +506,8 @@ class detectionParams(sanpyPlugin):
         self.replot()
 
     def save(self) -> None:
-        """Save our current detection dict to a user file."""
+        """Save our current detection dict to a user file.
+        """
         sanpy_app = self.getSanPyApp()
         sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.SanPyPaths()
         userDetectionFolder = sanpy_paths.detection_dir
@@ -574,48 +515,22 @@ class detectionParams(sanpyPlugin):
         # key 'detectionName'
         filename = self._detectionDict["userSaveName"]
         if not filename:
-            filename = self._detectionDict["detectionName"] + " User"
+            filename = self._detectionDict["detectionName"]
+        # saved detection dict always start with "User - "
+        # so saved names never conflict with built in detection names
+        filename = "User - " + filename
 
         savePath = str(userDetectionFolder / f"{filename}.json")
 
-        userSaveFile, _tmp = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save Detection Params", savePath
-        )
-        logger.info(userSaveFile)
+        # abb 202610, removing dialog and just using filename
+        # userSaveFile, _tmp = QtWidgets.QFileDialog.getSaveFileName(
+        #     self, "Save Detection Params", savePath
+        # )
+        # logger.info(f'userSaveFile:"{userSaveFile}"')
 
-        with open(userSaveFile, "w") as f:
-            self._detectionDict["userSaveName"] = filename
-            json.dump(self._detectionDict, f, indent=4)
-
-
-if __name__ == "__main__":
-    path = "data/19114001.abf"
-    ba = sanpy.bAnalysis(path)
-
-    bd = sanpy.bDetection()  # gets default
-    dDict = bd.getDetectionDict("SA Node")  # an actual dict
-
-    # from pprint import pprint
-    # pprint(dDict)
-
-    # dDict['dvdtThreshold'] = 12
-
-    ba.spikeDetect(dDict)
-    logger.info(f"detected numSpike:{ba.numSpikes}")
-
-    import sys
-
-    app = QtWidgets.QApplication([])
-
-    dp = detectionParams(ba=ba)  # dec 2022, do not pass bd
-    dp.show()
-
-    """
-    scrollArea = dp.insertIntoScrollArea()
-    if scrollArea is not None:
-        scrollArea.show()
-    else:
-        dp.show()
-    """
-
-    sys.exit(app.exec_())
+        # with open(userSaveFile, "w") as f:
+        # always over-write with no warning
+        with open(savePath, "w") as f:
+            # abb do not change the user specified name
+            # self._detectionDict["userSaveName"] = filename
+            json.dump(self._detectionDict, f, indent=2)

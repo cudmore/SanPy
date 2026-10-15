@@ -24,8 +24,8 @@
         90
     ],
     "halfWidthWindow_ms": 4,
-    "preSpikeClipWidth_ms": 2,
-    "postSpikeClipWidth_ms": 2,
+    "preSpikeClipWidth_ms": 4,
+    "postSpikeClipWidth_ms": 8,
     "fastAhpWindow_ms": 8,
     "medianFilter": 0,
     "SavitzkyGolay_pnts": 5,
