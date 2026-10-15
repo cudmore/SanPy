@@ -437,22 +437,20 @@ class bAnalysis:
 
             if loadedMetaData:
                 # get default
-                metaDataDict = sanpy.MetaData.getMetaDataDict()
+                defaultMetadataDict = sanpy.MetaData.getMetaDataDict()
                 
-                loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[
-                    0
-                ]
+                loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[0]
                 # we need to load current meta data dict with all current keys
                 # saved file may be out of date
 
                 for k,v in loadedMetaDataDict.items():
-                    if not k in metaDataDict.keys():
+                    if not k in defaultMetadataDict.keys():
                         if k in {"Acq Date", "Acq Time"}:
                             continue
-                        logger.error(f'  did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
+                        logger.error(f'  did not find loaded metadata key "{k}" in default metadata keys: {defaultMetadataDict.keys()}')
                         continue
-                    metaDataDict[k] = v
-                self.metaData.fromDict(metaDataDict, triggerDirty=False)
+                    defaultMetadataDict[k] = v
+                self.metaData.fromDict(defaultMetadataDict, triggerDirty=False)
 
                 # logger.warning(f'LOADED META DATA:')
                 # print('self.metaData:', self.metaData)

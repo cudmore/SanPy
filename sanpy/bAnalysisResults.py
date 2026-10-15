@@ -875,7 +875,7 @@ class analysisResultList:
     def __init__(self):
         # one copy for entire list
 
-        # TODO: put xxx in a function getAnalysisResltDict()
+        # TODO: put analysisResultDict in a function getAnalysisResultDict()
         self._dDict = analysisResultDict
 
         # list of analysisResultDict
@@ -1005,9 +1005,6 @@ class analysisResult:
         Args:
             theDict: Pre-existing dict when we load form h5 file
         """
-        # this is the raw definition of analysis results (See above)
-        # pull from this to create key/value self.rDict
-        # self._dDict = analysisResultDict
         defaultDict = analysisResultDict
         # this is simple key/value pairs as we will in detection
         self._rDict = {}
@@ -1019,19 +1016,6 @@ class analysisResult:
         if theDict is not None:
             for k, v in theDict.items():
                 self[k] = v  # calls __setitem__()
-
-    # this was interfering with converting to DataFrame ???
-    """
-    def __str__(self):
-        printList = []
-        for k,v in self._rDict.items():
-            if isinstance(v, dict):
-                for k2,v2 in v.items():
-                    printList.append(f'  {k2} : {v2} {type(v2)}')
-            else:
-                printList.append(f'{k} : {v} {type(v)}')
-        return '\n'.join(printList)
-    """
 
     def print(self):
         printList = []
@@ -1090,7 +1074,6 @@ class analysisResult:
     def __setitem__(self, key, value):
         # to mimic a dictionary
         try:
-            # self._dDict[key]['currentValue'] = value
             self._rDict[key] = value
         except KeyError as e:
             logger.error(f"{e}")
