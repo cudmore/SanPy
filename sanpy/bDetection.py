@@ -19,8 +19,6 @@ from sanpy.schema import DetectionParameterCategory
 
 from sanpy.sanpyLogger import get_logger
 
-from sanpy.config import D_BJ_MANUSCRIPT
-
 logger = get_logger(__name__)
 
 
@@ -605,6 +603,9 @@ class bDetection(object):
         # dict with detection key and current value
         self._dDict = getDefaultDetection()
 
+        # Names of presets loaded from the user detection folder.
+        self._userPresetNames: set[str] = set()
+
         # list of preset names including <user>SanPy/detection json files
         # use item=e[key] or item=e(value) then use item.name or item.value
         # _theDict, _userPresetsDict = self._getPresetsDict()
@@ -617,6 +618,17 @@ class bDetection(object):
             Bundled and user-defined preset names.
         """
         return list(self._detectionPreset.keys())
+
+    def isUserPreset(self, name: str) -> bool:
+        """Return whether ``name`` was loaded from the user detection folder.
+
+        Args:
+            name: Detection-preset name, such as ``"User - My Params"``.
+
+        Returns:
+            True when ``name`` came from the user ``detection/`` folder.
+        """
+        return name in self._userPresetNames
 
     def _getPresetsDict(self) -> dict:
         """Load detection presets from json files in 2 different folder:
@@ -654,17 +666,7 @@ class bDetection(object):
             #
             # theDict[fileNameKey] = fileName
 
-            if D_BJ_MANUSCRIPT:
-                if 'Ca Kymograph' in filePath:
-                    continue
-                if 'Ca Spikes' in filePath:
-                    continue
-                if 'Sub Threshold' in filePath:
-                    continue
-                if 'Wu-iPSC' in filePath:
-                    continue
-
-            # load user preset json and grab (param keys and values)
+            # load bundled preset json and grab (param keys and values)
             with open(filePath, "r") as f:
                 userPresetsDict = json.load(f)
                 theDict[fileNameKey] = userPresetsDict
@@ -673,9 +675,6 @@ class bDetection(object):
         # theDict["ventricular"] = "Ventricular"
         # theDict["neuron"] = "Neuron"
         # theDict["fastneuron"] = "Fast Neuron"
-        # theDict["subthreshold"] = "Sub Threshold"
-        # theDict["caspikes"] = "Ca Spikes"
-        # theDict["cakymograph"] = "Ca Kymograph"
 
         #
         # get files in <users>/Documents/SanPy/detection/ folder
@@ -688,6 +687,7 @@ class bDetection(object):
             with open(filePath, "r") as f:
                 userPresetsDict = json.load(f)
                 theDict[fileNameKey] = userPresetsDict
+                self._userPresetNames.add(fileNameKey)
 
         # make sure what we loaded has all the needed keys
         _defaultDetection = getDefaultDetection()

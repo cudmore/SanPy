@@ -91,27 +91,6 @@ class myMplPlot():
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-def test_mplPlot():
-    import matplotlib.pyplot as plt
-
-    plt.ion()
-
-    x = None  #np.arange(10)
-    y = None  #np.random.random(10)
-    mmplPlot = myMplPlot(x=x, y=y)
-
-    # plt.show()
-
-    x = list(range(10))
-    # y = np.random.random(10)
-    for i in range(30):
-        # time.sleep(.01)
-        y = np.random.random(10)
-        yRight = np.random.random(10)
-        # y += 0.1
-        mmplPlot.replot(xData=x, yData=y, yRight=yRight)
-        time.sleep(0.1)
-
 def startStopFromDeriv(lineProfile, stdMult, doPlot=False, verbose=False):
     """Given a line profile, return start/stop pnt using first derivative.
     """
@@ -1921,47 +1900,6 @@ def lineProfilePool(imgData, detectionDict):
 
     return results
 
-def testLineProfilePool():
-    # path = "/Users/cudmore/data/rosie/Raw data for contraction analysis/Female Old/filter median 1 C2-0-255 Cell 2 CTRL  2_5_21 female wt old.tif"
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 03.tif'
-    
-    ka = kymAnalysis(path)
-    
-    # linewidth 1 takes 5 seconds
-    # linewidth 3 takes 120 seconds for 10000 line scans (for 5000 scans takes 44 sec)
-    # ka.analyzeDiameter()
-
-    # ka.saveAnalysis()
-
-    # linewidth of 1 takes 16 seconds (need to use simplified version if linewidth is 1 !!!)
-    # linewidth of 3 takes 16 seconds for 10000 line scans, 7.3 sec for 5000 scans
-    # linewidth of 5 takes 17 seconds
-    # linewidth of 7 takes 17 seconds
-    roiRect = ka.getRoiRect()  # (l, t, r, b) in um and seconds (float)
-    
-    _testLineWidth = 1
-    ka.setAnalysisParam('lineWidth', _testLineWidth)
-
-    # ka.setAnalysisParam('lineFilterKernel', 0)
-
-    _detectionDict = {
-        'lineWidth': ka.getAnalysisParam('lineWidth'),
-        'lineFilterKernel': ka.getAnalysisParam('lineFilterKernel'),
-        'detectPosNeg': ka.getAnalysisParam('detectPosNeg'),
-        'percentOfMax': ka.getAnalysisParam('percentOfMax'),
-        'src_pnt_space': roiRect.getBottom(),
-        'dst_pnt_space': roiRect.getTop(),
-    }
-
-
-    # todo: put this in kymAnalysis class
-    # lineProfilePool(ka.getImage(), lineWidth, roiRect, _percentOfMax)
-    lineProfilePool(ka.getImage(), _detectionDict)
-
-    # plotKym(ka)
-    # plotKym_plotly(ka)
-    # plotDash(ka)
-
 def plotKym(ka: kymAnalysis):
     """Plot a kym image using matplotlib."""
     import matplotlib.pyplot as plt
@@ -1990,29 +1928,6 @@ def plotKym(ka: kymAnalysis):
 
     plt.show()
 
-def testNewDiamAnalysis():
-    path = '/media/cudmore/data/Dropbox/data/cell-shortening/Low resolution files_kymographs analysis/cell02_0002.tif.frames/cell02_0002_C002T001.tif'
-    ba = sanpy.bAnalysis(path)    
-    _threshold = guessDvDtThreshold(ba)
-    print('_threshold:', _threshold)
-
-    # set detection parameters and detect
-    dDict = sanpy.bDetection().getDetectionDict('Ca Kymograph')
-    dDict['dvdtThreshold'] = _threshold  #0.007
-    dDict['verbose'] = False
-    # spike detect will also detect diameter params 'diam_*'
-    ba.spikeDetect(dDict)
-
-    # analyze diameter
-    # ba.kymAnalysis.setAnalysisParam('imageFilterKenel', 0)
-    ba.kymAnalysis.setAnalysisParam('lineWidth', 2)
-    ba.kymAnalysis.analyzeDiameter(verbose=False)
-
-    ddDict, dResultDict = detectDiam(ba)
-    plotDiamFit(ba, ddDict, dResultDict)
-
 if __name__ == "__main__":
-    # testLineProfilePool()
-    # testNewDiamAnalysis()
 
     test_mplPlot()

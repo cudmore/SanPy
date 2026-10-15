@@ -2,7 +2,7 @@ import math
 import os
 from functools import partial
 import json
-from typing import Union, Dict, List, Tuple, Optional, Optional
+from typing import Any, Optional
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -146,6 +146,7 @@ class detectionParams(sanpyPlugin):
         analysisDirDict = sanpy.analysisDir.sanpyColumns
 
         dDict = self._detectionObject.getMasterDict(self._currentDetectionName)
+        compareDict = self._getCompareDict()
 
         vLayoutParams = QtWidgets.QGridLayout()
 
@@ -169,7 +170,6 @@ class detectionParams(sanpyPlugin):
 
             # k is the name in spike dictionary
             paramName = k
-            defaultValue = v["defaultValue"]
             valueType = v[
                 "type"
             ]  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
@@ -177,9 +177,6 @@ class detectionParams(sanpyPlugin):
             humanName = v["humanName"]
             description = v["description"]
             allowNone = v["allowNone"]  # set special value for spin box
-
-            # flag with red
-            flagWithRed = currentValue != defaultValue
 
             inAnalysisDir = paramName in analysisDirDict.keys()
 
@@ -194,7 +191,7 @@ class detectionParams(sanpyPlugin):
 
             humanNameLabel = QtWidgets.QLabel(humanName)
             vLayoutParams.addWidget(nameLabel, row, col, rowSpan, colSpan)
-            if flagWithRed:
+            if compareDict is not None and currentValue != compareDict[paramName]:
                 humanNameLabel.setStyleSheet(self._qLabelRed)
             vLayoutParams.addWidget(humanNameLabel, row, col, rowSpan, colSpan)
             col += 1
@@ -305,6 +302,21 @@ class detectionParams(sanpyPlugin):
         #
         return vLayoutParams
 
+    def _getCompareDict(self) -> dict[str, Any] | None:
+        """Return the parent core preset to compare against for label highlighting.
+
+        Core presets never highlight. User presets compare against the core
+        preset named by ``detectionName``.
+
+        Returns:
+            Parent core-preset parameter dictionary, or ``None`` when the
+            selected preset is a core preset.
+        """
+        if not self._detectionObject.isUserPreset(self._currentDetectionName):
+            return None
+        parentName = self._detectionDict["detectionName"]
+        return self._detectionObject.getDetectionDict(parentName)
+
     def _setDict(self, detectionParam, value):
         """Respond to user chhanging a detection parameter.
 
@@ -322,11 +334,9 @@ class detectionParams(sanpyPlugin):
         #     logger.error('')
         self._detectionDict[detectionParam] = value
 
-        _masterDict = self._detectionObject.getMasterDict(self._currentDetectionName)
-        defaultValue = _masterDict[detectionParam]["defaultValue"]
-        flagWithRed = value != defaultValue
+        compareDict = self._getCompareDict()
         aLabel = self.widgetDict[detectionParam]["nameLabelWidget"]
-        if flagWithRed:
+        if compareDict is not None and value != compareDict[detectionParam]:
             aLabel.setStyleSheet(self._qLabelRed)
         else:
             aLabel.setStyleSheet(self._qLabelBackground)
@@ -386,7 +396,9 @@ class detectionParams(sanpyPlugin):
         self._detectionDict = self._detectionObject.getDetectionDict(
             detectionPresetName
         )
-        self._currentDetectionName = self._detectionDict["detectionName"]
+        # Keep the selected preset name (dropdown text), not detectionName.
+        # User presets keep detectionName of their parent core preset.
+        self._currentDetectionName = detectionPresetName
 
         self.replot()
 
@@ -401,7 +413,6 @@ class detectionParams(sanpyPlugin):
             self._detectionDict = self._detectionObject.getDetectionDict(
                 self._currentDetectionName
             )
-            self._currentDetectionName = self._detectionDict["detectionName"]
 
             # refresh interface
             self.replot()
@@ -454,6 +465,7 @@ class detectionParams(sanpyPlugin):
         detectionDict = self._detectionDict
 
         _masterDict = self._detectionObject.getMasterDict(self._currentDetectionName)
+        compareDict = self._getCompareDict()
 
         for detectionParam in detectionDict.keys():
             if not _masterDict[detectionParam]["show_in_editor"]:
@@ -465,8 +477,6 @@ class detectionParams(sanpyPlugin):
                 continue
 
             currentValue = detectionDict[detectionParam]
-            defaultValue = _masterDict[detectionParam]["defaultValue"]
-            flagWithRed = defaultValue != currentValue
 
             if currentValue == -1e9:
                 logger.error(
@@ -475,7 +485,10 @@ class detectionParams(sanpyPlugin):
                 currentValue = None
 
             aLabel = self.widgetDict[detectionParam]["nameLabelWidget"]
-            if flagWithRed:
+            if (
+                compareDict is not None
+                and currentValue != compareDict[detectionParam]
+            ):
                 aLabel.setStyleSheet(self._qLabelRed)
                 aLabel.update()
             else:
