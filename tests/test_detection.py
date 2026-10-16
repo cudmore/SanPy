@@ -54,3 +54,23 @@ def test_user_preset_detection(tmp_path: Path) -> None:
     assert user_name in detection.getDetectionPresetList()
     assert detection.getDetectionDict(user_name)["dvdtThreshold"] == 25
     assert detection.getDetectionDict(user_name)["detectionName"] == "Neuron"
+
+
+def test_reload_presets_picks_up_saved_user_preset(tmp_path: Path) -> None:
+    """Load a user preset that was saved after detection presets were loaded."""
+    detection_dir = tmp_path / "SanPy-User-Files" / "detection"
+    detection_dir.mkdir(parents=True)
+    detection = bDetection(SanPyPaths(documents_dir=tmp_path))
+    user_name = "User - Test"
+
+    assert user_name not in detection.getDetectionPresetList()
+
+    user_preset = detection.getDetectionDict("Neuron")
+    with open(detection_dir / f"{user_name}.json", "w") as handle:
+        json.dump(user_preset, handle)
+
+    detection.reloadPresets()
+
+    assert detection.isUserPreset(user_name)
+    assert not detection.isUserPreset("Neuron")
+    assert user_name in detection.getDetectionPresetList()

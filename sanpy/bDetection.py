@@ -274,7 +274,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
 
     key = "mdp_ms"
     theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.DETECTION
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 250
     theDict[key]["type"] = "float"
@@ -320,11 +320,11 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     theDict[key]["type"] = "list"  # list of number
     theDict[key]["allowNone"] = False
     theDict[key]["units"] = ""
-    theDict[key]["humanName"] = "AP Durations (%)"
+    theDict[key]["humanName"] = "AP Widths"
     theDict[key]["errors"] = ""
     theDict[key][
         "description"
-    ] = "AP Durations as percent of AP height (AP Peak (mV) - TOP (mV))"
+    ] = "AP Widths - hard coded as [10, 20, 50, 80, 90] percent of AP height (AP Peak (mV) - TOP (mV))"
 
     key = "halfWidthWindow_ms"
     theDict[key] = {}
@@ -336,7 +336,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     theDict[key]["units"] = "ms"
     theDict[key]["humanName"] = "Half Width Window (ms)"
     theDict[key]["errors"] = ""
-    theDict[key]["description"] = "Window (ms) after TOP to look for AP Durations"
+    theDict[key]["description"] = "Window (ms) after TOP to look for AP widths"
 
     key = "preSpikeClipWidth_ms"
     theDict[key] = {}
@@ -629,6 +629,15 @@ class bDetection(object):
             True when ``name`` came from the user ``detection/`` folder.
         """
         return name in self._userPresetNames
+
+    def reloadPresets(self) -> None:
+        """Reload bundled and user detection presets from disk.
+
+        Call this after a user preset file is saved so later preset queries
+        include that file.
+        """
+        self._userPresetNames = set()
+        self._detectionPreset = self._getPresetsDict()
 
     def _getPresetsDict(self) -> dict:
         """Load detection presets from json files in 2 different folder:

@@ -9,6 +9,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 import sanpy
 from sanpy.bDetection import getDefaultDetection
 from sanpy.interface.plugins import sanpyPlugin
+from sanpy.schema import DetectionParameterCategory
 
 from sanpy.sanpyLogger import get_logger
 
@@ -96,17 +97,12 @@ class detectionParams(sanpyPlugin):
         aButton.clicked.connect(partial(self.on_button_click, aName))
         hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
-        # get list of names of detection presets (like SANode)
-        # detectionPresetList = self.getSanPyApp().getDetectionClass().getDetectionPresetList()
-        detectionPresetList = self._detectionObject.getDetectionPresetList()
-
-        aComboBox = QtWidgets.QComboBox()
-        # detectionPresets = sanpy.bDetection.getDetectionPresetList()
-        for detectionPreset in detectionPresetList:
-            aComboBox.addItem(detectionPreset)
-        aComboBox.setCurrentText(detectionPresetList[0])
-        aComboBox.currentTextChanged.connect(self.on_select_detection_preset)
-        hControlLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
+        # Fill before connecting so this does not reload the preset and
+        # replace parameters already taken from an analyzed file.
+        self._presetCombo = QtWidgets.QComboBox()
+        self._fillPresetCombo(self._currentDetectionName)
+        self._presetCombo.currentTextChanged.connect(self.on_select_detection_preset)
+        hControlLayout.addWidget(self._presetCombo, alignment=QtCore.Qt.AlignLeft)
 
         aName = "Save Params"
         aButton = QtWidgets.QPushButton(aName)
@@ -140,13 +136,26 @@ class detectionParams(sanpyPlugin):
     def buildUI_2(self) -> QtWidgets.QGridLayout:
         """Build a control for each detection parameter shown in the editor.
 
+        Visible parameters are placed in one section per
+        ``DetectionParameterCategory``, in enum order. Parameters keep their
+        definition order inside a section.
+
         Returns:
-            Grid layout holding one row of controls per visible parameter.
+            Grid layout holding one header and one row of controls per visible
+            parameter.
         """
         analysisDirDict = sanpy.analysisDir.sanpyColumns
 
         dDict = self._detectionObject.getMasterDict(self._currentDetectionName)
         compareDict = self._getCompareDict()
+
+        grouped: dict[DetectionParameterCategory, list[tuple[str, dict[str, Any]]]] = {
+            category: [] for category in DetectionParameterCategory
+        }
+        for key, definition in dDict.items():
+            if not definition["show_in_editor"]:
+                continue
+            grouped[definition["category"]].append((key, definition))
 
         vLayoutParams = QtWidgets.QGridLayout()
 
@@ -156,149 +165,159 @@ class detectionParams(sanpyPlugin):
         col = 0
         rowSpan = 1
         colSpan = 1
-        for k, v in dDict.items():
-            if not v["show_in_editor"]:
+        for category, parameters in grouped.items():
+            if not parameters:
                 continue
 
-            col = 0
-
-            try:
-                currentValue = self._detectionDict[k]
-            except (KeyError) as e:
-                logger.error('did not find key "{k}" in _detectionDict')
-                continue
-
-            # k is the name in spike dictionary
-            paramName = k
-            valueType = v[
-                "type"
-            ]  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
-            units = v["units"]
-            humanName = v["humanName"]
-            description = v["description"]
-            allowNone = v["allowNone"]  # set special value for spin box
-
-            inAnalysisDir = paramName in analysisDirDict.keys()
-
-            # add an '*' for params in main file table keys/columns
-            aName = " "
-            if inAnalysisDir:
-                aName = "*"
-            nameLabel = QtWidgets.QLabel(
-                aName
-            )  # added to list so we can later set color
-            col += 1
-
-            humanNameLabel = QtWidgets.QLabel(humanName)
-            vLayoutParams.addWidget(nameLabel, row, col, rowSpan, colSpan)
-            if compareDict is not None and currentValue != compareDict[paramName]:
-                humanNameLabel.setStyleSheet(self._qLabelRed)
-            vLayoutParams.addWidget(humanNameLabel, row, col, rowSpan, colSpan)
-            col += 1
-
-            aWidget = None
-            if valueType == "int":
-                aWidget = QtWidgets.QSpinBox()
-                aWidget.setRange(
-                    0, 2**16
-                )  # minimum is used for setSpecialValueText()
-                aWidget.setSpecialValueText(
-                    "None"
-                )  # displayed when widget is set to minimum
-                if currentValue is None:
-                    aWidget.setValue(0)
-                # elif math.isnan(currentValue):
-                #     pass
-                else:
-                    currentValue = int(currentValue)
-                    aWidget.setValue(currentValue)
-                aWidget.setKeyboardTracking(False)  # don't trigger signal as user edits
-                aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
-            elif valueType == "float":
-                aWidget = QtWidgets.QDoubleSpinBox()
-                aWidget.setRange(
-                    -1e9, +1e9
-                )  # minimum is used for setSpecialValueText()
-                aWidget.setSpecialValueText(
-                    "None"
-                )  # displayed when widget is set to minimum
-
-                if currentValue is None or math.isnan(currentValue):
-                    aWidget.setValue(-1e9)
-                else:
-                    aWidget.setValue(currentValue)
-                aWidget.setKeyboardTracking(False)  # don't trigger signal as user edits
-                aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
-            elif valueType == "list":
-                # text edit a list
-                pass
-            elif valueType in ["bool", "boolean"]:
-                # popup of True/False
-                aWidget = QtWidgets.QComboBox()
-                aWidget.addItem("True")
-                aWidget.addItem("False")
-                aWidget.setCurrentText(str(currentValue))
-                aWidget.currentTextChanged.connect(
-                    partial(self.on_bool_combo_box, paramName)
-                )
-            elif valueType == "string":
-                # text edit
-                aWidget = QtWidgets.QLineEdit(currentValue)
-                # logger.info(f'paramName:{paramName}')
-                _allow_edit = paramName == 'userSaveName'  # abb so user can specify name to save
-                aWidget.setReadOnly(not _allow_edit)
-                # aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
-                # aWidget.setValidator(QIntValidator())
-                # aWidget.setMaxLength(4)
-                aWidget.setAlignment(QtCore.Qt.AlignLeft)
-                aWidget.editingFinished.connect(
-                    partial(self.on_text_edit, aWidget, paramName)
-                )
-            elif valueType == "sanpy.bDetection.detectionTypes":
-                aWidget = QtWidgets.QComboBox()
-                detectionTypes = sanpy.bDetection.detectionTypes
-                for theType in detectionTypes:
-                    aWidget.addItem(theType.name)
-                aWidget.setCurrentText(str(currentValue))
-                aWidget.currentTextChanged.connect(
-                    partial(self.on_detection_type_combo_box, paramName)
-                )
-            else:
-                logger.error(
-                    f'Did not understand valueType:"{valueType}" for parameter:"{paramName}"'
-                )
-
-            if aWidget is not None:
-                # keep track of what we are displaying
-                # used to we can get default value (form 'key' and set label to red
-                self.widgetDict[paramName] = {
-                    "widget": aWidget,
-                    "nameLabelWidget": humanNameLabel,
-                }
-
-                vLayoutParams.addWidget(aWidget, row, col, rowSpan, colSpan)
-            #
-            col += 1
-
-            # units
-            aLabel = QtWidgets.QLabel(units)
-            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
-            col += 1
-
-            # add a 'None' button for detection parameters that allow it
-            if allowNone:
-                aName = f"{paramName}_none"
-                aButton = QtWidgets.QPushButton("Set None")
-                aButton.clicked.connect(partial(self.on_button_click, aName))
-                vLayoutParams.addWidget(aButton, row, col, rowSpan, colSpan)
-            #
-            col += 1
-
-            aLabel = QtWidgets.QLabel(description)
-            vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
-
-            #
+            header = QtWidgets.QLabel(category.value.capitalize())
+            headerFont = header.font()
+            headerFont.setBold(True)
+            if headerFont.pointSize() > 0:
+                headerFont.setPointSize(headerFont.pointSize() + 2)
+            header.setFont(headerFont)
+            vLayoutParams.addWidget(header, row, 0, rowSpan, 6)
             row += 1
+
+            for k, v in parameters:
+                col = 0
+
+                try:
+                    currentValue = self._detectionDict[k]
+                except (KeyError) as e:
+                    logger.error('did not find key "{k}" in _detectionDict')
+                    continue
+
+                # k is the name in spike dictionary
+                paramName = k
+                valueType = v[
+                    "type"
+                ]  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
+                units = v["units"]
+                humanName = v["humanName"]
+                description = v["description"]
+                allowNone = v["allowNone"]  # set special value for spin box
+
+                inAnalysisDir = paramName in analysisDirDict.keys()
+
+                # add an '*' for params in main file table keys/columns
+                aName = " "
+                if inAnalysisDir:
+                    aName = "*"
+                nameLabel = QtWidgets.QLabel(
+                    aName
+                )  # added to list so we can later set color
+                col += 1
+
+                humanNameLabel = QtWidgets.QLabel(humanName)
+                vLayoutParams.addWidget(nameLabel, row, col, rowSpan, colSpan)
+                if compareDict is not None and currentValue != compareDict[paramName]:
+                    humanNameLabel.setStyleSheet(self._qLabelRed)
+                vLayoutParams.addWidget(humanNameLabel, row, col, rowSpan, colSpan)
+                col += 1
+
+                aWidget = None
+                if valueType == "int":
+                    aWidget = QtWidgets.QSpinBox()
+                    aWidget.setRange(
+                        0, 2**16
+                    )  # minimum is used for setSpecialValueText()
+                    aWidget.setSpecialValueText(
+                        "None"
+                    )  # displayed when widget is set to minimum
+                    if currentValue is None:
+                        aWidget.setValue(0)
+                    # elif math.isnan(currentValue):
+                    #     pass
+                    else:
+                        currentValue = int(currentValue)
+                        aWidget.setValue(currentValue)
+                    aWidget.setKeyboardTracking(False)  # don't trigger signal as user edits
+                    aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
+                elif valueType == "float":
+                    aWidget = QtWidgets.QDoubleSpinBox()
+                    aWidget.setRange(
+                        -1e9, +1e9
+                    )  # minimum is used for setSpecialValueText()
+                    aWidget.setSpecialValueText(
+                        "None"
+                    )  # displayed when widget is set to minimum
+
+                    if currentValue is None or math.isnan(currentValue):
+                        aWidget.setValue(-1e9)
+                    else:
+                        aWidget.setValue(currentValue)
+                    aWidget.setKeyboardTracking(False)  # don't trigger signal as user edits
+                    aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
+                elif valueType == "list":
+                    # text edit a list
+                    pass
+                elif valueType in ["bool", "boolean"]:
+                    # popup of True/False
+                    aWidget = QtWidgets.QComboBox()
+                    aWidget.addItem("True")
+                    aWidget.addItem("False")
+                    aWidget.setCurrentText(str(currentValue))
+                    aWidget.currentTextChanged.connect(
+                        partial(self.on_bool_combo_box, paramName)
+                    )
+                elif valueType == "string":
+                    # text edit
+                    aWidget = QtWidgets.QLineEdit(currentValue)
+                    # logger.info(f'paramName:{paramName}')
+                    _allow_edit = paramName == 'userSaveName'  # abb so user can specify name to save
+                    aWidget.setReadOnly(not _allow_edit)
+                    # aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
+                    # aWidget.setValidator(QIntValidator())
+                    # aWidget.setMaxLength(4)
+                    aWidget.setAlignment(QtCore.Qt.AlignLeft)
+                    aWidget.editingFinished.connect(
+                        partial(self.on_text_edit, aWidget, paramName)
+                    )
+                elif valueType == "sanpy.bDetection.detectionTypes":
+                    aWidget = QtWidgets.QComboBox()
+                    detectionTypes = sanpy.bDetection.detectionTypes
+                    for theType in detectionTypes:
+                        aWidget.addItem(theType.name)
+                    aWidget.setCurrentText(str(currentValue))
+                    aWidget.currentTextChanged.connect(
+                        partial(self.on_detection_type_combo_box, paramName)
+                    )
+                else:
+                    logger.error(
+                        f'Did not understand valueType:"{valueType}" for parameter:"{paramName}"'
+                    )
+
+                if aWidget is not None:
+                    # keep track of what we are displaying
+                    # used to we can get default value (form 'key' and set label to red
+                    self.widgetDict[paramName] = {
+                        "widget": aWidget,
+                        "nameLabelWidget": humanNameLabel,
+                    }
+
+                    vLayoutParams.addWidget(aWidget, row, col, rowSpan, colSpan)
+                #
+                col += 1
+
+                # units
+                aLabel = QtWidgets.QLabel(units)
+                vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
+                col += 1
+
+                # add a 'None' button for detection parameters that allow it
+                if allowNone:
+                    aName = f"{paramName}_none"
+                    aButton = QtWidgets.QPushButton("Set None")
+                    aButton.clicked.connect(partial(self.on_button_click, aName))
+                    vLayoutParams.addWidget(aButton, row, col, rowSpan, colSpan)
+                #
+                col += 1
+
+                aLabel = QtWidgets.QLabel(description)
+                vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
+
+                #
+                row += 1
         #
         return vLayoutParams
 
@@ -384,6 +403,20 @@ class detectionParams(sanpyPlugin):
 
         # update interface
         self.signalDetect.emit(self.ba)
+
+    def _fillPresetCombo(self, selectedName: str) -> None:
+        """Refill the preset combo and select one name without emitting.
+
+        Args:
+            selectedName: Preset name to select, such as ``"Neuron"`` or
+                ``"User - My Params"``.
+        """
+        self._presetCombo.blockSignals(True)
+        self._presetCombo.clear()
+        for presetName in self._detectionObject.getDetectionPresetList():
+            self._presetCombo.addItem(presetName)
+        self._presetCombo.setCurrentText(selectedName)
+        self._presetCombo.blockSignals(False)
 
     def on_select_detection_preset(self, detectionPresetName: str):
         """User selected a detection preset from combobox."""
@@ -496,32 +529,36 @@ class detectionParams(sanpyPlugin):
                 aLabel.update()
 
             aWidget = self.widgetDict[detectionParam]["widget"]
-            if isinstance(aWidget, QtWidgets.QSpinBox):
-                try:
-                    if currentValue is None or math.isnan(currentValue):
-                        aWidget.setValue(0)
-                    else:
-                        aWidget.setValue(currentValue)
-                except TypeError as e:
-                    logger.error(f"QSpinBox detectionParam:{detectionParam} ... {e}")
-            elif isinstance(aWidget, QtWidgets.QDoubleSpinBox):
-                try:
-                    if currentValue is None or math.isnan(currentValue):
-                        aWidget.setValue(-1e9)
-                    else:
-                        aWidget.setValue(currentValue)
-                except TypeError as e:
-                    logger.error(
-                        f"QDoubleSpinBox detectionParam:{detectionParam} ... {e}"
+            aWidget.blockSignals(True)
+            try:
+                if isinstance(aWidget, QtWidgets.QSpinBox):
+                    try:
+                        if currentValue is None or math.isnan(currentValue):
+                            aWidget.setValue(0)
+                        else:
+                            aWidget.setValue(currentValue)
+                    except TypeError as e:
+                        logger.error(f"QSpinBox detectionParam:{detectionParam} ... {e}")
+                elif isinstance(aWidget, QtWidgets.QDoubleSpinBox):
+                    try:
+                        if currentValue is None or math.isnan(currentValue):
+                            aWidget.setValue(-1e9)
+                        else:
+                            aWidget.setValue(currentValue)
+                    except TypeError as e:
+                        logger.error(
+                            f"QDoubleSpinBox detectionParam:{detectionParam} ... {e}"
+                        )
+                elif isinstance(aWidget, QtWidgets.QComboBox):
+                    aWidget.setCurrentText(str(currentValue))
+                elif isinstance(aWidget, QtWidgets.QLineEdit):
+                    aWidget.setText(str(currentValue))
+                else:
+                    logger.warning(
+                        f'key "{detectionParam}" has value "{currentValue}" but widget type "{type(aWidget)}" not understood.'
                     )
-            elif isinstance(aWidget, QtWidgets.QComboBox):
-                aWidget.setCurrentText(str(currentValue))
-            elif isinstance(aWidget, QtWidgets.QLineEdit):
-                aWidget.setText(str(currentValue))
-            else:
-                logger.warning(
-                    f'key "{detectionParam}" has value "{currentValue}" but widget type "{type(aWidget)}" not understood.'
-                )
+            finally:
+                aWidget.blockSignals(False)
 
     def slot_switchFile(
         self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
@@ -535,26 +572,36 @@ class detectionParams(sanpyPlugin):
         if _detectionDict is not None:
             self._detectionDict = _detectionDict  #
             self._currentDetectionName = _detectionDict["detectionName"]
+            # Do not emit currentTextChanged; that reloads the preset and
+            # drops parameter values stored with this file.
+            self._presetCombo.blockSignals(True)
+            self._presetCombo.setCurrentText(self._currentDetectionName)
+            self._presetCombo.blockSignals(False)
 
         self.replot()
 
     def save(self) -> None:
-        """Save our current detection dict to a user file.
+        """Save the current detection parameters to a user preset file.
 
-        Parameters hidden from the editor are saved as None because they are
-        set per detection, not per preset.
+        Saving requires ``userSaveName``. Parameters hidden from the editor
+        are saved as None because they are set per detection, not per preset.
         """
+        userSaveName = self._detectionDict["userSaveName"]
+        if not isinstance(userSaveName, str) or not userSaveName.strip():
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Save Params",
+                "Specify a Save User Name before saving detection parameters.",
+            )
+            return
+
         sanpy_app = self.getSanPyApp()
         sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.SanPyPaths()
         userDetectionFolder = sanpy_paths.detection_dir
 
-        # key 'detectionName'
-        filename = self._detectionDict["userSaveName"]
-        if not filename:
-            filename = self._detectionDict["detectionName"]
         # saved detection dict always start with "User - "
         # so saved names never conflict with built in detection names
-        filename = "User - " + filename
+        filename = "User - " + userSaveName
 
         savePath = str(userDetectionFolder / f"{filename}.json")
 
@@ -575,3 +622,14 @@ class detectionParams(sanpyPlugin):
             # abb do not change the user specified name
             # self._detectionDict["userSaveName"] = filename
             json.dump(saveDict, f, indent=2)
+
+        logger.info(f'saved detection params to "{savePath}"')
+
+        self._detectionObject.reloadPresets()
+        self._fillPresetCombo(filename)
+        self._currentDetectionName = filename
+
+        window = self.getSanPyWindow()
+        if window is not None:
+            window.myDetectionWidget.detectToolbarWidget.refreshDetectionPresets()
+            window.slot_updateStatus(f'Saved detection params to "{savePath}"')

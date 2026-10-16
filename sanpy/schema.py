@@ -8,9 +8,9 @@ class DetectionParameterCategory(StrEnum):
 
     GENERAL = "general"
     DETECTION = "detection"
-    FILTERING = "filtering"
     WINDOWS = "windows"
     WAVEFORM = "waveform"
+    FILTERING = "filtering"
     ADVANCED = "advanced"
 
 

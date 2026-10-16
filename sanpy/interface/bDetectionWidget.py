@@ -3512,6 +3512,21 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         print('    todo: implement sweep number:', sweepNumber)
     """
 
+    def refreshDetectionPresets(self) -> None:
+        """Rebuild the preset list and keep the current selection.
+
+        Used after a user preset is saved. Does not apply that preset to the
+        dV/dt or mV controls.
+        """
+        selected = self.detectionPresets.currentText()
+        detectionClass = self.detectionWidget.getMainWindowDetectionClass()
+        self.detectionPresets.blockSignals(True)
+        self.detectionPresets.clear()
+        for detectionType in detectionClass.getDetectionPresetList():
+            self.detectionPresets.addItem(detectionType)
+        self.detectionPresets.setCurrentText(selected)
+        self.detectionPresets.blockSignals(False)
+
     def on_detection_preset_change(self, detectionTypeStr):
         """User selected a preset detection.
 
