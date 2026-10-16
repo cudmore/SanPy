@@ -6,11 +6,12 @@ from enum import StrEnum
 class DetectionParameterCategory(StrEnum):
     """Categories used to organize detection parameters for presentation."""
 
-    GENERAL = "general"
+    PRESETS = "presets"
     DETECTION = "detection"
     WINDOWS = "windows"
     WAVEFORM = "waveform"
     FILTERING = "filtering"
+    SPIKE_CLIPS = "spike clips"
     ADVANCED = "advanced"
 
 

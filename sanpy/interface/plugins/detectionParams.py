@@ -562,10 +562,21 @@ class detectionParams(sanpyPlugin):
 
     def slot_switchFile(
         self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
-    ):
+    ) -> None:
+        """Load the selected file and show its file name.
+
+        Args:
+            ba: Analysis object for the selected file.
+            rowDict: Optional file-table row. This editor does not read it.
+            replot: Ignored. Parameter widgets are refreshed after the file
+                detection parameters are loaded.
+        """
         # don't replot until we set our detectionClass
         replot = False
         super().slot_switchFile(ba, rowDict, replot=replot)
+
+        if self.ba is not None:
+            self.fileNameLabel.setText(f"File: {self.ba.fileLoader.filename}")
 
         # before we detect a ba, its detection dict is None
         _detectionDict = self.ba.getDetectionDict(asCopy=True)  # can be None

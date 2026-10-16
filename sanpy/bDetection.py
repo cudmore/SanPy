@@ -51,7 +51,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
 
     key = "detectionName"
     theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.GENERAL
+    theDict[key]["category"] = DetectionParameterCategory.PRESETS
     theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = "default"  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
@@ -65,7 +65,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
 
     key = "userSaveName"
     theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.GENERAL
+    theDict[key]["category"] = DetectionParameterCategory.PRESETS
     theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = ""  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
@@ -156,7 +156,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
     # abb 202610, userType does not belong in detection. it is a spike property
     # key = "userType"
     # theDict[key] = {}
-    # theDict[key]["category"] = DetectionParameterCategory.GENERAL
+    # theDict[key]["category"] = DetectionParameterCategory.PRESETS
     # theDict[key]["defaultValue"] = "0"
     # theDict[key]["type"] = "int"
     # theDict[key]["allowNone"] = False
@@ -340,7 +340,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
 
     key = "preSpikeClipWidth_ms"
     theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["category"] = DetectionParameterCategory.SPIKE_CLIPS
     theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 4
     theDict[key]["type"] = "float"
@@ -352,7 +352,7 @@ def getDefaultDetection() -> dict[str, dict[str, Any]]:
 
     key = "postSpikeClipWidth_ms"
     theDict[key] = {}
-    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
+    theDict[key]["category"] = DetectionParameterCategory.SPIKE_CLIPS
     theDict[key]["show_in_editor"] = True
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
