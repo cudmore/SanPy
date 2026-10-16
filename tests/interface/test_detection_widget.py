@@ -22,6 +22,51 @@ def test_window_state_normalizes_empty_spike_selection() -> None:
     assert state.spike_selection is None
 
 
+def test_folder_window_selects_first_visible_file(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, tmp_path: Path
+) -> None:
+    """Select the top file-table row when a folder window opens.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary directory supplied by pytest.
+    """
+    data_path = Path(__file__).resolve().parents[1] / "data"
+    for name in ("2021_07_20_0010.abf", "19114001.abf"):
+        source = data_path / name
+        (tmp_path / name).write_bytes(source.read_bytes())
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(tmp_path))
+    table = window._fileListWidget.getTableView()
+    real_row = table.model()._data.index[0]
+    file_key = window.myAnalysisDir.get_file_key(real_row)
+
+    assert window.state == WindowState(file_key, 0, None)
+    assert table.currentIndex().row() == 0
+    assert window.myDetectionWidget.ba is window.myAnalysisDir.get_analysis_for_file_key(
+        file_key
+    )
+
+
+def test_empty_folder_window_leaves_detection_unselected(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, tmp_path: Path
+) -> None:
+    """Leave detection empty when a folder window has no recordings.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary directory supplied by pytest.
+    """
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(tmp_path))
+
+    assert window.state is None
+    assert window.get_bAnalysis() is None
+    assert window._fileListWidget.getTableView().currentIndex().row() == -1
+
+
 def test_file_switch_applies_one_complete_state_without_nested_request(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:

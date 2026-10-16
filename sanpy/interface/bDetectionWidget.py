@@ -838,23 +838,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         return start, stop
 
-    def _old_setAxis_OnFileChange(self, startSec, stopSec):
-        if (
-            startSec is None
-            or stopSec is None
-            or math.isnan(startSec)
-            or math.isnan(stopSec)
-        ):
-            startSec = 0
-            stopSec = self.ba.fileLoader.recordingDur
-
-        self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # always full view
-        self.linearRegionItem2.setRegion([startSec, stopSec])
-
-        # padding = 0
-        # self.derivPlot.setXRange(startSec, stopSec, padding=padding) # linked to Vm
-        # self.myKymWidget.kymographPlot.autoRange()  # row major is different
-
     def setAxisFull_y(self, thisAxis):
         """Set full y-axis.
 
@@ -1046,61 +1029,6 @@ class bDetectionWidget(QtWidgets.QWidget):
             y.append(np.nan)
 
         # print ('  returning', len(x), len(y))
-        return x, y
-
-    def _old_getHalfWidths(self):
-        """Get x/y pair for plotting all half widths."""
-        # defer until we know how many half-widths 20/50/80
-        x = []
-        y = []
-        numPerSpike = 3  # rise/fall/nan
-        numSpikes = self.ba.numSpikes
-        xyIdx = 0
-        # for idx, spike in enumerate(self.ba.spikeDict):
-        spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
-        for idx, spike in enumerate(spikeDictionaries):
-            if idx == 0:
-                # make x/y from first spike using halfHeights = [20,50,80]
-                halfHeights = spike[
-                    "halfHeights"
-                ]  # will be same for all spike, like [20, 50, 80]
-                numHalfHeights = len(halfHeights)
-                # *numHalfHeights to account for rise/fall + padding nan
-                x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-                y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-                # print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
-
-            if "widths" not in spike:
-                print(f'=== Did not find "widths" key in spike {idx}')
-                # print(spike)
-            for idx2, width in enumerate(spike["widths"]):
-                halfHeight = width["halfHeight"]  # [20,50,80]
-                risingPnt = width["risingPnt"]
-                risingVal = width["risingVal"]
-                fallingPnt = width["fallingPnt"]
-                fallingVal = width["fallingVal"]
-
-                if risingPnt is None or fallingPnt is None:
-                    # half-height was not detected
-                    continue
-
-                risingSec = self.ba.fileLoader.pnt2Sec_(risingPnt)
-                fallingSec = self.ba.fileLoader.pnt2Sec_(fallingPnt)
-
-                x[xyIdx] = risingSec
-                x[xyIdx + 1] = fallingSec
-                x[xyIdx + 2] = np.nan
-                # y
-                y[xyIdx] = fallingVal  # risingVal, to make line horizontal
-                y[xyIdx + 1] = fallingVal
-                y[xyIdx + 2] = np.nan
-
-                # each spike has 3x pnts: rise/fall/nan
-                xyIdx += numPerSpike  # accounts for rising/falling/nan
-            # end for width
-        # end for spike
-        # print('  numSpikes:', numSpikes, 'xyIdx:', xyIdx)
-        #
         return x, y
 
     def replotOverlays(self, oneIndex=None):
@@ -2076,65 +2004,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._leftPanelLayout.removeWidget(widget)
         widget.close()
         widget.deleteLater()
-
-    def _old_kymographChanged(self, event):
-        """
-        User finished gragging the ROI
-
-        Args:
-            event (pyqtgraph.graphicsItems.ROI.ROI)
-        """
-        logger.info("")
-        # print(event)
-        pos = event.pos()
-        size = event.size()
-        # print(pos, size)
-
-        # imagePos = self.myImageItem.mapFromScene(event.scenePos())
-        # imageSize = self.myImageItem.mapFromScene(event.size())
-        # print('  imagePos:', imagePos, 'imageSize:', imageSize)
-
-        left, top, right, bottom = None, None, None, None
-        handles = event.getSceneHandlePositions()
-        for handle in handles:
-            if handle[0] is not None:
-                imagePos = self.myImageItem.mapFromScene(handle[1])
-                x = imagePos.x()
-                y = imagePos.y()
-                # units are in image pixels !!!
-                # print(handle[0], 'x:', x, 'y:', y)
-                if handle[0] == "topleft":
-                    left = x
-                    bottom = y
-                    # top = y
-                elif handle[0] == "bottomright":
-                    right = x
-                    top = y
-                    # bottom = y
-        #
-        left = int(left)
-        top = int(top)
-        right = int(right)
-        bottom = int(bottom)
-
-        if left < 0:
-            left = 0
-
-        print(f"  left:{left} top:{top} right:{right} bottom:{bottom}")
-
-        #  cludge
-        if bottom > top:
-            logger.warning(f"fixing bad top/bottom")
-            tmp = top
-            top = bottom
-            bottom = tmp
-
-        theRect = [left, top, right, bottom]
-        self.ba._updateTifRoi(theRect)
-
-        self._replot(startSec=None, stopSec=None, userUpdate=True)
-
-        self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
     def slot_kymographChanged(self):
         self._replot(startSec=None, stopSec=None, userUpdate=True)

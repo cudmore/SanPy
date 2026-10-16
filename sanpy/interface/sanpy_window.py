@@ -560,74 +560,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             logger.warning(f'Did not understand this: "{this}"')
 
-    def _old_keyPressEvent(self, event):
-        """Respond to key press
-
-        TODO: does not seem to work?
-        """
-        key = event.key()
-        text = event.text()
-        logger.info(f"text:{text} key:{key} event:{event}")
-
-        # handled in bDetectionWidget
-        # set full axis
-        # if key in [70, 82]: # 'r' or 'f'
-        # if key in [QtCore.Qt.Key.Key_R, QtCore.Qt.Key.Key_F]:
-        #     self.myDetectionWidget.setAxisFull()
-
-        """
-        if key in [QtCore.Qt.Key.Key_P]: # 'r' or 'f'
-            self.myDetectionWidget.myPrint()
-        """
-
-        # handled in bDetectionWidget
-        # cancel all selections
-        # if key == QtCore.Qt.Key.Key_Escape:
-        #     self.mySignal('cancel all selections')
-
-        # handled in bDetectionWidget
-        # hide detection widget
-        # if text == 'h':
-        #     if self.myDetectionWidget.detectToolbarWidget.isVisible():
-        #         self.myDetectionWidget.detectToolbarWidget.hide()
-        #     else:
-        #         self.myDetectionWidget.detectToolbarWidget.show()
-
-        # user can copy this to the clipboard
-        # print file list model
-        # this is df updated as user updates table
-        # if text == 'p':
-        #     print(self.myModel)
-        #     print(self.myModel._data)
-
-        #
-        event.accept()
-
     def get_bAnalysis(self):
         return self.myDetectionWidget.ba
-
-    def _old_getSelectedFileDict(self):
-        """
-        Used by detection widget to get info in selected file.
-
-        todo: remove, pass this dict in signal emit from file table
-        """
-
-        fileDict = self._fileListWidget.getTableView().getSelectedRowDict()
-        return fileDict
-
-        # was this
-        """
-        selectedRows = self._fileListWidget.selectionModel().selectedRows()
-        if len(selectedRows) == 0:
-            return None
-        else:
-            selectedItem = selectedRows[0]
-            selectedRow = selectedItem.row()
-
-        rowDict = self.myModel.myGetRowDict(selectedRow)
-        return rowDict
-        """
 
     def slot_fileTableClicked(
         self, row: int, rowDict: dict, selectingAgain: bool
@@ -1145,6 +1079,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def _load(self, analysis_dir: sanpy.analysisDir | None = None) -> None:
         """Load or install the analysis directory for this window.
 
+        A folder with at least one recording selects the first visible file
+        through the same path as a file-table click.
+
         Args:
             analysis_dir: Preconstructed directory from the background loader.
                 When omitted, construct the directory synchronously.
@@ -1170,8 +1107,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             self.myAnalysisDir = analysis_dir
 
-        # abb, try and select first file -> not working
-
         # file
         if os.path.isfile(path):
             filename = os.path.split(path)[1]
@@ -1189,6 +1124,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
             self._fileListWidget.mySetModel(self.myModel)
             self.myModel.signalMyDataChanged.connect(self.slot_fileTableDataChanged)
+            if self.myModel.rowCount() > 0:
+                self.selectFileListRow(self.myModel._data.index[0])
 
     def slot_closeWindow(self, pluginObj: object) -> None:
         """Close named plugin window.
