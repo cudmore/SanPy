@@ -111,11 +111,35 @@ class preferences:
     def getRecentFiles(self):
         return self.configDict["recentFiles"]
 
+    def getRecentFilesForDisplay(self) -> list[str]:
+        """Return recent files that currently exist.
+
+        Returns:
+            Existing file paths in stored order. Missing paths stay in preferences.
+        """
+        return [
+            path
+            for path in self.configDict["recentFiles"]
+            if os.path.isfile(path)
+        ]
+
     def getMostRecentFolder(self):
         return self.configDict["mostRecentFolder"]
 
     def getRecentFolder(self):
         return self.configDict["recentFolders"]
+
+    def getRecentFoldersForDisplay(self) -> list[str]:
+        """Return recent folders that currently exist.
+
+        Returns:
+            Existing folder paths in stored order. Missing paths stay in preferences.
+        """
+        return [
+            path
+            for path in self.configDict["recentFolders"]
+            if os.path.isdir(path)
+        ]
 
     def clearRecent(self) -> None:
         """Clear recent file and folder history and persist the change."""

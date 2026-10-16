@@ -638,6 +638,75 @@ def test_clear_recents_refreshes_menu_and_launcher(
         launcher.refreshRecent()
 
 
+def test_missing_recent_paths_stay_stored_and_are_hidden(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, tmp_path: Path
+) -> None:
+    """Hide missing recent paths in the launcher and menu without dropping them.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary directory for paths that exist.
+    """
+    existing_file = tmp_path / "recording.abf"
+    existing_file.write_bytes(b"")
+    existing_folder = tmp_path / "recordings"
+    existing_folder.mkdir()
+    missing_file = str(tmp_path / "missing.abf")
+    missing_folder = str(tmp_path / "missing-folder")
+    existing_file_path = str(existing_file)
+    existing_folder_path = str(existing_folder)
+
+    options = qapp.getOptions()
+    original_values = {
+        "recentFiles": list(options["recentFiles"]),
+        "recentFolders": list(options["recentFolders"]),
+        "mostRecentFile": options.configDict.get("mostRecentFile", ""),
+        "mostRecentFolder": options["mostRecentFolder"],
+    }
+    monkeypatch.setattr(options, "save", Mock())
+    options["recentFiles"][:] = [missing_file, existing_file_path]
+    options["recentFolders"][:] = [missing_folder, existing_folder_path]
+    launcher = qapp._openFirstWidget
+
+    try:
+        launcher.refreshRecent()
+        qapp._refreshOpenRecent()
+
+        assert options["recentFiles"] == [missing_file, existing_file_path]
+        assert options["recentFolders"] == [missing_folder, existing_folder_path]
+        assert launcher.recentFileList == [existing_file_path]
+        assert launcher.recentFolderList == [existing_folder_path]
+        assert launcher.recentFileTable.item(0, 0).text() == existing_file_path
+        assert launcher.recentFolderTable.item(0, 0).text() == existing_folder_path
+
+        menu_texts = [
+            action.text()
+            for action in qapp.openRecentMenu.actions()
+            if not action.isSeparator()
+        ]
+        assert existing_file_path in menu_texts
+        assert existing_folder_path in menu_texts
+        assert missing_file not in menu_texts
+        assert missing_folder not in menu_texts
+
+        clear_button = next(
+            button
+            for button in launcher.findChildren(QtWidgets.QPushButton)
+            if button.text() == "Clear Recents"
+        )
+        clear_button.click()
+
+        assert options["recentFiles"] == []
+        assert options["recentFolders"] == []
+        assert launcher.recentFileTable.rowCount() == 0
+        assert launcher.recentFolderTable.rowCount() == 0
+    finally:
+        for key, value in original_values.items():
+            options[key] = value
+        launcher.refreshRecent()
+
+
 def test_successful_open_refreshes_launcher_recents(
     monkeypatch: pytest.MonkeyPatch, qapp: Any
 ) -> None:

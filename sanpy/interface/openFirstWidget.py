@@ -36,8 +36,10 @@ class openFirstWidget(QtWidgets.QMainWindow):
         self._icon_labels: list[tuple[QtWidgets.QLabel, str]] = []
         self._icon_buttons: list[tuple[QtWidgets.QPushButton, str]] = []
 
-        self.recentFileList = self._sanpyApp.getConfigDict().getRecentFiles()
-        self.recentFolderList = self._sanpyApp.getConfigDict().getRecentFolder()
+        self.recentFileList = self._sanpyApp.getConfigDict().getRecentFilesForDisplay()
+        self.recentFolderList = (
+            self._sanpyApp.getConfigDict().getRecentFoldersForDisplay()
+        )
 
         self._appIcon = None
         appIconPath = self._sanpyApp.getAppIconPath()    
@@ -143,10 +145,10 @@ class openFirstWidget(QtWidgets.QMainWindow):
             table.setRowHeight(index, 24)
 
     def refreshRecent(self) -> None:
-        """Reload recent paths and refresh both launcher tables."""
+        """Reload existing recent paths and refresh both launcher tables."""
         preferences = self._sanpyApp.getConfigDict()
-        self.recentFileList = preferences.getRecentFiles()
-        self.recentFolderList = preferences.getRecentFolder()
+        self.recentFileList = preferences.getRecentFilesForDisplay()
+        self.recentFolderList = preferences.getRecentFoldersForDisplay()
         self._populateRecentTable(self.recentFileTable, self.recentFileList)
         self._populateRecentTable(self.recentFolderTable, self.recentFolderList)
     
@@ -310,6 +312,14 @@ class openFirstWidget(QtWidgets.QMainWindow):
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         self._icon_buttons.append((aButton, "ph.folder-notch-open-thin"))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
+
+        hBoxLayout.addStretch(1)
+
+        clearRecentsButton = QtWidgets.QPushButton("Clear Recents")
+        clearRecentsButton.setFixedSize(QtCore.QSize(140, 30))
+        clearRecentsButton.setToolTip("Clear recent files and folders.")
+        clearRecentsButton.clicked.connect(self._sanpyApp._clearRecent)
+        hBoxLayout.addWidget(clearRecentsButton, alignment=QtCore.Qt.AlignRight)
 
         # recent files and tables
         recent_vBoxLayout = QtWidgets.QVBoxLayout()
