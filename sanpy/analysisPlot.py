@@ -452,7 +452,7 @@ class bAnalysisPlot:
         # preClipWidth_ms = 200
         # postClipWidth_ms = 1000
 
-        # Leave this none, if we pass none, ba.getSpikeClipsWill take care of this
+        # Leave this none, if we pass none, spike_clips.get uses detection widths
         """
         if preClipWidth_ms is None:
             preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
@@ -460,13 +460,13 @@ class bAnalysisPlot:
             postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
         """
         sweepNumber = 0
-        theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
+        theseClips, theseClips_x, meanClip = self.ba.spike_clips.get(
             startSec,
             stopSec,
-            spikeSelection=selectedSpikeList,
-            preSpikeClipWidth_ms=preClipWidth_ms,
-            postSpikeClipWidth_ms=postClipWidth_ms,
-            sweepNumber=sweepNumber,
+            spike_selection=selectedSpikeList,
+            pre_spike_clip_width_ms=preClipWidth_ms,
+            post_spike_clip_width_ms=postClipWidth_ms,
+            sweep_number=sweepNumber,
         )
         numClips = len(theseClips)
 

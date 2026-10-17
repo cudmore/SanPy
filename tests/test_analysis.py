@@ -55,3 +55,37 @@ def test_stats(detected_analysis: sanpy.bAnalysis) -> None:
         detected_analysis: Analysis prepared with the SA Node preset.
     """
     assert len(detected_analysis.getStat("thresholdSec")) == 103
+
+
+def test_spike_clips(detected_analysis: sanpy.bAnalysis) -> None:
+    """Return a full clip and matching time axis for each spike that fits.
+
+    On this fixture the first spike starts before the pre-clip window, so
+    that clip is omitted and the kept count is one less than the spike count.
+
+    Args:
+        detected_analysis: Analysis prepared with the SA Node preset.
+    """
+    spike_times = detected_analysis.getSpikeTimes(sweepNumber=0, epochNumber="All")
+    result = detected_analysis.spike_clips.get(None, None, sweep_number=0)
+    assert result is not None
+    clips, clips_x, mean_clip = result
+    assert len(spike_times) == 103
+    assert len(clips) == len(spike_times) - 1
+    assert len(clips_x) == len(clips)
+    for clip, x_row in zip(clips, clips_x):
+        assert len(x_row) == len(clip)
+    assert clips_x[0][0] < 0
+    assert 0 in clips_x[0]
+    assert len(mean_clip) == len(clips[0])
+
+
+def test_spike_clips_without_spikes(test_data_dir: Path) -> None:
+    """Return no clips before spike detection.
+
+    Args:
+        test_data_dir: Stable test-only data directory.
+    """
+    analysis = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
+    assert analysis.numSpikes == 0
+    assert analysis.spike_clips.get(0, 1) is None

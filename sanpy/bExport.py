@@ -561,8 +561,8 @@ class bExport:
 
             #
             # mean spike clip
-            theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
-                theMin, theMax, sweepNumber=self.sweepNumber
+            theseClips, theseClips_x, meanClip = self.ba.spike_clips.get(
+                theMin, theMax, sweep_number=self.sweepNumber
             )
             try:
                 first_X = theseClips_x[0]  # - theseClips_x[0][0]
@@ -585,8 +585,8 @@ class bExport:
             #
             # save mean spike clip
 
-            not_used_theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
-                theMin, theMax, sweepNumber=self.sweepNumber
+            not_used_theseClips, theseClips_x, meanClip = self.ba.spike_clips.get(
+                theMin, theMax, sweep_number=self.sweepNumber
             )
             if len(theseClips_x) == 0:
                 pass

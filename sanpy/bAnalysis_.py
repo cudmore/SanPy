@@ -35,6 +35,7 @@ from sanpy.bExport import bExport
 from sanpy.bDetection import getDefaultDetection
 
 from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
+from sanpy.spike_clips import SpikeClips
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -130,9 +131,8 @@ class bAnalysis:
         )
         # class to store all analysis results
 
-        self.spikeClips = []  # created in self.spikeDetect()
-        self.spikeClips_x = []  #
-        self.spikeClips_x2 = []  #
+        self.spike_clips: SpikeClips = SpikeClips(self)
+        """Spike clips built on demand by ``SpikeClips.get``."""
 
         self.dfError = None  # dataframe with a list of detection errors
         self._dfReportForScatter = None  # dataframe to be used by scatterplotwidget
@@ -1416,6 +1416,8 @@ class bAnalysis:
                 by the caller.
         """
 
+        self.spike_clips.clear()
+
         rememberSweep = (
             self.fileLoader.currentSweep
         )  # This is BAD we are mixing analysis with interface !!!
@@ -2034,12 +2036,6 @@ class bAnalysis:
         # look between threshold crossing to get minima
         # we will ignore the first and last spike
 
-        #
-        # spike clips
-        self.spikeClips = None
-        self.spikeClips_x = None
-        self.spikeClips_x2 = None
-
         # SUPER important, previously our self.spikeDict was simple list of dict
         # now it is a list of class xxx
         # print('=== addind', len(spikeDict))
@@ -2216,213 +2212,6 @@ class bAnalysis:
             print(f"spike {idx} has {len(spike['errors'])} errors")
             for eIdx, error in enumerate(spike["errors"]):
                 print(f"  error # {eIdx} is: {error}")
-
-    def _makeSpikeClips(
-        self,
-        preSpikeClipWidth_ms,
-        postSpikeClipWidth_ms=None,
-        theseTime_sec=None,
-        sweepNumber=None,
-        epochNumber='All'
-    ):
-        """
-        (Internal) Make small clips for each spike.
-
-        Args:
-            preSpikeClipWidth_ms (int): Width of each spike clip in milliseconds.
-            postSpikeClipWidth_ms (int): Width of each spike clip in milliseconds.
-            theseTime_sec (list of float): [NOT USED] List of seconds to make clips from.
-
-        Returns:
-            spikeClips_x2: ms
-            self.spikeClips (list): List of spike clips
-        """
-
-        verbose = self._detectionDict["verbose"]
-
-        if preSpikeClipWidth_ms is None:
-            preSpikeClipWidth_ms = self._detectionDict["preSpikeClipWidth_ms"]
-        if postSpikeClipWidth_ms is None:
-            postSpikeClipWidth_ms = self._detectionDict["postSpikeClipWidth_ms"]
-
-        if sweepNumber is None:
-            sweepNumber = "All"
-
-        # print('makeSpikeClips() spikeClipWidth_ms:', spikeClipWidth_ms, 'theseTime_sec:', theseTime_sec)
-        if theseTime_sec is None:
-            theseTime_pnts = self.getSpikeTimes(sweepNumber=sweepNumber, epochNumber=epochNumber)
-        else:
-            # convert theseTime_sec to pnts
-            theseTime_ms = [x * 1000 for x in theseTime_sec]
-            theseTime_pnts = [x * self.fileLoader.dataPointsPerMs for x in theseTime_ms]
-            theseTime_pnts = [round(x) for x in theseTime_pnts]
-
-        preClipWidth_pnts = self.fileLoader.ms2Pnt_(preSpikeClipWidth_ms)
-        # if preClipWidth_pnts % 2 == 0:
-        #    pass # Even
-        # else:
-        #    clipWidth_pnts += 1 # Make odd even
-        postClipWidth_pnts = self.fileLoader.ms2Pnt_(postSpikeClipWidth_ms)
-
-        # halfClipWidth_pnts = int(clipWidth_pnts/2)
-
-        # print('  makeSpikeClips() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
-        # make one x axis clip with the threshold crossing at 0
-        # was this, in ms
-        # self.spikeClips_x = [(x-halfClipWidth_pnts)/self.dataPointsPerMs for x in range(clipWidth_pnts)]
-
-        # in ms
-        self.spikeClips_x = [
-            (x - preClipWidth_pnts) / self.fileLoader.dataPointsPerMs
-            for x in range(preClipWidth_pnts)
-        ]
-        self.spikeClips_x += [
-            (x) / self.fileLoader.dataPointsPerMs for x in range(postClipWidth_pnts)
-        ]
-
-        # 20190714, added this to make all clips same length, much easier to plot in MultiLine
-        numPointsInClip = len(self.spikeClips_x)
-
-        self.spikeClips = []
-        self.spikeClips_x2 = []
-
-        # abb 20260929, _filteredY is the full (points, sweeps) array
-        # bug was that sweepY_filtered is using a global in *this bAnalysis
-        # sweepY = self.fileLoader.sweepY_filtered
-        sweepY = self.fileLoader._filteredY
-
-        # when there are no spikes getStat() will not return anything
-        # For 'All' sweeps, we need to know column
-        sweepNum = self.getStat("sweep", sweepNumber=sweepNumber)
-
-        # logger.info(f'sweepY: {sweepY.shape} {len(sweepY.shape)}')
-        # logger.info(f'theseTime_pnts: {theseTime_pnts}')
-
-        for idx, spikeTime in enumerate(theseTime_pnts):
-            sweep = sweepNum[idx]
-
-            if len(sweepY.shape) == 1:
-                # 1D case where recording has only oone sweep
-                # currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
-                currentClip = sweepY[
-                    spikeTime - preClipWidth_pnts : spikeTime + postClipWidth_pnts
-                ]
-            else:
-                # 2D case where recording has multiple sweeps
-                # currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts, sweep]
-                try:
-                    currentClip = sweepY[
-                        # abb 20260929
-                        # spikeTime - preClipWidth_pnts : spikeTime + preClipWidth_pnts,
-                        spikeTime - preClipWidth_pnts : spikeTime + postClipWidth_pnts,
-                        sweep,
-                    ]
-                except IndexError as e:
-                    logger.error(e)
-                    logger.error(f"  sweep: {sweep}")
-                    logger.error(f"  sweepY.shape: {sweepY.shape}")
-
-            if len(currentClip) == numPointsInClip:
-                self.spikeClips.append(currentClip)
-                self.spikeClips_x2.append(
-                    self.spikeClips_x
-                )
-            else:
-                if verbose:
-                    logger.warning(
-                        f"Did not add clip for spike index: {idx} at time: {spikeTime} len(currentClip): {len(currentClip)} != numPointsInClip: {numPointsInClip}"
-                    )
-
-        #
-        return self.spikeClips_x2, self.spikeClips
-
-    def getSpikeClips(
-        self,
-        theMin,
-        theMax,
-        spikeSelection=[],
-        preSpikeClipWidth_ms=None,
-        postSpikeClipWidth_ms=None,
-        sweepNumber=None,
-        epochNumber='All',
-        ignoreMinMax=False  # added 20230418
-    ):
-        """Get 2d list of spike clips, spike clips x, and 1d mean spike clip.
-
-        Args:
-            theMin (float): Start seconds.
-            theMax (float): Stop seconds.
-            spikeSelection (list): List of spike numbers
-            preSpikeClipWidth_ms (float):
-            postSpikeClipWidth_ms (float):
-
-        Requires: self.spikeDetect() and self._makeSpikeClips()
-
-        Returns:
-            theseClips (list): List of clip
-            theseClips_x (list): ms
-            meanClip (list)
-        """
-
-        if self.numSpikes == 0:
-            return
-
-        doSpikeSelection = len(spikeSelection) > 0
-
-        if doSpikeSelection:
-            pass
-        elif theMin is None or theMax is None:
-            theMin = 0
-            theMax = self.fileLoader.recordingDur  # self.sweepX[-1]
-
-        # new interface, spike detect no longer auto generates these
-        # need to do this every time because we get here when sweepNumber changes
-        # if self.spikeClips is None:
-        #    self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)
-        # TODO: don't make all clips
-        # self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)
-        self._makeSpikeClips(
-            preSpikeClipWidth_ms=preSpikeClipWidth_ms,
-            postSpikeClipWidth_ms=postSpikeClipWidth_ms,
-            sweepNumber=sweepNumber,
-            epochNumber=epochNumber
-        )
-
-        # make a list of clips within start/stop (Seconds)
-        theseClips = []
-        theseClips_x = []
-        tmpMeanClips = []  # for mean clip
-        meanClip = []
-        
-        # spikeTimes are in pnts
-        spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber, epochNumber=epochNumber)
-
-        logger.info(f'spikeTimes:{len(spikeTimes)} sweepNumber:{sweepNumber} epochNumber:{epochNumber}')
-
-        # if len(spikeTimes) != len(self.spikeClips):
-        #    logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')
-
-        # self.spikeClips is a list of clips
-        for idx, clip in enumerate(self.spikeClips):
-            doThisSpike = False
-            if doSpikeSelection:
-                doThisSpike = idx in spikeSelection
-            else:
-                spikeTime = spikeTimes[idx]
-                spikeTime = self.fileLoader.pnt2Sec_(spikeTime)
-                if ignoreMinMax or (spikeTime >= theMin and spikeTime <= theMax):
-                    doThisSpike = True
-            if doThisSpike:
-                theseClips.append(clip)
-                theseClips_x.append(
-                    self.spikeClips_x2[idx]
-                )  # remember, all _x are the same
-                if len(self.spikeClips_x) == len(clip):
-                    tmpMeanClips.append(clip)  # for mean clip
-        if len(tmpMeanClips):
-            meanClip = np.mean(tmpMeanClips, axis=0)
-
-        return theseClips, theseClips_x, meanClip
 
     # def numErrors(self):
     #     if self.dfError is None:

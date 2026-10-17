@@ -308,15 +308,15 @@ class spikeClips(sanpyPlugin):
         # theseClips_x is in ms
         logger.warning(f'fetching clips with')
         logger.warning(f'  startSec:{startSec} stopSec:{stopSec}')
-        theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
+        theseClips, theseClips_x, meanClip = self.ba.spike_clips.get(
             startSec,
             stopSec,
-            spikeSelection=selectedSpikeList,
-            preSpikeClipWidth_ms=self.preClipWidth_ms,
-            postSpikeClipWidth_ms=self.postClipWidth_ms,
-            sweepNumber=self.sweepNumber,
-            epochNumber=self.epochNumber,
-            ignoreMinMax=False  # 20230418 trying to get sweeps/epochs working
+            spike_selection=selectedSpikeList,
+            pre_spike_clip_width_ms=self.preClipWidth_ms,
+            post_spike_clip_width_ms=self.postClipWidth_ms,
+            sweep_number=self.sweepNumber,
+            epoch_number=self.epochNumber,
+            ignore_min_max=False  # 20230418 trying to get sweeps/epochs working
         )
         numClips = len(theseClips)
         logger.info(f'  got numClips:{numClips}')
