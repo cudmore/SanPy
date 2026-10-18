@@ -771,26 +771,6 @@ def peakDetect_ba(ba, sweep, detectionParams):
 
     return resultsDict
 
-
-def testNeuron():
-    path = "/Users/cudmore/data/theanne-griffith/07.20.21/2021_07_20_0013.abf"
-    ba = sanpy.bAnalysis(path)
-    print(ba)
-
-    detectionPreset = sanpy.bDetection.detectionPresets.neuron
-    detectionParams = sanpy.bDetection(detectionPreset=detectionPreset)
-
-    for sweep in range(ba.numSweeps):
-        resultsDict = peakDetect_ba(ba, sweep, detectionParams)
-
-        sweepX = ba.sweepX
-        sweepX_pnts = np.arange(start=0, stop=sweepX.shape[0], step=1)
-        sweepY = ba.sweepY
-
-        Plot(sweepX_pnts, sweepY, resultsDict)
-        plt.show()
-
-
 def _plotHalfWidth(y, hwSpikes, ax):
     """
 
@@ -859,10 +839,3 @@ def Plot(x, y, resultsDict: dict = {}, showFirstDeriv=True, showSecondDeriv=True
         # 	print(f"idx:{idx} width: {resultsDict['widths'][idx]}")
 
     # plt.show()
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import sanpy
-
-    testNeuron()

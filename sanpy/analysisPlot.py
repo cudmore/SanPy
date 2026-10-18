@@ -58,66 +58,6 @@ def old_getEddLines(ba):
 
     return x, y
 
-
-def old_getHalfWidths(ba):
-    """Get lines representing half-widhts (AP Dur).
-
-    Args:
-        ba (bAnalysis): bAnalysis object
-
-    Returns:
-        x,y (enum):
-    """
-    # defer until we know how many half-widths 20/50/80
-    x = []
-    y = []
-    numPerSpike = 3  # rise/fall/nan
-    # numSpikes = ba.numSpikes
-    xyIdx = 0
-    spikeDictionaries = ba.getSpikeDictionaries()  # for current sweep
-    numSpikes = len(spikeDictionaries)
-    # for idx, spike in enumerate(ba.spikeDict):
-    for idx, spike in enumerate(spikeDictionaries):
-        if idx == 0:
-            # make x/y from first spike using halfHeights = [20,50,80]
-            halfHeights = spike[
-                "halfHeights"
-            ]  # will be same for all spike, like [20, 50, 80]
-            numHalfHeights = len(halfHeights)
-            # *numHalfHeights to account for rise/fall + padding nan
-            x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-            y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-            # print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
-
-        for idx2, width in enumerate(spike["widths"]):
-            halfHeight = width["halfHeight"]  # [20,50,80]
-            risingPnt = width["risingPnt"]
-            risingVal = width["risingVal"]
-            fallingPnt = width["fallingPnt"]
-            fallingVal = width["fallingVal"]
-
-            if risingPnt is None or fallingPnt is None:
-                # half-height was not detected
-                continue
-
-            risingSec = ba.pnt2Sec_(risingPnt)
-            fallingSec = ba.pnt2Sec_(fallingPnt)
-
-            x[xyIdx] = risingSec
-            x[xyIdx + 1] = fallingSec
-            x[xyIdx + 2] = np.nan
-            # y
-            y[xyIdx] = fallingVal  # risingVal, to make line horizontal
-            y[xyIdx + 1] = fallingVal
-            y[xyIdx + 2] = np.nan
-
-            # each spike has 3x pnts: rise/fall/nan
-            xyIdx += numPerSpike  # accounts for rising/falling/nan
-        # end for width
-    # end for spike
-    return x, y
-
-
 class bAnalysisPlot:
     """Plot a recording and its spike-detection results with Matplotlib.
 
@@ -581,34 +521,3 @@ class bAnalysisPlot:
         ax.set_xlabel("filtered Vm (mV)")
 
         return line
-
-
-def test_plot(path):
-    import matplotlib.pyplot as plt
-
-    print("=== test_plot() path:", path)
-    ba = sanpy.bAnalysis(path)
-
-    # detect
-    dDict = sanpy.bAnalysis.getDefaultDetection()
-    dDict["dvdThreshold"] = 50
-    ba.spikeDetect(dDict)
-
-    # plot
-    bp = sanpy.bAnalysisPlot(ba)
-
-    fig = bp.plotDerivAndRaw()
-
-    fig = bp.plotSpikes()
-
-    plt.show()
-
-
-if __name__ == "__main__":
-    path = "data/19114001.abf"
-    test_plot(path)
-
-    # TODO: check if error
-
-    path = "data/19114001.csv"
-    test_plot(path)
