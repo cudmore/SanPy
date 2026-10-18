@@ -31,7 +31,6 @@ import sanpy._util
 import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
-from sanpy.bExport import bExport
 from sanpy.bDetection import getDefaultDetection
 
 from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
@@ -1638,7 +1637,6 @@ class bAnalysis:
                 spikeTime
             ]  # in dvdt, spikeTime is points
 
-            # TODO: revamp this for 'Plot FI' plugin
             # spikeTime falls into wrong epoch for first fast spike
             # DAC command at the precise spike point
             # spikeDict[i]['dacCommand'] = sweepC[spikeTime]  # spikeTime is in points
@@ -2046,16 +2044,6 @@ class bAnalysis:
         # run all user analysis ... what if this fails ???
         sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
 
-        #
-        # generate a df holding stats (used by scatterplotwidget)
-        # startSeconds = dDict['startSeconds']
-        # stopSeconds = dDict['stopSeconds']
-        # if self.numSpikes > 0:
-        #     # exportObject = sanpy.bExport(self)
-        #     # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
-        #     self._dfReportForScatter = self.spikeDict.asDataFrame()
-        # else:
-        #     self.dfReportForScatter = None
         self.regenerateAnalysisDataFrame()
 
         # generate error report

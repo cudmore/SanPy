@@ -61,7 +61,9 @@ def test_spike_clips(detected_analysis: sanpy.bAnalysis) -> None:
     """Return a full clip and matching time axis for each spike that fits.
 
     On this fixture the first spike starts before the pre-clip window, so
-    that clip is omitted and the kept count is one less than the spike count.
+    that clip is omitted. Time windows and spike selection use the detection
+    spike index, so spike 0 selects nothing and spike 1 selects the first
+    kept clip.
 
     Args:
         detected_analysis: Analysis prepared with the SA Node preset.
@@ -78,6 +80,59 @@ def test_spike_clips(detected_analysis: sanpy.bAnalysis) -> None:
     assert clips_x[0][0] < 0
     assert 0 in clips_x[0]
     assert len(mean_clip) == len(clips[0])
+
+    loader = detected_analysis.fileLoader
+    assert loader is not None
+    spike0_sec = loader.pnt2Sec_(spike_times[0])
+    spike1_sec = loader.pnt2Sec_(spike_times[1])
+    around_spike0 = detected_analysis.spike_clips.get(
+        spike0_sec - 0.01, spike0_sec + 0.01, sweep_number=0
+    )
+    around_spike1 = detected_analysis.spike_clips.get(
+        spike1_sec - 0.01, spike1_sec + 0.01, sweep_number=0
+    )
+    selected_spike0 = detected_analysis.spike_clips.get(
+        None, None, spike_selection=[0], sweep_number=0
+    )
+    selected_spike1 = detected_analysis.spike_clips.get(
+        None, None, spike_selection=[1], sweep_number=0
+    )
+    assert around_spike0 is not None
+    assert around_spike1 is not None
+    assert selected_spike0 is not None
+    assert selected_spike1 is not None
+    assert around_spike0[0] == []
+    assert len(around_spike1[0]) == 1
+    assert selected_spike0[0] == []
+    assert len(selected_spike1[0]) == 1
+    assert (selected_spike1[0][0] == around_spike1[0][0]).all()
+    assert (selected_spike1[0][0] == clips[0]).all()
+
+
+def test_plot_phase_plot_uses_one_spike_clip(
+    detected_analysis: sanpy.bAnalysis,
+) -> None:
+    """Plot the phase of a spike that has a clip.
+
+    Args:
+        detected_analysis: Analysis prepared with the SA Node preset.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    from matplotlib import pyplot as plt
+
+    from sanpy.analysisPlot import bAnalysisPlot
+
+    plotter = bAnalysisPlot(detected_analysis)
+    assert plotter.plotPhasePlot(0) is None
+
+    _figure, ax = plt.subplots()
+    line = plotter.plotPhasePlot(1, ax=ax)
+    assert line is not None
+    assert len(line.get_xdata()) == len(line.get_ydata())
+    assert len(line.get_xdata()) > 0
+    plt.close(_figure)
 
 
 def test_spike_clips_without_spikes(test_data_dir: Path) -> None:

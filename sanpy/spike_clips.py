@@ -23,6 +23,8 @@ class SpikeClips:
         _analysis: Analysis that owns the recording, detection parameters,
             and spike results.
         _clips: Kept waveform slices, one per spike that had a full window.
+        _spike_indexes: Position of each kept clip in the spike list for the
+            requested sweep and epoch.
         _x_ms: Shared clip time axis in milliseconds, with the threshold at 0.
         _x_ms_per_clip: The shared time axis repeated once per kept clip.
     """
@@ -35,12 +37,14 @@ class SpikeClips:
         """
         self._analysis = analysis
         self._clips: list[np.ndarray] = []
+        self._spike_indexes: list[int] = []
         self._x_ms: list[float] = []
         self._x_ms_per_clip: list[list[float]] = []
 
     def clear(self) -> None:
         """Drop any cached clips."""
         self._clips = []
+        self._spike_indexes = []
         self._x_ms = []
         self._x_ms_per_clip = []
 
@@ -55,7 +59,7 @@ class SpikeClips:
         """Build a clip for each spike time in the requested sweep and epoch.
 
         A clip is kept only when the sliced window has the same length as the
-        time axis. Kept-clip order is the order of those full windows.
+        time axis. Each kept clip records its position in the spike list.
 
         Args:
             pre_spike_clip_width_ms: Samples to take before the spike, in
@@ -108,6 +112,7 @@ class SpikeClips:
         num_points_in_clip = len(self._x_ms)
 
         self._clips = []
+        self._spike_indexes = []
         self._x_ms_per_clip = []
 
         # _filteredY is the full (points, sweeps) array. sweepY_filtered follows
@@ -133,9 +138,11 @@ class SpikeClips:
                     logger.error(e)
                     logger.error(f"  sweep: {sweep}")
                     logger.error(f"  sweepY.shape: {sweep_y.shape}")
+                    continue
 
             if len(current_clip) == num_points_in_clip:
                 self._clips.append(current_clip)
+                self._spike_indexes.append(idx)
                 self._x_ms_per_clip.append(self._x_ms)
             else:
                 if verbose:
@@ -163,8 +170,9 @@ class SpikeClips:
                 is empty and either bound is ``None``, the window is the full
                 recording.
             the_max: End of the time window in seconds.
-            spike_selection: Kept-clip indexes to return. ``None`` or an empty
-                list selects by the time window instead.
+            spike_selection: Indexes in the spike list for the requested sweep
+                and epoch. ``None`` or an empty list selects by the time window
+                instead.
             pre_spike_clip_width_ms: Samples to take before each spike, in
                 milliseconds. ``None`` uses the detection parameter.
             post_spike_clip_width_ms: Samples to take at and after each spike,
@@ -213,18 +221,20 @@ class SpikeClips:
             f"spikeTimes:{len(spike_times)} sweepNumber:{sweep_number} epochNumber:{epoch_number}"
         )
 
-        for idx, clip in enumerate(self._clips):
+        for clip, spike_index, clip_x in zip(
+            self._clips, self._spike_indexes, self._x_ms_per_clip
+        ):
             do_this_spike = False
             if do_spike_selection:
-                do_this_spike = idx in spike_selection
+                do_this_spike = spike_index in spike_selection
             else:
-                spike_time = spike_times[idx]
+                spike_time = spike_times[spike_index]
                 spike_time = analysis.fileLoader.pnt2Sec_(spike_time)
                 if ignore_min_max or (spike_time >= the_min and spike_time <= the_max):
                     do_this_spike = True
             if do_this_spike:
                 these_clips.append(clip)
-                these_clips_x.append(self._x_ms_per_clip[idx])
+                these_clips_x.append(clip_x)
                 if len(self._x_ms) == len(clip):
                     tmp_mean_clips.append(clip)
         if len(tmp_mean_clips):

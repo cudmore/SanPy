@@ -32,72 +32,6 @@ class bExport:
         self.ba = ba
         self.sweepNumber = 0
 
-    def old_report(self, theMin, theMax):
-        """
-        Get entire spikeDict as a Pandas DataFrame.
-
-        Args:
-            theMin (float): Start seconds of the analysis
-            theMax (float): Stop seconds of the analysis
-
-        Returns:
-            df: Pandas DataFrame
-        """
-        if theMin is None or theMax is None:
-            # return None
-            theMin = 0
-            theMax = self.ba.fileLoader.recordingDur
-
-        logger.info(f"theMin:{theMin} theMax:{theMax}")
-
-        df = self.ba.asDataFrame()
-        df = df[(df["thresholdSec"] >= theMin) & (df["thresholdSec"] <= theMax)]
-
-        # added when trying to make scatterwidget for one file
-        df["Condition"] = ""
-        df["File Number"] = ""
-        df["Region"] = ""
-
-        # make new column with sex/region encoded
-        """
-        tmpNewCol = 'RegSex'
-        self.ba.masterDf[tmpNewCol] = ''
-        for tmpRegion in ['Superior', 'Inferior']:
-            for tmpSex in ['Male', 'Female']:
-                newEncoding = tmpRegion[0] + tmpSex[0]
-                regSex = self.ba.masterDf[ (self.ba.masterDf['Region']==tmpRegion) & (self.ba.masterDf['Sex']==tmpSex)]
-                regSex = (self.ba.masterDf['Region']==tmpRegion) & (self.ba.masterDf['Sex']==tmpSex)
-                print('newEncoding:', newEncoding, 'regSex:', regSex.shape)
-                self.ba.masterDf.loc[regSex, tmpNewCol] = newEncoding
-        """
-
-        # want this but region/sex/condition are not defined
-        # print('bExport.report()')
-        # print(df.head())
-        tmpNewCol = "CellTypeSex"
-        cellTypeStr = df["cell_type"].iloc[0]
-        sexStr = df["sex"].iloc[0]
-        # print('cellTypeStr:', cellTypeStr, 'sexStr:', sexStr)
-        regSexEncoding = cellTypeStr + sexStr
-        df[tmpNewCol] = regSexEncoding
-
-        minStr = "%.2f" % (theMin)
-        maxStr = "%.2f" % (theMax)
-        minStr = minStr.replace(".", "_")
-        maxStr = maxStr.replace(".", "_")
-
-        # TODO: bytestreams are not strictly from a hdd folder or file
-        fileName = self.ba.fileLoader.filename
-        if fileName is not None:
-            fileName, tmpExt = os.path.splitext(fileName)
-            analysisName = fileName + "_s" + minStr + "_s" + maxStr
-            # print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
-        else:
-            analysisName = "bytestream"
-        df["analysisname"] = analysisName
-
-        return df
-
     def report3(self, sweep='All',
                 epoch='All',
                 theMin : Optional[float] = None,
@@ -373,8 +307,6 @@ class bExport:
         savefile,
         theMin=None,
         theMax=None,
-        saveExcel=True,
-        alsoSaveTxt=True,
         verbose=True,
     ):
         """
@@ -386,8 +318,6 @@ class bExport:
             savefile (str): path to xlsx file
             theMin (float): start/stop seconds of the analysis
             theMax (float): start/stop seconds of the analysis
-            saveExcel (bool):
-            alsoSaveTxt (bool):
 
         Return:
             str: analysisName
@@ -402,183 +332,10 @@ class bExport:
 
         theRet = None
 
-        logger.warning("NEVER SAVING EXCEL !!! dec 2022")
-        saveExcel = False
-        if saveExcel and savefile:
-            # if verbose: print('    bExport.saveReport() saving user specified .xlsx file:', savefile)
-            excelFilePath = savefile
-            writer = pd.ExcelWriter(excelFilePath, engine="xlsxwriter")
-
-            #
-            # cardiac style analysis to sheet 'cardiac'
-            cardiac_df = self.report2(theMin, theMax)  # report2 is more 'cardiac'
-
-            dDict = self.ba.getDetectionDict()
-            dateAnalyzed = self.ba.dateAnalyzed
-            timeAnalyzed = self.ba.dateAnalyzed
-
-            #
-            # header sheet
-            headerDict = OrderedDict()
-            filePath, fileName = os.path.split(self.ba.filepath)
-            headerDict["File Name"] = [fileName]
-            headerDict["File Path"] = [filePath]
-
-            headerDict["Cell Type"] = [self.ba.metaData["cell_type"]]
-            headerDict["Sex"] = [self.ba.metaData["sex"]]
-            headerDict["Condition"] = [self.ba.metaData["condition"]]
-
-            # todo: get these params in ONE dict inside self.ba
-            # dateAnalyzed, timeAnalyzed = self.ba.dateAnalyzed.split(' ')
-            headerDict["Date Analyzed"] = [dateAnalyzed]
-            headerDict["Time Analyzed"] = [timeAnalyzed]
-            headerDict["Detection Type"] = [dDict["detectionType"]]
-            headerDict["dV/dt Threshold"] = [dDict["dvdtThreshold"]]
-            headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
-
-            headerDict["Sweep Number"] = ["Default 0"]  # [self.ba.currentSweep]
-            headerDict["Number of Sweeps"] = [self.ba.fileLoader.numSweeps]
-            headerDict["Export Start (sec)"] = [
-                float("%.2f" % (theMin))
-            ]  # on export, x-axis of raw plot will be ouput
-            headerDict["Export Stop (sec)"] = [
-                float("%.2f" % (theMax))
-            ]  # on export, x-axis of raw plot will be ouput
-
-            # 'stats' has xxx columns (name, mean, sd, se, n)
-            headerDict["stats"] = []
-
-            ignoreColumns = ["Sweep", "Epoch", "Spike", "File"]
-            for idx, col in enumerate(cardiac_df):
-                if col in ignoreColumns:
-                    # in general, need to ignore string columns
-                    # headerDict[col].append('')
-                    continue
-                headerDict[col] = []
-
-            # mean
-            theMean = cardiac_df.mean()  # skipna default is True
-            theMean["errors"] = ""
-            # sd
-            theSD = cardiac_df.std()  # skipna default is True
-            theSD["errors"] = ""
-            # se
-            theSE = cardiac_df.sem()  # skipna default is True
-            theSE["errors"] = ""
-            # n
-            theN = cardiac_df.count()  # skipna default is True
-            theN["errors"] = ""
-
-            statCols = ["mean", "sd", "se", "n"]
-            for j, stat in enumerate(statCols):
-                if j == 0:
-                    pass
-                else:
-                    # need to append columns to keep Excel sheet columns in sync
-                    # for k,v in headerDict.items():
-                    #    headerDict[k].append('')
-
-                    headerDict["File Name"].append("")
-                    headerDict["File Path"].append("")
-                    headerDict["Cell Type"].append("")
-                    headerDict["Sex"].append("")
-                    headerDict["Condition"].append("")
-                    #
-                    headerDict["Date Analyzed"].append("")
-                    headerDict["Time Analyzed"].append("")
-                    headerDict["Detection Type"].append("")
-                    headerDict["dV/dt Threshold"].append("")
-                    headerDict["Vm Threshold (mV)"].append("")
-                    # headerDict['Median Filter (pnts)'].append('')
-                    # headerDict["Analysis Version"].append("")
-                    # headerDict["Interface Version"].append("")
-                    headerDict["Sweep Number"].append("")
-                    headerDict["Number of Sweeps"].append("")
-                    headerDict["Export Start (sec)"].append("")
-                    headerDict["Export Stop (sec)"].append("")
-
-                # a dictionary key for each stat
-                headerDict["stats"].append(stat)
-                for idx, col in enumerate(cardiac_df):
-                    if col in ignoreColumns:
-                        # in general, need to ignore string columns
-                        # headerDict[col].append('')
-                        continue
-                    # headerDict[col].append('')
-                    if stat == "mean":
-                        headerDict[col].append(theMean[col])
-                    elif stat == "sd":
-                        headerDict[col].append(theSD[col])
-                    elif stat == "se":
-                        headerDict[col].append(theSE[col])
-                    elif stat == "n":
-                        headerDict[col].append(theN[col])
-
-            # print(headerDict)
-            # for k,v in headerDict.items():
-            #    print(k, v)
-
-            # dict to pandas dataframe
-            df = pd.DataFrame(headerDict).T
-            df.to_excel(writer, sheet_name="summary")
-
-            # set the column widths in excel sheet 'cardiac'
-            columnWidth = 25
-            worksheet = writer.sheets["summary"]  # pull worksheet object
-            for idx, col in enumerate(df):  # loop through all columns
-                worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-            #
-            # 'params' sheet with all detection params
-            # need to convert list values in dict to string (o.w. we get one row per item in list)
-            exportDetectionDict = {}
-            for k, v in dDict.items():
-                # v is a dict from bDetection
-                if isinstance(v, list):
-                    v = f'"{v}"'
-                exportDetectionDict[k] = v
-            # print('  === "params" sheet exportDetectionDict:', exportDetectionDict)
-            # df = pd.DataFrame(exportDetectionDict, index=[0]).T # index=[0] needed when dict has all scalar values
-            detection_df = pd.DataFrame(exportDetectionDict).T
-            detection_df.to_excel(writer, sheet_name="params")
-            # worksheet is <class 'xlsxwriter.worksheet.Worksheet'>
-            worksheet = writer.sheets["params"]  # pull worksheet object
-            # set first 20 columns to columnWidth
-            columnWidth = 18
-            startCol = 0
-            stopCol = 20  # xlswriter.worksheet does not care about the stop column
-            worksheet.set_column(0, stopCol, columnWidth)  # set column width
-
-            #
-            # 'cardiac' sheet with human readable stat names
-            cardiac_df.to_excel(writer, sheet_name="cardiac")
-
-            # set the column widths in excel sheet 'cardiac'
-            columnWidth = 20
-            worksheet = writer.sheets["cardiac"]  # pull worksheet object
-            for idx, col in enumerate(cardiac_df):  # loop through all columns
-                worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-            #
-            # mean spike clip
-            theseClips, theseClips_x, meanClip = self.ba.spike_clips.get(
-                theMin, theMax, sweep_number=self.sweepNumber
-            )
-            try:
-                first_X = theseClips_x[0]  # - theseClips_x[0][0]
-                # if verbose: print('    bExport.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
-                df = pd.DataFrame(meanClip, first_X)
-                df.to_excel(writer, sheet_name="Avg Spike")
-            except IndexError as e:
-                logger.warning("Got bad spike clips. Usually happend when 1-2 spikes")
-
-            writer.save()
-
         #
         # save a csv text file
-        #
         analysisName = ""
-        if alsoSaveTxt:
+        if 1:
             # this also saves
             analysisName, df0 = self.getReportDf(theMin, theMax, savefile)
 
@@ -592,8 +349,6 @@ class bExport:
                 pass
             else:
                 first_X = theseClips_x[0]  # - theseClips_x[0][0]
-                first_X = np.array(first_X)
-                first_X /= self.ba.fileLoader.dataPointsPerMs  # pnts to ms
                 # if verbose: print('    bExport.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
                 # dfClip = pd.DataFrame(meanClip, first_X)
                 dfClip = pd.DataFrame.from_dict({"xMs": first_X, "yVm": meanClip})

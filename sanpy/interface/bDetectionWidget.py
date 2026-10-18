@@ -734,13 +734,14 @@ class bDetectionWidget(QtWidgets.QWidget):
             theRet = self.myMainWindow.getFileLoaderDict()
         return theRet
 
-    def save(self, saveCsv=True):
-        """Prompt user for filename and save both xlsx and txt"""
+    def save(self):
+        """Prompt user for filename and save csv"""
         if self.ba is None or self.ba.numSpikes == 0:
             _warning = "No analysis to save"
             logger.warning(_warning)
             self.updateStatusBar(_warning)
             return
+            
         xMin, xMax = self.getXRange()
         xMinStr = "%.2f" % (xMin)
         xMaxStr = "%.2f" % (xMax)
@@ -763,10 +764,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         if len(savefile) > 0:
             logger.info(f"savefile: {savefile}")
-            logger.info(f"  xMin:{xMin} xMax:{xMax} alsoSaveTxt:{saveCsv}")
+            logger.info(f"  xMin:{xMin} xMax:{xMax}")
             exportObj = bExport(self.ba)
             analysisName, df = exportObj.saveReport(
-                savefile, xMin, xMax, alsoSaveTxt=saveCsv
+                savefile, xMin, xMax
             )
             # if self.myMainWindow is not None:
             #    self.myMainWindow.mySignal('saved', data=analysisName)
@@ -3477,8 +3478,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             )
 
         elif name == "Export Spike Report":
-            # self.detectionWidget.save(alsoSaveTxt=isShift)
-            self.detectionWidget.save(saveCsv=True)
+            self.detectionWidget.save()
 
         # next/previous sweep
         elif name == "<":

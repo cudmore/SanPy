@@ -671,21 +671,11 @@ class bDetection(object):
         files = glob.glob(str(presetsPath))
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
-            # logger.info(f'detection-presets json fileNameKey:{fileNameKey} fileName:{fileName}')
-            #
-            # theDict[fileNameKey] = fileName
-
             # load bundled preset json and grab (param keys and values)
             with open(filePath, "r") as f:
                 userPresetsDict = json.load(f)
                 theDict[fileNameKey] = userPresetsDict
 
-        # theDict["sanode"] = "SA Node"
-        # theDict["ventricular"] = "Ventricular"
-        # theDict["neuron"] = "Neuron"
-        # theDict["fastneuron"] = "Fast Neuron"
-
-        #
         # get files in <users>/Documents/SanPy/detection/ folder
         files = self._getUserFiles()
         for filePath in files:
@@ -853,9 +843,8 @@ class bDetection(object):
                 except (KeyError) as e:
                     logger.error(f'sanpy.bDetection.detectionTypes does not contain value "{value}"')
             """
-            #
+
             # set
-            # self._dDict[key]['currentValue'] = value
             self._detectionPreset[detectionType][key] = value
 
             logger.info(

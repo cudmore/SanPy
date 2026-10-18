@@ -537,20 +537,45 @@ class bAnalysisPlot:
         #
         return xPlot, yPlot
 
-    def plotPhasePlot(self, oneSpikeNumber=None, ax=None):
-        import matplotlib.pyplot as plt
+    def plotPhasePlot(
+        self, oneSpikeNumber: Optional[int] = None, ax: Optional["Axes"] = None
+    ) -> Optional[Any]:
+        """Plot one sweep-0 spike clip as filtered Vm versus its derivative.
+
+        Args:
+            oneSpikeNumber: Detection spike index within sweep 0. ``None``
+                plots nothing.
+            ax: Axes to draw on. ``None`` creates a new figure.
+
+        Returns:
+            The plotted line, or ``None`` when that spike has no clip.
+        """
+        if oneSpikeNumber is None or self.ba.numSpikes == 0:
+            return None
+
+        result = self.ba.spike_clips.get(
+            None,
+            None,
+            spike_selection=[oneSpikeNumber],
+            sweep_number=0,
+        )
+        if result is None:
+            return None
+        clips, _clips_x, _mean_clip = result
+        if len(clips) == 0:
+            return None
 
         if ax is None:
+            import matplotlib.pyplot as plt
+
             grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
-
             fig = plt.figure(figsize=(10, 8))
-            ax = fig.add_subplot(grid[0, 0:])  # Vm, entire sweep
+            ax = fig.add_subplot(grid[0, 0:])
 
-        filteredClip = scipy.signal.medfilt(self.spikeClips[oneSpikeNumber], 3)
-        dvdt = np.diff(filteredClip)
-        # add an initial point so it is the same length as raw data in abf.sweepY
+        filtered_clip = scipy.signal.medfilt(clips[0], 3)
+        dvdt = np.diff(filtered_clip)
         dvdt = np.concatenate(([0], dvdt))
-        (line,) = ax.plot(filteredClip, dvdt, "y")
+        (line,) = ax.plot(filtered_clip, dvdt, "y")
 
         ax.set_ylabel("filtered dV/dt")
         ax.set_xlabel("filtered Vm (mV)")
