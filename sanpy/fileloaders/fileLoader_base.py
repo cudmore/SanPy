@@ -14,7 +14,7 @@ from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 
 import sanpy.metaData
 from sanpy.fileloaders.fileMetadata import FileMetadata
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)

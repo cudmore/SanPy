@@ -7,7 +7,7 @@ from qtpy import QtCore, QtWidgets
 
 from sanpy.interface import sanpy_app, sanpy_info_widget
 from sanpy import sanpyLogger
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 
 def test_logger_text_combines_retained_logs(

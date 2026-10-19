@@ -607,7 +607,7 @@ class detectionParams(sanpyPlugin):
             return
 
         sanpy_app = self.getSanPyApp()
-        sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.SanPyPaths()
+        sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.sanpy_paths()
         userDetectionFolder = sanpy_paths.detection_dir
 
         # saved detection dict always start with "User - "

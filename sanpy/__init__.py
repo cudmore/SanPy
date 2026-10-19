@@ -5,7 +5,7 @@ from .bAnalysis_ import bAnalysis
 from .bDetection import bDetection
 from .analysisDir import analysisDir
 from .metaData import MetaData
-from .sanpyPaths import SanPyPaths
+from .sanpy_paths import SanPyPaths
 
 __all__ = [
     "__version__",

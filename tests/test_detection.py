@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from sanpy.bDetection import bDetection
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 
 def test_detection() -> None:

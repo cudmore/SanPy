@@ -9,7 +9,7 @@ import pathlib
 from pprint import pprint
 import glob
 
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 import copy
 from collections import OrderedDict
 from typing import Any

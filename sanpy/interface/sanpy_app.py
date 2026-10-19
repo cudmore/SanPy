@@ -57,7 +57,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 
 import sanpy
 import sanpy._util
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 import sanpy.interface
 import sanpy.interface.preferences
 

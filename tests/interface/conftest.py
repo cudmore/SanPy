@@ -3,7 +3,7 @@
 import pytest
 
 from sanpy.interface.sanpy_app import SanPyApp
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 
 @pytest.fixture(scope="session")

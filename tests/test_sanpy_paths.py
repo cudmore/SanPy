@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 
 def _make_template(bundled_dir: Path) -> Path:
@@ -88,7 +88,7 @@ def test_ensure_user_files_logs_copy_failure(
         del path
         logged.append(message)
 
-    monkeypatch.setattr("sanpy.sanpyPaths.logger.exception", _record_error)
+    monkeypatch.setattr("sanpy.sanpy_paths.logger.exception", _record_error)
 
     assert sanpy_paths.ensure_user_files() is False
     assert logged

@@ -15,7 +15,7 @@ import sanpy
 # import sanpy.interface
 import sanpy.interface.plugins
 from sanpy.config import DO_KYMOGRAPH_ANALYSIS
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
 

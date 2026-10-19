@@ -6,7 +6,7 @@ Used by the About SanPy dialog and the detection view's SanPy Info panel.
 from qtpy import QtCore, QtGui, QtWidgets
 
 from sanpy import build_info
-from sanpy.sanpyPaths import SanPyPaths
+from sanpy.sanpy_paths import SanPyPaths
 from sanpy.sanpyLogger import getLoggerText, get_logger
 
 logger = get_logger(__name__)
