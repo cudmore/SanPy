@@ -7,7 +7,7 @@ cd ~/Sites/SanPy
 
 uv pip install --python .venv/bin/python --editable ../cs_project/mapmanager-web-components/integrations/nicepool-pyqt5
 
-uv run --extra gui --extra nwb sanpy
+uv run --extra gui sanpy
 ```
 
 - Always run the `uv pip install` line. `uv sync` removes the editable NicePool install because it is not in `uv.lock`; `uv run` does not.

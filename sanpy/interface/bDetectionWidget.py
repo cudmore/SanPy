@@ -317,7 +317,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: green",
                 "symbol": "o",
                 "plotOn": "vm",
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
 
             {
@@ -329,7 +329,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: yellow",
                 "symbol": "o",
                 "plotOn": "vm",
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
 
             {
@@ -352,7 +352,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: gray",
                 "symbol": "o",
                 "plotOn": "vm",
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
             # removed april 15, 2023
             # {
