@@ -1976,6 +1976,7 @@ dependencies = [
     { name = "pyabf" },
     { name = "pyarrow" },
     { name = "pydantic" },
+    { name = "pynwb" },
     { name = "scikit-image" },
     { name = "scipy" },
     { name = "tables" },
@@ -1993,9 +1994,6 @@ gui = [
     { name = "qtawesome" },
     { name = "qtpy" },
     { name = "seaborn" },
-]
-nwb = [
-    { name = "pynwb" },
 ]
 plot = [
     { name = "matplotlib" },
@@ -2042,7 +2040,7 @@ requires-dist = [
     { name = "pyabf", specifier = "==2.3.8" },
     { name = "pyarrow", specifier = ">=19,<24" },
     { name = "pydantic", specifier = ">=2,<3" },
-    { name = "pynwb", marker = "extra == 'nwb'", specifier = ">=4.2,<5" },
+    { name = "pynwb", specifier = ">=4.2,<5" },
     { name = "pyqt5", marker = "extra == 'gui'", specifier = "==5.15.11" },
     { name = "pyqtdarktheme-fork", marker = "extra == 'gui'", specifier = "==2.3.6" },
     { name = "pyqtgraph", marker = "extra == 'gui'", specifier = ">=0.13.7,<1" },
@@ -2056,7 +2054,7 @@ requires-dist = [
     { name = "tifffile", specifier = ">=2025.1,<2027" },
     { name = "zarr", specifier = ">=3.1,<4" },
 ]
-provides-extras = ["nwb", "plot", "gui"]
+provides-extras = ["plot", "gui"]
 
 [package.metadata.requires-dev]
 dev = [
