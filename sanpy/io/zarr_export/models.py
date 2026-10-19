@@ -97,7 +97,7 @@ class SanPySnapshot:
     file_metadata: FileMetadata
     file_metadata_definitions: dict[str, dict[str, Any]]
     detection_parameters: dict[str, Any]
-    detection_definitions: dict[str, dict[str, Any]]
+    detection_definitions: dict[str, Any]
     result_definitions: dict[str, dict[str, Any]]
     trace_overlay_definitions: tuple[TraceOverlayDefinition, ...]
     analysis_results: pd.DataFrame

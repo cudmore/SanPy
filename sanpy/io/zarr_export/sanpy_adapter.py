@@ -11,7 +11,7 @@ import pandas as pd
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters
 from sanpy.fileloaders.fileMetadata import get_file_metadata_definitions
 from sanpy.trace_overlays import get_trace_overlay_definitions
 
@@ -38,8 +38,8 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         experimental_metadata_definitions=analysis.metaData.getMetaDataDefinitions(),
         file_metadata=copy.deepcopy(loader.fileMetadata),
         file_metadata_definitions=get_file_metadata_definitions(),
-        detection_parameters=copy.deepcopy(analysis.getDetectionDict() or {}),
-        detection_definitions=copy.deepcopy(getDefaultDetection()),
+        detection_parameters=_detection_parameters(analysis.getDetectionDict()),
+        detection_definitions=DetectionParameters.model_json_schema(),
         result_definitions=copy.deepcopy(analysisResultDict),
         trace_overlay_definitions=get_trace_overlay_definitions(),
         analysis_results=results,
@@ -48,6 +48,21 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         analysis_channel=0,
         sanpy_version=str(sanpy.__version__),
     )
+
+
+def _detection_parameters(value: Any) -> dict[str, Any]:
+    """Return validated applied parameters without filling an empty analysis.
+
+    Args:
+        value: Detection dictionary returned by a SanPy analysis.
+
+    Returns:
+        A JSON-compatible parameter dictionary, or an empty dictionary when
+        the recording has not been analyzed.
+    """
+    if not value:
+        return {}
+    return DetectionParameters.from_saved(value).model_dump(mode="json")
 
 
 def _copy_array(value: Any) -> np.ndarray | None:

@@ -33,6 +33,7 @@ dependencies = [
     "numpy>=2.1,<3",
     "pandas>=2.3,<2.4",
     "platformdirs>=4.3,<5",
+    "pydantic>=2,<3",
     "pyabf==2.3.8",
     "pyarrow>=19,<24",
     "scikit-image>=0.25,<1",

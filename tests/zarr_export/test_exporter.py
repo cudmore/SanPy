@@ -13,7 +13,7 @@ import zarr
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters
 from sanpy.io.zarr_export.exporter import _write_json, export_collection
 from sanpy.io.zarr_export.json_codec import canonical_json, json_value
 from sanpy.io.zarr_export.pyabf_adapter import snapshot_abf
@@ -123,6 +123,10 @@ def test_export_is_zarr3_and_preserves_runtime_state(
     assert (root / "tables" / "epochs.parquet").is_file()
     assert (root / "tables" / "analysis_results.csv").is_file()
     assert (root / "tables" / "analysis_results.parquet").is_file()
+    detection_parameters = json.loads(
+        (root / "metadata" / "detection_parameters.json").read_text()
+    )
+    assert detection_parameters == {}
     validate_collection(destination)
 
 
@@ -443,19 +447,60 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     results = pd.read_csv(root / "tables" / "analysis_results.csv")
     assert actual_parameters["detectionName"] == detection["detectionName"]
     assert isinstance(actual_parameters["detectionName"], str)
-    assert "defaultValue" in parameter_definitions["detectionName"]
-    assert parameter_definitions["detectionName"]["category"]
-    assert parameter_definitions["detectionName"]["humanName"]
+    detection_name = parameter_definitions["properties"]["detectionName"]
+    assert "default" in detection_name
+    assert detection_name["x-category"]
+    assert detection_name["title"]
     # abb 202609 way too specific
     # assert result_definitions["thresholdPnt"]["category"] == "waveform"
     assert "depends on detection" in result_definitions["thresholdPnt"]
-    assert parameter_definitions == json_value(getDefaultDetection())
+    assert parameter_definitions == DetectionParameters.model_json_schema()
     assert result_definitions == json_value(analysisResultDict)
     assert overlay_definitions == {
         "overlays": json_value(get_trace_overlay_definitions())
     }
     assert len(results) == analysis.numSpikes
     assert "errors" in results.columns
+
+
+def test_detection_parameter_validation_rejects_bad_value(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Reject an applied detection value that violates its stored schema.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
+    destination = tmp_path / "invalid-detection-value.sanpy.zarr"
+    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    root = _recording_root(destination)
+    path = root / "metadata" / "detection_parameters.json"
+    values = json.loads(path.read_text(encoding="utf-8"))
+    values["dvdtThreshold"] = "invalid"
+    _write_json(path, values)
+
+    with pytest.raises(SanPyZarrValidationError, match="Detection parameter validation"):
+        validate_collection(destination)
+
+
+def test_legacy_detection_definitions_are_rejected(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Reject the obsolete metadata-dictionary definitions shape.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
+    destination = tmp_path / "legacy-detection-schema.sanpy.zarr"
+    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    root = _recording_root(destination)
+    definitions_path = root / "metadata" / "detection_parameter_definitions.json"
+    _write_json(definitions_path, {"detectionName": {"defaultValue": "default"}})
+
+    with pytest.raises(SanPyZarrValidationError, match="not a supported JSON Schema"):
+        validate_collection(destination)
 
 
 def test_overlay_definitions_must_reference_known_results(

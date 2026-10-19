@@ -35,7 +35,7 @@
   "required": ["format", "version", "id", "name", "dimensions", "sampling_rate_hz", "protocol", "acquisition_datetime", "channels", "command_channels", "analysis_channel", "source", "export", "resources"],
   "properties": {
     "format": {"const": "sanpy-zarr-recording"},
-    "version": {"const": "1.0-draft"},
+    "version": {"const": "1.1-draft"},
     "id": {"type": "string", "minLength": 1},
     "name": {"type": "string"},
     "dimensions": {

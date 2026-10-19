@@ -8,7 +8,7 @@ from pathlib import Path
 from types import ModuleType
 
 from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters
 
 
 def _load_generator_module() -> ModuleType:
@@ -35,7 +35,7 @@ def test_detection_table_contains_every_registered_parameter() -> None:
     """The detection table includes every parameter once in registry order."""
     module = _load_generator_module()
     table = module.render_detection_parameters_table(date(2026, 10, 1))
-    parameter_names = list(getDefaultDetection())
+    parameter_names = list(DetectionParameters.model_fields)
 
     assert "Generated on 20261001 with SanPy version" in table
     rendered_names = [

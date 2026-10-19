@@ -5,7 +5,7 @@
   "required": ["format", "version", "id", "name", "created_at", "members"],
   "properties": {
     "format": {"const": "sanpy-zarr"},
-    "version": {"const": "1.0-draft"},
+    "version": {"const": "1.1-draft"},
     "id": {"type": "string", "minLength": 1},
     "name": {"type": "string"},
     "created_at": {"type": "string"},

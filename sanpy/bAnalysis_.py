@@ -31,7 +31,7 @@ import sanpy._util
 import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters
 
 from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 from sanpy.spike_clips import SpikeClips
@@ -117,7 +117,7 @@ class bAnalysis:
         """bool: True if error loading file/stream."""
 
         # self.detectionDict = None  # remember the parameters of our last detection
-        """dict: Dictionary specifying detection parameters, see bDetection.getDefaultDetection."""
+        """dict: Dictionary containing validated detection parameter values."""
 
         self.dateAnalyzed: str = None
         """str: Date Time of analysis. TODO: make a property."""
@@ -433,15 +433,9 @@ class bAnalysis:
                 loadedDetectionDict = dfDetection.to_dict(
                     "records", into=OrderedDict
                 )[0]
-                detectionDict = OrderedDict(
-                    (k, v["defaultValue"]) for k, v in getDefaultDetection().items()
-                )
-                for k, v in loadedDetectionDict.items():
-                    if k not in detectionDict:
-                        logger.warning(f'Ignoring unknown saved detection parameter "{k}"')
-                        continue
-                    detectionDict[k] = v
-                self._detectionDict = detectionDict
+                self._detectionDict = DetectionParameters.from_saved(
+                    loadedDetectionDict
+                ).model_dump(mode="json")
 
             if loadedMetaData:
                 # get default
@@ -686,7 +680,7 @@ class bAnalysis:
         Notes
         -----
         For a list of available analysis results,
-            see [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
+            see [DetectionParameters][sanpy.bDetection.DetectionParameters]
 
         If the returned list of analysis results are in points,
             convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).

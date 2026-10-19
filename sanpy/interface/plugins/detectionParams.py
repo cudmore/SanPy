@@ -2,18 +2,62 @@ import math
 import os
 from functools import partial
 import json
-from typing import Any, Optional
+from types import UnionType
+from typing import Any, Optional, get_args, get_origin
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 import sanpy
-from sanpy.bDetection import getDefaultDetection
+from pydantic import ValidationError
+
+from sanpy.bDetection import DetectionParameters, detectionTypes_
 from sanpy.interface.plugins import sanpyPlugin
 from sanpy.schema import DetectionParameterCategory
 
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _editor_type(annotation: Any) -> tuple[str | type[detectionTypes_], bool]:
+    """Resolve a model annotation into the editor's supported control type.
+
+    Args:
+        annotation: Detection model field annotation.
+
+    Returns:
+        The scalar control type and whether the field accepts ``None``.
+
+    Raises:
+        TypeError: If the annotation has no supported editor control.
+    """
+    arguments = get_args(annotation)
+    allow_none = get_origin(annotation) is UnionType and type(None) in arguments
+    base = next((item for item in arguments if item is not type(None)), annotation)
+    mapping: dict[Any, str | type[detectionTypes_]] = {
+        str: "string",
+        bool: "boolean",
+        int: "int",
+        float: "float",
+        detectionTypes_: detectionTypes_,
+    }
+    if get_origin(base) is list:
+        return "list", allow_none
+    if base not in mapping:
+        raise TypeError(f"Unsupported detection parameter annotation: {annotation}")
+    return mapping[base], allow_none
+
+
+def _display_value(value: Any) -> Any:
+    """Convert a typed model value into its Qt display representation.
+
+    Args:
+        value: Typed detection parameter value.
+
+    Returns:
+        Enum values as their stored strings; all other values unchanged.
+    """
+    return value.value if isinstance(value, detectionTypes_) else value
 
 
 class detectionParams(sanpyPlugin):
@@ -23,7 +67,12 @@ class detectionParams(sanpyPlugin):
 
     myHumanName = "Detection Parameters"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the detection-parameter editor.
+
+        Args:
+            **kwargs: Plugin initialization arguments forwarded to the base class.
+        """
         super().__init__(**kwargs)
 
         logger.info("")
@@ -31,10 +80,10 @@ class detectionParams(sanpyPlugin):
         # this is a class that holds all premade and loaded presets
         # it exists when runnin the sanpy app
         # if not running sanpy app then build it here (for debuggin)
-        self._detectionObject: sanpy.bDetection = None
+        self._detectionObject: sanpy.bDetection | None = None
 
-        _detectionDict: dict = None
-        _currentDetectionName: str = None
+        detection_values: dict[str, Any] | None = None
+        _currentDetectionName: str | None = None
 
         _sanPyApp = self.getSanPyApp()
         if _sanPyApp is not None:
@@ -46,25 +95,25 @@ class detectionParams(sanpyPlugin):
         if self.ba is not None:
             # get the ba detection dict
             # only exists if analysis has been performed
-            _detectionDict = self.ba.getDetectionDict(asCopy=True)  # can be None
+            detection_values = self.ba.getDetectionDict(asCopy=True)
 
         # or, get from app
-        if _detectionDict is None:
+        if detection_values is None:
             # ba is either None or does not have detection yet
             # get the list
             presetList = self._detectionObject.getDetectionPresetList()
             # select first in list
             _currentDetectionName = presetList[0]
-            _detectionDict = self._detectionObject.getDetectionDict(
+            detection_values = self._detectionObject.getDetectionDict(
                 _currentDetectionName
             )
 
         # deep copy because we are modifying this
         # do not want to change ba (for example) until we detect
-        self._detectionDict = _detectionDict  # dict
+        self._detection_parameters = DetectionParameters.from_saved(detection_values)
 
         # the name of the detection dict in ba OR the first detection type in detection class
-        _currentDetectionName = _detectionDict["detectionName"]
+        _currentDetectionName = self._detection_parameters.detectionName
         self._currentDetectionName = _currentDetectionName
 
         self._qLabelRed = "QLabel { background-color : #999922;}"
@@ -74,7 +123,8 @@ class detectionParams(sanpyPlugin):
 
         # self.insertIntoScrollArea()
 
-    def buildUI(self):
+    def buildUI(self) -> None:
+        """Build the plugin controls and parameter scroll area."""
         self.vLayout = QtWidgets.QVBoxLayout()
 
         # top controls
@@ -146,16 +196,17 @@ class detectionParams(sanpyPlugin):
         """
         analysisDirDict = sanpy.analysisDir.sanpyColumns
 
-        dDict = self._detectionObject.getMasterDict(self._currentDetectionName)
-        compareDict = self._getCompareDict()
+        fields = DetectionParameters.model_fields
+        compare_parameters = self._getCompareParameters()
 
-        grouped: dict[DetectionParameterCategory, list[tuple[str, dict[str, Any]]]] = {
+        grouped: dict[DetectionParameterCategory, list[tuple[str, Any]]] = {
             category: [] for category in DetectionParameterCategory
         }
-        for key, definition in dDict.items():
-            if not definition["show_in_editor"]:
+        for key, field in fields.items():
+            metadata = field.json_schema_extra or {}
+            if not metadata["x-show-in-editor"]:
                 continue
-            grouped[definition["category"]].append((key, definition))
+            grouped[DetectionParameterCategory(metadata["x-category"])].append((key, field))
 
         vLayoutParams = QtWidgets.QGridLayout()
 
@@ -182,20 +233,19 @@ class detectionParams(sanpyPlugin):
                 col = 0
 
                 try:
-                    currentValue = self._detectionDict[k]
+                    currentValue = _display_value(
+                        self._detection_parameters.get_value(k)
+                    )
                 except (KeyError) as e:
                     logger.error('did not find key "{k}" in _detectionDict')
                     continue
-
                 # k is the name in spike dictionary
                 paramName = k
-                valueType = v[
-                    "type"
-                ]  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
-                units = v["units"]
-                humanName = v["humanName"]
-                description = v["description"]
-                allowNone = v["allowNone"]  # set special value for spin box
+                metadata = v.json_schema_extra or {}
+                valueType, allowNone = _editor_type(v.annotation)
+                units = metadata["x-units"]
+                humanName = v.title
+                description = v.description
 
                 inAnalysisDir = paramName in analysisDirDict.keys()
 
@@ -210,7 +260,11 @@ class detectionParams(sanpyPlugin):
 
                 humanNameLabel = QtWidgets.QLabel(humanName)
                 vLayoutParams.addWidget(nameLabel, row, col, rowSpan, colSpan)
-                if compareDict is not None and currentValue != compareDict[paramName]:
+                if (
+                    compare_parameters is not None
+                    and currentValue
+                    != _display_value(compare_parameters.get_value(paramName))
+                ):
                     humanNameLabel.setStyleSheet(self._qLabelRed)
                 vLayoutParams.addWidget(humanNameLabel, row, col, rowSpan, colSpan)
                 col += 1
@@ -273,7 +327,7 @@ class detectionParams(sanpyPlugin):
                     aWidget.editingFinished.connect(
                         partial(self.on_text_edit, aWidget, paramName)
                     )
-                elif valueType == "sanpy.bDetection.detectionTypes":
+                elif valueType is detectionTypes_:
                     aWidget = QtWidgets.QComboBox()
                     detectionTypes = sanpy.bDetection.detectionTypes
                     for theType in detectionTypes:
@@ -321,65 +375,99 @@ class detectionParams(sanpyPlugin):
         #
         return vLayoutParams
 
-    def _getCompareDict(self) -> dict[str, Any] | None:
-        """Return the parent core preset to compare against for label highlighting.
+    def _getCompareParameters(self) -> DetectionParameters | None:
+        """Return the parent preset model used for label highlighting.
 
         Core presets never highlight. User presets compare against the core
         preset named by ``detectionName``.
 
         Returns:
-            Parent core-preset parameter dictionary, or ``None`` when the
+            Parent core-preset parameter model, or ``None`` when the
             selected preset is a core preset.
         """
         if not self._detectionObject.isUserPreset(self._currentDetectionName):
             return None
-        parentName = self._detectionDict["detectionName"]
-        return self._detectionObject.getDetectionDict(parentName)
+        parent_name = self._detection_parameters.detectionName
+        values = self._detectionObject.getDetectionDict(parent_name)
+        return DetectionParameters.from_saved(values)
 
-    def _setDict(self, detectionParam, value):
-        """Respond to user chhanging a detection parameter.
+    def _set_parameter(self, detection_param: str, value: Any) -> bool:
+        """Strictly validate and apply one editor value.
 
-        This is getting triggered when we update values in Widgets in replot()
-        Not intended but just be aware
+        Args:
+            detection_param: Detection model field name.
+            value: Proposed field value.
+
+        Returns:
+            True when the value was applied, otherwise False.
         """
         logger.info(
-            f'Setting dDict key:"{detectionParam}" to value "{value}" type:{type(value)}'
+            f'Setting detection parameter "{detection_param}" to "{value}" type:{type(value)}'
         )
         if value == -1e9:
-            # print(f'TWEAK paramName:{paramName} --->>> value:', value)
             value = None
-        # ok = self.detectionClass.setValue(paramName, value)
-        # if not ok:
-        #     logger.error('')
-        self._detectionDict[detectionParam] = value
+        try:
+            self._detection_parameters = self._detection_parameters.with_value(
+                detection_param, value
+            )
+        except (KeyError, ValueError, ValidationError) as error:
+            logger.warning(f'Invalid value for "{detection_param}": {error}')
+            self.replot()
+            return False
 
-        compareDict = self._getCompareDict()
-        aLabel = self.widgetDict[detectionParam]["nameLabelWidget"]
-        if compareDict is not None and value != compareDict[detectionParam]:
+        compare_parameters = self._getCompareParameters()
+        aLabel = self.widgetDict[detection_param]["nameLabelWidget"]
+        if (
+            compare_parameters is not None
+            and _display_value(value)
+            != _display_value(compare_parameters.get_value(detection_param))
+        ):
             aLabel.setStyleSheet(self._qLabelRed)
         else:
             aLabel.setStyleSheet(self._qLabelBackground)
+        return True
 
-    def on_bool_combo_box(self, paramName, text):
+    def on_bool_combo_box(self, paramName: str, text: str) -> None:
+        """Store a boolean combo-box edit.
+
+        Args:
+            paramName: Detection parameter field name.
+            text: Selected boolean text.
+        """
         # logger.info(f'paramName:{paramName} text:"{text}" {type(text)}')
         value = text == "True"
-        self._setDict(paramName, value)
+        self._set_parameter(paramName, value)
 
-    def on_detection_type_combo_box(self, paramName, text):
+    def on_detection_type_combo_box(self, paramName: str, text: str) -> None:
+        """Store a detection-algorithm combo-box edit.
+
+        Args:
+            paramName: Detection parameter field name.
+            text: Selected detection type value.
+        """
         # logger.info(f'paramName:"{paramName}" text:"{text}"')
-        self._setDict(paramName, text)
+        self._set_parameter(paramName, text)
 
-    def on_text_edit(self, aWidget, paramName):
+    def on_text_edit(self, aWidget: QtWidgets.QLineEdit, paramName: str) -> None:
+        """Store a line-edit value.
+
+        Args:
+            aWidget: Edited line widget.
+            paramName: Detection parameter field name.
+        """
         text = aWidget.text()
         logger.info(f'paramName:{paramName} text:"{text}"')
-        self._setDict(paramName, text)
+        self._set_parameter(paramName, text)
 
-    def on_spin_box(self, paramName, value):
-        """
-        When QDoubldeSpinBox accepts None, value is -1e9
+    def on_spin_box(self, paramName: str, value: int | float) -> None:
+        """Store a numeric edit, including the legacy ``None`` sentinel.
+
+        Args:
+            paramName: Detection parameter field name.
+            value: Numeric widget value.
         """
         # logger.info(f'paramName:{paramName} value:"{value}" {type(value)}')
-        self._setDict(paramName, value)
+        self._set_parameter(paramName, value)
 
     def detect(self) -> None:
         """Detect spikes in the current file with the editor's parameters.
@@ -392,17 +480,28 @@ class detectionParams(sanpyPlugin):
         if self.ba is None:
             return
 
-        for k, v in getDefaultDetection().items():
-            if not v["show_in_editor"]:
-                self._detectionDict[k] = None
+        parameters = self._parameters_for_detection()
 
         # spike detect
-        self.ba.spikeDetect(self._detectionDict)
+        self.ba.spikeDetect(parameters.model_dump(mode="json"))
 
         logger.info(f"detected {self.ba.numSpikes} spikes")
 
         # update interface
         self.signalDetect.emit(self.ba)
+
+    def _parameters_for_detection(self) -> DetectionParameters:
+        """Return an emission copy with hidden range fields cleared.
+
+        Returns:
+            Parameters ready for detection or preset persistence.
+        """
+        parameters = self._detection_parameters
+        for name, field in DetectionParameters.model_fields.items():
+            metadata = field.json_schema_extra or {}
+            if not metadata["x-show-in-editor"] and name != "halfHeights":
+                parameters = parameters.with_value(name, None)
+        return parameters
 
     def _fillPresetCombo(self, selectedName: str) -> None:
         """Refill the preset combo and select one name without emitting.
@@ -418,16 +517,20 @@ class detectionParams(sanpyPlugin):
         self._presetCombo.setCurrentText(selectedName)
         self._presetCombo.blockSignals(False)
 
-    def on_select_detection_preset(self, detectionPresetName: str):
-        """User selected a detection preset from combobox."""
+    def on_select_detection_preset(self, detectionPresetName: str) -> None:
+        """Load a newly selected detection preset.
+
+        Args:
+            detectionPresetName: Selected preset name.
+        """
         logger.info(f'detectionPresetName:"{detectionPresetName}"')
         # detectionPreset = sanpy.bDetection.detectionPresets[detectionPreset]
         # detectionPreset = sanpy.bDetection.detectionPresets(detectionPreset)
         # self.detectionClass.setToType(detectionPreset)
 
         # grab the detection from sanpy app
-        self._detectionDict = self._detectionObject.getDetectionDict(
-            detectionPresetName
+        self._detection_parameters = DetectionParameters.from_saved(
+            self._detectionObject.getDetectionDict(detectionPresetName)
         )
         # Keep the selected preset name (dropdown text), not detectionName.
         # User presets keep detectionName of their parent core preset.
@@ -435,7 +538,12 @@ class detectionParams(sanpyPlugin):
 
         self.replot()
 
-    def on_button_click(self, buttonName):
+    def on_button_click(self, buttonName: str) -> None:
+        """Handle one of the plugin's action buttons.
+
+        Args:
+            buttonName: Button action name.
+        """
         if buttonName == "Detect":
             # take our current dDict and ba.detectSpikes
             # need to signal main interface we did this
@@ -443,8 +551,8 @@ class detectionParams(sanpyPlugin):
 
         elif buttonName == "Set Defaults":
             # set current dict to defaults from sanpy.bDetection
-            self._detectionDict = self._detectionObject.getDetectionDict(
-                self._currentDetectionName
+            self._detection_parameters = DetectionParameters.from_saved(
+                self._detectionObject.getDetectionDict(self._currentDetectionName)
             )
 
             # refresh interface
@@ -487,7 +595,7 @@ class detectionParams(sanpyPlugin):
         elif buttonName.endswith("_none"):
             # set a parameter to None, will only work if 'allowNone'
             paramName = buttonName.replace("_none", "")
-            self._setDict(paramName, None)
+            self._set_parameter(paramName, None)
             self.replot()
 
         else:
@@ -495,13 +603,11 @@ class detectionParams(sanpyPlugin):
 
     def replot(self) -> None:
         """Refresh editor widgets from the current detection parameters."""
-        detectionDict = self._detectionDict
+        compare_parameters = self._getCompareParameters()
 
-        _masterDict = self._detectionObject.getMasterDict(self._currentDetectionName)
-        compareDict = self._getCompareDict()
-
-        for detectionParam in detectionDict.keys():
-            if not _masterDict[detectionParam]["show_in_editor"]:
+        for detectionParam, field in DetectionParameters.model_fields.items():
+            metadata = field.json_schema_extra or {}
+            if not metadata["x-show-in-editor"]:
                 continue
             if detectionParam not in self.widgetDict.keys():
                 logger.warning(
@@ -509,7 +615,9 @@ class detectionParams(sanpyPlugin):
                 )
                 continue
 
-            currentValue = detectionDict[detectionParam]
+            currentValue = _display_value(
+                self._detection_parameters.get_value(detectionParam)
+            )
 
             if currentValue == -1e9:
                 logger.error(
@@ -519,8 +627,9 @@ class detectionParams(sanpyPlugin):
 
             aLabel = self.widgetDict[detectionParam]["nameLabelWidget"]
             if (
-                compareDict is not None
-                and currentValue != compareDict[detectionParam]
+                compare_parameters is not None
+                and currentValue
+                != _display_value(compare_parameters.get_value(detectionParam))
             ):
                 aLabel.setStyleSheet(self._qLabelRed)
                 aLabel.update()
@@ -579,10 +688,10 @@ class detectionParams(sanpyPlugin):
             self.fileNameLabel.setText(f"File: {self.ba.fileLoader.filename}")
 
         # before we detect a ba, its detection dict is None
-        _detectionDict = self.ba.getDetectionDict(asCopy=True)  # can be None
-        if _detectionDict is not None:
-            self._detectionDict = _detectionDict  #
-            self._currentDetectionName = _detectionDict["detectionName"]
+        detection_values = self.ba.getDetectionDict(asCopy=True)
+        if detection_values is not None:
+            self._detection_parameters = DetectionParameters.from_saved(detection_values)
+            self._currentDetectionName = self._detection_parameters.detectionName
             # Do not emit currentTextChanged; that reloads the preset and
             # drops parameter values stored with this file.
             self._presetCombo.blockSignals(True)
@@ -597,7 +706,7 @@ class detectionParams(sanpyPlugin):
         Saving requires ``userSaveName``. Parameters hidden from the editor
         are saved as None because they are set per detection, not per preset.
         """
-        userSaveName = self._detectionDict["userSaveName"]
+        userSaveName = self._detection_parameters.userSaveName
         if not isinstance(userSaveName, str) or not userSaveName.strip():
             QtWidgets.QMessageBox.warning(
                 self,
@@ -624,12 +733,9 @@ class detectionParams(sanpyPlugin):
 
         # with open(userSaveFile, "w") as f:
         # always over-write with no warning
-        saveDict = dict(self._detectionDict)
-        for k, v in getDefaultDetection().items():
-            if not v["show_in_editor"]:
-                saveDict[k] = None
+        saveDict = self._parameters_for_detection().model_dump(mode="json")
 
-        with open(savePath, "w") as f:
+        with open(savePath, "w", encoding="utf-8") as f:
             # abb do not change the user specified name
             # self._detectionDict["userSaveName"] = filename
             json.dump(saveDict, f, indent=2)

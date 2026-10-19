@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import zarr
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 
 from .contract import FORMAT_NAME, FORMAT_VERSION
 
@@ -87,8 +88,16 @@ def _validate_recording(
         raise SanPyZarrValidationError("Command channel metadata count mismatch")
     if recording["analysis_channel"] >= dimensions["channels"]:
         raise SanPyZarrValidationError("Analysis channel is out of bounds")
-    for key in ("detection_parameters", "detection_parameter_definitions"):
-        _json(_resource(recording_root, recording["resources"][key]))
+    detection_parameters = _json(
+        _resource(recording_root, recording["resources"]["detection_parameters"])
+    )
+    detection_definitions = _json(
+        _resource(
+            recording_root,
+            recording["resources"]["detection_parameter_definitions"],
+        )
+    )
+    _validate_detection_parameters(detection_parameters, detection_definitions)
     experimental_metadata = _json(
         _resource(recording_root, recording["resources"]["experimental_metadata"])
     )
@@ -208,6 +217,44 @@ def _validate_metadata_definitions(
                 )
 
 
+def _validate_detection_parameters(
+    values: dict[str, Any], definitions: dict[str, Any]
+) -> None:
+    """Validate applied detection values against their stored JSON Schema.
+
+    Args:
+        values: Applied detection parameter values.
+        definitions: Stored detection parameter JSON Schema.
+
+    Raises:
+        SanPyZarrValidationError: If the schema is obsolete or values do not
+            satisfy it.
+    """
+    properties = definitions.get("properties")
+    if (
+        definitions.get("type") != "object"
+        or definitions.get("additionalProperties") is not False
+        or not isinstance(properties, dict)
+        or "detectionName" not in properties
+        or "detectionType" not in properties
+    ):
+        raise SanPyZarrValidationError(
+            "Detection parameter definitions are not a supported JSON Schema"
+        )
+    try:
+        Draft202012Validator.check_schema(definitions)
+        errors = sorted(
+            Draft202012Validator(definitions).iter_errors(values),
+            key=lambda error: list(error.path),
+        )
+    except SchemaError as error:
+        raise SanPyZarrValidationError(
+            f"Detection parameter schema is invalid: {error}"
+        ) from error
+    if errors:
+        raise SanPyZarrValidationError(
+            f"Detection parameter validation failed: {errors[0].message}"
+        )
 def _validate_trace_overlays(
     document: dict[str, Any],
     result_definitions: dict[str, Any],

@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import date
 from enum import Enum
 import math
-from typing import TYPE_CHECKING, Any, Mapping, Sequence
+from types import UnionType
+from typing import TYPE_CHECKING, Any, Mapping, Sequence, get_args, get_origin
 
 if TYPE_CHECKING:
     from mkdocs.config.defaults import MkDocsConfig
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters, detectionTypes_
 
 
 DETECTION_PLACEHOLDER = "<!-- SANPY:DETECTION-PARAMETERS -->"
@@ -85,18 +86,12 @@ def render_detection_parameters_table(generated_on: date | None = None) -> str:
     Returns:
         Provenance text followed by the detection-parameter Markdown table.
     """
-    rows = [
-        (
-            name,
-            definition["category"],
-            definition["defaultValue"],
-            definition["type"],
-            definition["units"],
-            definition["humanName"],
-            definition["description"],
-        )
-        for name, definition in getDefaultDetection().items()
-    ]
+    rows = []
+    for name, field in DetectionParameters.model_fields.items():
+        metadata = field.json_schema_extra or {}
+        rows.append((name, metadata["x-category"], field.default,
+                     _detection_type_label(field.annotation), metadata["x-units"],
+                     field.title, field.description))
     table = _render_table(
         (
             "Parameter",
@@ -110,6 +105,28 @@ def render_detection_parameters_table(generated_on: date | None = None) -> str:
         rows,
     )
     return f"{_generation_note(generated_on)}\n\n{table}"
+
+
+def _detection_type_label(annotation: Any) -> str:
+    """Return a concise type label for a detection parameter annotation.
+
+    Args:
+        annotation: Resolved Pydantic field annotation.
+
+    Returns:
+        Stable human-readable type label.
+    """
+    origin = get_origin(annotation)
+    if origin is UnionType:
+        labels = [_detection_type_label(item) for item in get_args(annotation)]
+        return " | ".join(labels)
+    if origin is list:
+        return f"list[{_detection_type_label(get_args(annotation)[0])}]"
+    if annotation is detectionTypes_:
+        return "detection type"
+    if annotation is type(None):
+        return "None"
+    return getattr(annotation, "__name__", str(annotation))
 
 
 def _render_analysis_table(

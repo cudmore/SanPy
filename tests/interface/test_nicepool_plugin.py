@@ -90,7 +90,7 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
     assert schema_by_name["epochLevel"]["type"] == "number"
     assert schema_by_name["epochLevel"]["categorical"] is True
     assert schema_by_name["epochLevel"]["category"] == "acquisition"
-    assert schema_by_name["epochLevel"]["axis_label"] == "Epoch level"
+    assert schema_by_name["epochLevel"]["axis_label"] == "Epoch level (pA)"
     assert schema_by_name["file"]["category"] == "acquisition"
     assert schema_by_name["include"]["type"] == "string"
     assert schema_by_name["include"]["category"] == "metadata"

@@ -3,7 +3,11 @@
 import json
 from pathlib import Path
 
-from sanpy.bDetection import bDetection
+import pandas as pd
+import pytest
+from pydantic import ValidationError
+
+from sanpy.bDetection import DetectionParameters, bDetection, detectionTypes_
 from sanpy.sanpy_paths import SanPyPaths
 
 
@@ -74,3 +78,47 @@ def test_reload_presets_picks_up_saved_user_preset(tmp_path: Path) -> None:
     assert detection.isUserPreset(user_name)
     assert not detection.isUserPreset("Neuron")
     assert user_name in detection.getDetectionPresetList()
+
+
+def test_detection_parameters_load_saved_values() -> None:
+    """Load old mappings while dropping unknown keys and filling defaults."""
+    parameters = DetectionParameters.from_saved(
+        {"detectionName": "Test", "obsolete": 1, "startSeconds": pd.NA}
+    )
+
+    assert parameters.detectionName == "Test"
+    assert parameters.startSeconds is None
+    assert parameters.fastAhpWindow_ms == 8
+    assert "obsolete" not in parameters.model_dump()
+
+
+def test_detection_parameters_update_is_strict_and_atomic() -> None:
+    """Reject invalid interactive values without changing the source model."""
+    parameters = DetectionParameters()
+
+    with pytest.raises(ValidationError):
+        parameters.with_value("dvdtThreshold", "30")
+
+    assert parameters.dvdtThreshold == 20
+    assert parameters.with_value("detectionType", "mv").detectionType is detectionTypes_.mv
+    with pytest.raises(KeyError):
+        parameters.with_value("obsolete", 1)
+
+
+def test_detection_schema_is_closed() -> None:
+    """Export a closed object schema while compatibility loading ignores extras."""
+    schema = DetectionParameters.model_json_schema()
+
+    assert schema["type"] == "object"
+    assert schema["additionalProperties"] is False
+    assert list(schema["properties"]) == list(DetectionParameters.model_fields)
+
+
+def test_set_value_uses_validated_model() -> None:
+    """Apply valid preset edits and reject invalid or unknown fields."""
+    detection = bDetection()
+
+    assert detection.setValue("SA Node", "dvdtThreshold", 30.0)
+    assert detection.getValue("SA Node", "dvdtThreshold") == 30.0
+    assert not detection.setValue("SA Node", "dvdtThreshold", "30")
+    assert not detection.setValue("SA Node", "obsolete", 1)

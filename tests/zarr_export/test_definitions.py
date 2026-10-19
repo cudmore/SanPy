@@ -10,23 +10,25 @@ from sanpy.bAnalysisResults import (
     get_plot_result_definitions,
     register_analysis_result,
 )
-from sanpy.bDetection import getDefaultDetection
+from sanpy.bDetection import DetectionParameters
 from sanpy.schema import AnalysisResultCategory, DetectionParameterCategory
 from sanpy.user_analysis.baseUserAnalysis import baseUserAnalysis
 
 
 def test_every_runtime_definition_has_a_category() -> None:
     """Require every core runtime definition to declare a valid category."""
-    detection = getDefaultDetection()
+    detection = DetectionParameters.model_fields
 
     assert detection
     assert analysisResultDict
     assert all(
-        isinstance(value["category"], DetectionParameterCategory)
+        (value.json_schema_extra or {})["x-category"]
+        in {category.value for category in DetectionParameterCategory}
         for value in detection.values()
     )
     assert all(
-        isinstance(value["show_in_editor"], bool) for value in detection.values()
+        isinstance((value.json_schema_extra or {})["x-show-in-editor"], bool)
+        for value in detection.values()
     )
     assert all(
         isinstance(value["category"], AnalysisResultCategory)
