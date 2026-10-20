@@ -554,38 +554,3 @@ class bTableView(QtWidgets.QTableView):
         if len(tmp) > 0:
             selectedRow = tmp[0].row()  # not in sort order
             self.model().myUpdateLoadedAnalyzed(ba, selectedRow)
-
-
-def test():
-    import sys
-
-    app = QtWidgets.QApplication([])
-
-    # import qdarkstyle
-    # app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-
-    path = "data"  # assuming we are run from SanPy repo
-    ad = sanpy.analysisDir(path)
-
-    # df = ad.getDataFrame()
-    model = sanpy.interface.bFileTable.pandasModel(ad)
-
-    # why was I doing this?
-    # # make an empty dataframe with just headers !!!
-    # dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
-    # #dfEmpty = dfEmpty.append(pd.Series(), ignore_index=True)
-    # #dfEmpty['_ba'] = ''
-    # print('dfEmpty:')
-    # print(dfEmpty)
-    # emptyModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
-
-    btv = bTableView(model)
-    # btv.mySetModel(model)
-
-    btv.show()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    test()

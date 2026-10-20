@@ -699,9 +699,11 @@ class bDetectionWidget(QtWidgets.QWidget):
                 axis.setTextPen(foreground)
 
         # These traces use the theme foreground. Keep explicitly colored
-        # overlays and the blue Full Recording trace unchanged.
+        # overlays, the blue Full Recording trace, and the blue right-axis
+        # trace unchanged.
         for trace in (self.derivPlot_, self.dacPlot_, self.vmPlot_):
             trace.setPen(foreground)
+        self._apply_vm_right_axis_pen()
 
         self._displayHoverText.setColor(foreground)
         self._displayHoverText_deriv.setColor(foreground)
@@ -877,6 +879,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.enableAutoRange(axis="y")
         self.derivPlot.enableAutoRange(axis="y")
         self.dacPlot.enableAutoRange(axis="y")
+        self._update_vm_right_curve()
 
         self.vmPlotGlobal.autoRange(items=[self.vmPlotGlobal_])  # we never zoom this
 
@@ -1611,9 +1614,9 @@ class bDetectionWidget(QtWidgets.QWidget):
     def _build_vm_plot_options_button(self) -> None:
         """Add a Vm-plot button that opens the Vm overlay checkboxes.
 
-        The menu lists overlays drawn on ``vmPlot``. Global Threshold and
-        Threshold (dV/dt) stay on the Full Recording and Derivative plots,
-        start off, and are not listed here.
+        The menu lists overlays drawn on ``vmPlot`` and the optional right
+        axis. Global Threshold and Threshold (dV/dt) stay on the Full
+        Recording and Derivative plots, start off, and are not listed here.
         """
         options = [
             (str(plot["humanName"]), bool(plot["plotIsOn"]))
@@ -1635,6 +1638,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         action = QtWidgets.QWidgetAction(menu)
         action.setDefaultWidget(self._vmPlotOptions)
         menu.addAction(action)
+        right_axis_action = QtWidgets.QWidgetAction(menu)
+        right_axis_action.setDefaultWidget(self._build_vm_right_axis_options(menu))
+        menu.addAction(right_axis_action)
         button.setMenu(menu)
 
         self._vmPlotOptionsButton = button
@@ -1679,6 +1685,92 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.togglePlot(idx, checked)
                 return
         logger.error(f'Unknown Vm plot option "{name}".')
+
+    def _build_vm_right_axis_options(
+        self, parent: QtWidgets.QWidget
+    ) -> QtWidgets.QGroupBox:
+        """Build the exclusive right-axis choice for the Vm plot menu.
+
+        Args:
+            parent: Widget that owns the group box, normally the options menu.
+
+        Returns:
+            Group box containing the None, Derivative, and DAC choices.
+        """
+        group_box = QtWidgets.QGroupBox("Right axis", parent)
+        layout = QtWidgets.QVBoxLayout(group_box)
+        button_group = QtWidgets.QButtonGroup(group_box)
+        self._vmRightAxisButtons: dict[str, QtWidgets.QRadioButton] = {}
+        for name in ("None", "Derivative", "DAC"):
+            button = QtWidgets.QRadioButton(name, group_box)
+            button_group.addButton(button)
+            layout.addWidget(button)
+            button.toggled.connect(partial(self._on_vm_right_axis_toggled, name))
+            self._vmRightAxisButtons[name] = button
+        none_button = self._vmRightAxisButtons["None"]
+        none_button.blockSignals(True)
+        none_button.setChecked(True)
+        none_button.blockSignals(False)
+        return group_box
+
+    def _on_vm_right_axis_toggled(self, name: str, checked: bool) -> None:
+        """Show the right-axis series selected in the Vm plot menu.
+
+        Args:
+            name: ``None``, ``Derivative``, or ``DAC``.
+            checked: Whether this choice became the selected one.
+        """
+        if checked:
+            self._set_vm_right_axis(name)
+
+    def _set_vm_right_axis(self, name: str) -> None:
+        """Show Derivative, DAC, or nothing on the Vm plot's right axis.
+
+        The stacked Derivative and DAC plots are left as they are.
+
+        Args:
+            name: ``None``, ``Derivative``, or ``DAC``.
+        """
+        if name not in ("None", "Derivative", "DAC"):
+            logger.error(f'Unknown Vm right axis "{name}".')
+            return
+        self._vmRightAxis = name
+        if name == "None":
+            self.vmPlot.hideAxis("right")
+            self._vmRightCurve.setData([], [])
+            return
+        self.vmPlot.showAxis("right")
+        self.vmPlot.getAxis("right").setLabel(name)
+        self._apply_vm_right_axis_pen()
+        self._update_vm_right_curve()
+        self._sync_vm_right_view()
+
+    def _apply_vm_right_axis_pen(self) -> None:
+        """Keep the right-axis trace blue, separate from the Vm trace."""
+        self._vmRightCurve.setPen(pg.mkPen("b"))
+
+    def _update_vm_right_curve(self) -> None:
+        """Copy the selected sweep array onto the Vm right axis and fit its Y range."""
+        if self._vmRightAxis == "None" or self.ba is None:
+            self._vmRightCurve.setData([], [])
+            return
+        sweep_x = self.ba.fileLoader.sweepX
+        if self._vmRightAxis == "Derivative":
+            y_values = self.ba.fileLoader.filteredDeriv
+        else:
+            y_values = self.ba.fileLoader.sweepC
+        self._vmRightCurve.setData(sweep_x, y_values, connect="finite")
+        self._vmRightView.enableAutoRange(axis="y")
+
+    def _sync_vm_right_view(self, _view: object | None = None) -> None:
+        """Match the right-axis view to the Vm view rectangle.
+
+        Args:
+            _view: View box that emitted a resize, when called from that signal.
+        """
+        main_view = self.vmPlot.getViewBox()
+        self._vmRightView.setGeometry(main_view.sceneBoundingRect())
+        self._vmRightView.linkedViewChanged(main_view, self._vmRightView.XAxis)
 
     def _build_view_toggle_bar(
         self, section: str, names: list[str]
@@ -1995,6 +2087,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._rawPlotLayout.setContentsMargins(0, 0, 0, 0)
 
         self._leftPanelSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self)
+        # A horizontal splitter stays Preferred vertically. The detection layout
+        # is top-aligned, so the plot column would keep its size hint once the
+        # other traces are hidden.
+        splitter_policy = self._leftPanelSplitter.sizePolicy()
+        splitter_policy.setVerticalPolicy(QtWidgets.QSizePolicy.Expanding)
+        self._leftPanelSplitter.setSizePolicy(splitter_policy)
         self._leftPanelSplitter.setChildrenCollapsible(True)
         self._leftPanelSplitter.addWidget(self._leftPanelContainer)
         self._leftPanelSplitter.addWidget(self._rawPlotColumn)
@@ -2076,6 +2174,21 @@ class bDetectionWidget(QtWidgets.QWidget):
         # here prevents every replot from adding another identical callback.
         self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
         self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
+
+        # Optional Derivative or DAC trace. It shares Vm's X axis and keeps its own Y axis.
+        self._vmRightAxis = "None"
+        self._vmRightView = pg.ViewBox()
+        self._vmRightView.setMouseEnabled(x=False, y=False)
+        self._vmRightView.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.vmPlot.scene().addItem(self._vmRightView)
+        self.vmPlot.getAxis("right").linkToView(self._vmRightView)
+        self._vmRightView.setXLink(self.vmPlot)
+        self._vmRightCurve = pg.PlotDataItem()
+        self._apply_vm_right_axis_pen()
+        self._vmRightView.addItem(self._vmRightCurve)
+        self.vmPlot.hideAxis("right")
+        self.vmPlot.getViewBox().sigResized.connect(self._sync_vm_right_view)
+        self._sync_vm_right_view()
 
         # 202401 trying to implement shift+wheel for zooming y
         # self._original_keyPressEvent = self.vmPlot.keyPressEvent
@@ -2826,6 +2939,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # A new sweep can have a different voltage range. Re-enable only the
         # vertical auto-range so the user's current time range is preserved.
         self.vmPlot.enableAutoRange(axis="y")
+        self._update_vm_right_curve()
 
         # vmPlot_ is PlotDataItem
         # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')

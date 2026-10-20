@@ -412,7 +412,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
 def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
-    """Reset the time range and equally stretch only visible trace plots.
+    """Reset the time range and give the Vm plot the leftover column height.
 
     Args:
         monkeypatch: Pytest fixture used to prevent preference-file writes.
@@ -441,6 +441,36 @@ def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
     for plot_widget, visible in plot_visibility.items():
         layout_index = widget._rawPlotLayout.indexOf(plot_widget)
         assert widget._rawPlotLayout.stretch(layout_index) == (1 if visible else 0)
+
+    window.resize(1000, 900)
+    qtbot.waitUntil(lambda: window.height() == 900)
+    for name in ("Full Recording", "Derivative", "DAC"):
+        window.setViewPanelVisible("rawDataPanels", name, False)
+    qtbot.wait(1)
+
+    column = widget._rawPlotColumn
+    toggle_bar = widget._rawPlotLayout.itemAt(0).widget()
+    sweep_controls = widget._plotSweepControls
+    toggle_gap = sweep_controls.y() - toggle_bar.geometry().bottom() - 1
+    plot_gap = widget.vmPlot.y() - sweep_controls.geometry().bottom() - 1
+    layout_margins = widget.myHBoxLayout_detect.contentsMargins()
+    available_height = (
+        widget.contentsRect().height()
+        - layout_margins.top()
+        - layout_margins.bottom()
+    )
+    assert widget._leftPanelSplitter.height() == available_height
+    assert column.height() == widget._leftPanelSplitter.contentsRect().height()
+    assert toggle_gap == plot_gap
+    assert widget.vmPlot.geometry().bottom() == column.rect().bottom()
+    assert widget.vmPlot.height() == (
+        column.height()
+        - toggle_bar.height()
+        - sweep_controls.height()
+        - (2 * plot_gap)
+    )
+    for hidden_plot in (widget.vmPlotGlobal, widget.derivPlot, widget.dacPlot):
+        assert hidden_plot.isHidden()
 
 
 def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
@@ -708,10 +738,10 @@ def test_vm_plot_options_button_toggles_vm_overlays(
     placed.sort()
     assert placed == [
         (0, 0, "Threshold (mV)", True),
-        (0, 1, "AP Peak (mV)", True),
-        (1, 0, "Fast AHP (mV)", True),
+        (0, 1, "AP Peak (mV)", False),
+        (1, 0, "Fast AHP (mV)", False),
         (1, 1, "Half-Widths", False),
-        (2, 0, "Epoch Lines", True),
+        (2, 0, "Epoch Lines", False),
     ]
     assert peak_box is not None
 
@@ -727,9 +757,87 @@ def test_vm_plot_options_button_toggles_vm_overlays(
         if plot_def["humanName"] == "AP Peak (mV)"
     )
     peak_box.click()
+    assert widget.myPlots[peak_index]["plotIsOn"] is True
+    assert widget.myPlotList[peak_index].isVisible() is True
+
+    peak_box.click()
     assert widget.myPlots[peak_index]["plotIsOn"] is False
     assert widget.myPlotList[peak_index].isVisible() is False
 
-    peak_box.click()
-    assert widget.myPlots[peak_index]["plotIsOn"] is True
-    assert widget.myPlotList[peak_index].isVisible() is True
+
+def test_vm_right_axis_shows_derivative_or_dac(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Show Derivative or DAC on the Vm right axis without changing stacked plots.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[1] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    row = window.myAnalysisDir.findFileRow("2021_07_20_0010.abf")
+    assert row is not None
+    window.selectFileListRow(row)
+    widget = window.myDetectionWidget
+    qtbot.wait(1)
+
+    assert set(qapp.getOptions()["rawDataPanels"]) == {
+        "plotEveryPoint",
+        "Full Recording",
+        "Derivative",
+        "DAC",
+    }
+    if not widget._vmRightAxisButtons["None"].isChecked():
+        widget._vmRightAxisButtons["None"].click()
+    assert widget.vmPlot.getAxis("right").isVisible() is False
+
+    derivative_hidden = widget.derivPlot.isHidden()
+    dac_hidden = widget.dacPlot.isHidden()
+    widget._vmRightAxisButtons["Derivative"].click()
+    qtbot.wait(1)
+
+    derivative = np.asarray(widget.ba.fileLoader.filteredDeriv)
+    sweep_y = np.asarray(widget.ba.fileLoader.sweepY)
+    _x_data, right_y = widget._vmRightCurve.getData()
+    _vm_x, vm_y_data = widget.vmPlot_.getData()
+    assert widget.vmPlot.getAxis("right").isVisible() is True
+    assert widget.vmPlot.getAxis("right").labelText == "Derivative"
+    assert np.allclose(right_y, derivative, equal_nan=True)
+    assert np.allclose(vm_y_data, sweep_y, equal_nan=True)
+    assert widget.derivPlot.isHidden() is derivative_hidden
+    assert widget.dacPlot.isHidden() is dac_hidden
+
+    widget.vmPlot.setXRange(0.1, 0.2, padding=0)
+    vm_x_range, vm_y_range = widget.vmPlot.viewRange()
+    right_x_range, right_y_range = widget._vmRightView.viewRange()
+    # ViewBox linking maps through each view's screen rectangle, so the shared
+    # time window can differ by a fraction of a pixel.
+    assert right_x_range == pytest.approx(vm_x_range, abs=1e-3)
+    assert right_y_range[0] <= np.nanmin(derivative)
+    assert right_y_range[1] >= np.nanmax(derivative)
+    assert vm_y_range[0] <= np.nanmin(sweep_y)
+    assert vm_y_range[1] >= np.nanmax(sweep_y)
+
+    widget._vmRightAxisButtons["DAC"].click()
+    qtbot.wait(1)
+    sweep_c = np.asarray(widget.ba.fileLoader.sweepC)
+    _x_data, right_y = widget._vmRightCurve.getData()
+    assert widget.vmPlot.getAxis("right").labelText == "DAC"
+    assert np.allclose(right_y, sweep_c, equal_nan=True)
+    assert widget.derivPlot.isHidden() is derivative_hidden
+    assert widget.dacPlot.isHidden() is dac_hidden
+
+    widget.setPlotTheme(True)
+    assert widget._vmRightCurve.opts["pen"].color().name() == pg.mkPen("b").color().name()
+    assert (
+        widget.vmPlot_.opts["pen"].color().name()
+        != widget._vmRightCurve.opts["pen"].color().name()
+    )
+
+    widget._vmRightAxisButtons["None"].click()
+    cleared_x, _cleared_y = widget._vmRightCurve.getData()
+    assert widget.vmPlot.getAxis("right").isVisible() is False
+    assert cleared_x is None or len(cleared_x) == 0

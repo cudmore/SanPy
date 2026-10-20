@@ -45,6 +45,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dandi = [
+    "dandi>=0.81,<0.82",
+    "fsspec[http]>=2025.9,<2027",
+]
 plot = [
     "matplotlib>=3.9,<4",
     "seaborn>=0.13,<1",

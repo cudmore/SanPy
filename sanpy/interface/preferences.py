@@ -271,7 +271,7 @@ class preferences:
         configDict["rawDataPanels"] = {}
         configDict["rawDataPanels"]["plotEveryPoint"] = 10  # not used?
         configDict["rawDataPanels"]["Full Recording"] = False  #
-        configDict["rawDataPanels"]["Derivative"] = True  #
+        configDict["rawDataPanels"]["Derivative"] = False  #
         configDict["rawDataPanels"]["DAC"] = False  #
 
         configDict['fileList'] = {}
