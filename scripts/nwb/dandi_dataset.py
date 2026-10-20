@@ -102,6 +102,49 @@ class NwbHeaderMetadata:
 
 
 @dataclass(frozen=True)
+class DandiAssetSummary:
+    """Store one table-ready summary of a remote NWB recording.
+
+    Attributes:
+        index: Zero-based asset position in the dandiset collection.
+        asset_id: Immutable DANDI asset identifier.
+        path: Asset path relative to the dandiset root.
+        size_mb: Asset size in decimal megabytes.
+        status: Header inspection result, either ``ready`` or ``error``.
+        error: Header inspection error text, or ``None``.
+        subject_id: NWB subject identifier, when available.
+        session_id: NWB session identifier, when available.
+        acquisition_datetime: ISO-formatted acquisition time, when available.
+        num_sweeps: Number of response sweeps, when available.
+        sample_rate_hz: Common sample rate, when available.
+        samples_per_sweep: Common sample count, when available.
+        duration_seconds: Common sweep duration, when available.
+    """
+
+    index: int
+    asset_id: str
+    path: str
+    size_mb: float
+    status: str
+    error: str | None
+    subject_id: str | None
+    session_id: str | None
+    acquisition_datetime: str | None
+    num_sweeps: int | None
+    sample_rate_hz: float | None
+    samples_per_sweep: int | None
+    duration_seconds: float | None
+
+    def to_row(self) -> dict[str, object]:
+        """Return a complete row suitable for tables and data frames.
+
+        Returns:
+            New dictionary whose keys match the public summary attributes.
+        """
+        return {field.name: getattr(self, field.name) for field in fields(self)}
+
+
+@dataclass(frozen=True)
 class DandiRecording:
     """Store one materialized current-clamp recording in SanPy units.
 
@@ -119,6 +162,98 @@ class DandiRecording:
     voltage_mv: np.ndarray
     current_na: np.ndarray | None
     warnings: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class DandiTracePlotData:
+    """Store one renderer-independent trace prepared for interactive plotting.
+
+    Attributes:
+        time_seconds: Downsampled time values in seconds.
+        values: Downsampled signal values in the displayed unit.
+        x_axis_label: Human-readable horizontal-axis label.
+        y_axis_label: Human-readable vertical-axis label.
+    """
+
+    time_seconds: np.ndarray
+    values: np.ndarray
+    x_axis_label: str
+    y_axis_label: str
+
+
+@dataclass(frozen=True)
+class DandiSweepPlotData:
+    """Store renderer-independent voltage and optional current plot data.
+
+    Attributes:
+        voltage: Membrane-voltage plot data.
+        current: Command-current plot data, or ``None`` without a stimulus.
+    """
+
+    voltage: DandiTracePlotData
+    current: DandiTracePlotData | None
+
+
+@dataclass(frozen=True)
+class DandiSweep:
+    """Store one fully materialized current-clamp sweep in SanPy units.
+
+    Attributes:
+        header: Header metadata validated while opening the asset.
+        sweep_index: Zero-based sweep position in the NWB recording table.
+        time_seconds: Complete sweep-local time values.
+        voltage_mv: Complete membrane-voltage values in millivolts.
+        current_na: Complete command-current values in nanoamps, or ``None``.
+        warnings: Nonfatal data-normalization messages.
+    """
+
+    header: NwbHeaderMetadata
+    sweep_index: int
+    time_seconds: np.ndarray
+    voltage_mv: np.ndarray
+    current_na: np.ndarray | None
+    warnings: tuple[str, ...]
+
+    def to_plot_data(self, max_points: int = 5000) -> DandiSweepPlotData:
+        """Create labeled plot data while preserving narrow signal extrema.
+
+        Each trace is independently reduced with a min/max envelope. The
+        complete arrays on this sweep remain unchanged.
+
+        Args:
+            max_points: Maximum plotted points in each output trace.
+
+        Returns:
+            Renderer-independent voltage and optional current traces.
+
+        Raises:
+            ValueError: If fewer than four plot points are requested.
+        """
+        voltage_time, voltage_values = _min_max_downsample(
+            self.time_seconds,
+            self.voltage_mv,
+            max_points=max_points,
+        )
+        voltage = DandiTracePlotData(
+            time_seconds=voltage_time,
+            values=voltage_values,
+            x_axis_label="Time (s)",
+            y_axis_label="Voltage (mV)",
+        )
+        current: DandiTracePlotData | None = None
+        if self.current_na is not None:
+            current_time, current_values = _min_max_downsample(
+                self.time_seconds,
+                self.current_na * 1000.0,
+                max_points=max_points,
+            )
+            current = DandiTracePlotData(
+                time_seconds=current_time,
+                values=current_values,
+                x_axis_label="Time (s)",
+                y_axis_label="Current (pA)",
+            )
+        return DandiSweepPlotData(voltage=voltage, current=current)
 
 
 class DandiNwbAsset:
@@ -139,6 +274,8 @@ class DandiNwbAsset:
         self.metadata = metadata
         self._header: NwbHeaderMetadata | None = None
         self._header_error: str | None = None
+        self._sweep_cache_key: tuple[int, str | None] | None = None
+        self._sweep_cache: DandiSweep | None = None
 
     @property
     def header(self) -> NwbHeaderMetadata | None:
@@ -188,6 +325,52 @@ class DandiNwbAsset:
         self._header_error = None
         return header
 
+    def load_summary(self, index: int) -> DandiAssetSummary:
+        """Inspect this asset and return one table-ready summary row.
+
+        Header failures are represented in the returned summary rather than
+        raised, allowing callers to continue inspecting other assets.
+
+        Args:
+            index: Zero-based position of this asset in its collection.
+
+        Returns:
+            Successful or failed header summary with stable asset identity.
+        """
+        try:
+            header = self.load_header()
+        except (DandiDatasetError, UnsupportedNwbError) as error:
+            return DandiAssetSummary(
+                index=index,
+                asset_id=self.metadata.asset_id,
+                path=self.metadata.path,
+                size_mb=round(self.metadata.size_bytes / 1_000_000, 2),
+                status="error",
+                error=str(error),
+                subject_id=None,
+                session_id=None,
+                acquisition_datetime=None,
+                num_sweeps=None,
+                sample_rate_hz=None,
+                samples_per_sweep=None,
+                duration_seconds=None,
+            )
+        return DandiAssetSummary(
+            index=index,
+            asset_id=self.metadata.asset_id,
+            path=self.metadata.path,
+            size_mb=round(self.metadata.size_bytes / 1_000_000, 2),
+            status="ready",
+            error=None,
+            subject_id=header.subject_id,
+            session_id=header.session_id,
+            acquisition_datetime=header.acquisition_datetime,
+            num_sweeps=header.num_sweeps,
+            sample_rate_hz=header.sample_rate_hz,
+            samples_per_sweep=header.samples_per_sweep,
+            duration_seconds=header.sweep_duration_seconds,
+        )
+
     def load_recording(
         self,
         current_unit_override: str | None = None,
@@ -222,6 +405,57 @@ class DandiNwbAsset:
         self._header = header
         self._header_error = None
         return recording
+
+    def load_sweep(
+        self,
+        sweep_index: int,
+        current_unit_override: str | None = None,
+    ) -> DandiSweep:
+        """Stream and materialize one current-clamp sweep from this asset.
+
+        The most recently loaded sweep is retained in memory. An identical
+        subsequent request returns the same result object.
+
+        Args:
+            sweep_index: Zero-based sweep position in the NWB recording table.
+            current_unit_override: Optional physical unit of the raw stored
+                stimulus values. When omitted, NWB conversion metadata is used.
+
+        Returns:
+            Complete selected sweep converted to display-independent SanPy units.
+
+        Raises:
+            IndexError: If ``sweep_index`` is outside the recording.
+            DandiDatasetError: If the remote asset cannot be opened or read.
+            UnsupportedNwbError: If SanPy cannot represent the sweep.
+        """
+        cache_key = (sweep_index, current_unit_override)
+        if self._sweep_cache_key == cache_key and self._sweep_cache is not None:
+            return self._sweep_cache
+        try:
+            with self._open_nwbfile() as nwbfile:
+                header, references = _inspect_nwbfile(nwbfile)
+                if sweep_index < 0 or sweep_index >= len(references):
+                    raise IndexError(
+                        f"Sweep index {sweep_index} is outside 0..{len(references) - 1}"
+                    )
+                sweep = _materialize_sweep(
+                    header,
+                    references[sweep_index],
+                    sweep_index=sweep_index,
+                    current_unit_override=current_unit_override,
+                )
+        except (IndexError, UnsupportedNwbError):
+            raise
+        except Exception as error:
+            raise DandiDatasetError(
+                f'Could not load remote NWB asset "{self.metadata.path}": {error}'
+            ) from error
+        self._header = header
+        self._header_error = None
+        self._sweep_cache_key = cache_key
+        self._sweep_cache = sweep
+        return sweep
 
     def _open_nwbfile(self) -> _OpenNwbFile:
         """Create a context manager for this asset's remote NWB file.
@@ -636,59 +870,22 @@ def _materialize_recording(
     Raises:
         UnsupportedNwbError: If trace timestamps are irregular or misaligned.
     """
-    times: list[np.ndarray] = []
-    voltages: list[np.ndarray] = []
-    currents: list[np.ndarray | None] = []
+    sweeps = [
+        _materialize_sweep(
+            header,
+            reference_pair,
+            sweep_index=sweep_index,
+            current_unit_override=current_unit_override,
+        )
+        for sweep_index, reference_pair in enumerate(references)
+    ]
+    times = [sweep.time_seconds for sweep in sweeps]
+    voltages = [sweep.voltage_mv for sweep in sweeps]
+    currents = [sweep.current_na for sweep in sweeps]
     missing_stimuli: list[int] = []
-
-    for sweep, (response_reference, stimulus_reference) in enumerate(references):
-        response = response_reference.timeseries
-        response_time = _reference_timestamps(
-            response_reference, label=f"response for sweep {sweep}"
-        )
-        local_time = response_time - float(response_time[0])
-        _validate_regular_time(local_time, label=f"response for sweep {sweep}")
-        response_values = _reference_values(
-            response_reference, label=f"response for sweep {sweep}"
-        )
-        voltage = (
-            response_values * float(response.conversion) + float(response.offset)
-        ) * 1e3
-
-        current: np.ndarray | None = None
-        if stimulus_reference is None:
-            missing_stimuli.append(sweep)
-        else:
-            stimulus = stimulus_reference.timeseries
-            stimulus_time = _reference_timestamps(
-                stimulus_reference, label=f"stimulus for sweep {sweep}"
-            )
-            stimulus_local_time = stimulus_time - float(stimulus_time[0])
-            _validate_regular_time(
-                stimulus_local_time, label=f"stimulus for sweep {sweep}"
-            )
-            if not np.allclose(
-                stimulus_local_time, local_time, rtol=_RTOL, atol=_ATOL
-            ):
-                raise UnsupportedNwbError(
-                    f"Sweep {sweep} stimulus and response sample times do not align"
-                )
-            stimulus_values = _reference_values(
-                stimulus_reference, label=f"stimulus for sweep {sweep}"
-            )
-            current = _convert_current_to_na(
-                stimulus_values,
-                conversion=float(stimulus.conversion),
-                offset_amperes=float(stimulus.offset),
-                stored_unit_override=current_unit_override,
-                label=f"stimulus for sweep {sweep}",
-            )
-
-        times.append(local_time.astype(np.float64, copy=False))
-        voltages.append(voltage.astype(np.float64, copy=False))
-        currents.append(
-            None if current is None else current.astype(np.float64, copy=False)
-        )
+    for sweep_index, current in enumerate(currents):
+        if current is None:
+            missing_stimuli.append(sweep_index)
 
     warnings: list[str] = []
     current_matrix: np.ndarray | None
@@ -718,6 +915,129 @@ def _materialize_recording(
         current_na=current_matrix,
         warnings=tuple(warnings),
     )
+
+
+def _materialize_sweep(
+    header: NwbHeaderMetadata,
+    references: tuple[TimeSeriesReference, Optional[TimeSeriesReference]],
+    sweep_index: int,
+    current_unit_override: str | None = None,
+) -> DandiSweep:
+    """Read one validated voltage/current pair into complete arrays.
+
+    Args:
+        header: Validated recording header metadata.
+        references: Response and optional stimulus references for one sweep.
+        sweep_index: Zero-based sweep position used in labels and the result.
+        current_unit_override: Optional unit of raw stored stimulus values.
+
+    Returns:
+        Materialized sweep in SanPy units.
+
+    Raises:
+        UnsupportedNwbError: If timestamps are irregular or misaligned.
+    """
+    response_reference, stimulus_reference = references
+    response = response_reference.timeseries
+    response_time = _reference_timestamps(
+        response_reference, label=f"response for sweep {sweep_index}"
+    )
+    local_time = response_time - float(response_time[0])
+    _validate_regular_time(local_time, label=f"response for sweep {sweep_index}")
+    response_values = _reference_values(
+        response_reference, label=f"response for sweep {sweep_index}"
+    )
+    voltage = (
+        response_values * float(response.conversion) + float(response.offset)
+    ) * 1e3
+
+    warnings: list[str] = []
+    current: np.ndarray | None = None
+    if stimulus_reference is None:
+        warnings.append("No usable current-clamp stimulus was present")
+    else:
+        stimulus = stimulus_reference.timeseries
+        stimulus_time = _reference_timestamps(
+            stimulus_reference, label=f"stimulus for sweep {sweep_index}"
+        )
+        stimulus_local_time = stimulus_time - float(stimulus_time[0])
+        _validate_regular_time(
+            stimulus_local_time, label=f"stimulus for sweep {sweep_index}"
+        )
+        if not np.allclose(stimulus_local_time, local_time, rtol=_RTOL, atol=_ATOL):
+            raise UnsupportedNwbError(
+                f"Sweep {sweep_index} stimulus and response sample times do not align"
+            )
+        stimulus_values = _reference_values(
+            stimulus_reference, label=f"stimulus for sweep {sweep_index}"
+        )
+        current = _convert_current_to_na(
+            stimulus_values,
+            conversion=float(stimulus.conversion),
+            offset_amperes=float(stimulus.offset),
+            stored_unit_override=current_unit_override,
+            label=f"stimulus for sweep {sweep_index}",
+        )
+        if current_unit_override is not None:
+            warnings.append(
+                f"Interpreted raw stimulus values as {current_unit_override} by "
+                "explicit override"
+            )
+
+    return DandiSweep(
+        header=header,
+        sweep_index=sweep_index,
+        time_seconds=local_time.astype(np.float64, copy=False),
+        voltage_mv=voltage.astype(np.float64, copy=False),
+        current_na=None if current is None else current.astype(np.float64, copy=False),
+        warnings=tuple(warnings),
+    )
+
+
+def _min_max_downsample(
+    time_seconds: np.ndarray,
+    values: np.ndarray,
+    max_points: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Reduce a trace with a time-ordered min/max envelope.
+
+    Args:
+        time_seconds: Complete one-dimensional time values.
+        values: Complete one-dimensional signal values.
+        max_points: Maximum number of returned points.
+
+    Returns:
+        Time and signal arrays containing each bin's extrema in temporal order.
+
+    Raises:
+        ValueError: If inputs differ in shape or fewer than four points are allowed.
+    """
+    if time_seconds.ndim != 1 or values.ndim != 1:
+        raise ValueError("Plot traces must be one-dimensional")
+    if time_seconds.shape != values.shape:
+        raise ValueError("Plot time and value arrays must have matching shapes")
+    if max_points < 4:
+        raise ValueError("max_points must be at least 4")
+    if len(values) <= max_points:
+        return time_seconds, values
+
+    bin_count = max_points // 2
+    edges = np.linspace(0, len(values), bin_count + 1, dtype=np.int64)
+    selected: list[int] = []
+    for start, stop in zip(edges[:-1], edges[1:]):
+        if stop <= start:
+            continue
+        segment = values[start:stop]
+        minimum = int(start + np.argmin(segment))
+        maximum = int(start + np.argmax(segment))
+        if minimum == maximum:
+            selected.append(minimum)
+        elif minimum < maximum:
+            selected.extend((minimum, maximum))
+        else:
+            selected.extend((maximum, minimum))
+    indexes = np.asarray(selected, dtype=np.int64)
+    return time_seconds[indexes], values[indexes]
 
 
 def _convert_current_to_na(

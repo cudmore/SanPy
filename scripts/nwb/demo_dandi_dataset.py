@@ -54,6 +54,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Explicit unit of raw stored current values for malformed metadata.",
     )
     parser.add_argument(
+        "--sweep-index",
+        type=int,
+        metavar="INDEX",
+        help="Materialize only this zero-based sweep from the selected recording.",
+    )
+    parser.add_argument(
         "--no-cache",
         action="store_true",
         help="Disable the persistent fsspec cache.",
@@ -82,6 +88,8 @@ def main(arguments: Sequence[str] | None = None) -> int:
         options.recording_index,
     )
     if all(selector is None for selector in selectors):
+        if options.sweep_index is not None:
+            _build_parser().error("--sweep-index requires --recording or --recording-index")
         logger.info("dataset.to_dataframe():")
         print(dataset.to_dataframe())
         print(f"\nNWB assets: {len(dataset)}")
@@ -98,6 +106,8 @@ def main(arguments: Sequence[str] | None = None) -> int:
 
     is_header_request = options.header is not None or options.header_index is not None
     if is_header_request:
+        if options.sweep_index is not None:
+            _build_parser().error("--sweep-index cannot be used with a header request")
         if options.current_unit_override is not None:
             _build_parser().error(
                 "--current-unit-override can only be used when loading a recording"
@@ -108,9 +118,25 @@ def main(arguments: Sequence[str] | None = None) -> int:
         print(f"Cache directory: {transport.cache_dir}")
         return 0
 
-    recording = asset.load_recording(
-        current_unit_override=options.current_unit_override,
-    )
+    if options.sweep_index is not None:
+        sweep = asset.load_sweep(
+            options.sweep_index,
+            current_unit_override=options.current_unit_override,
+        )
+        print(sweep.header)
+        print(f"Sweep index: {sweep.sweep_index}")
+        print(f"Time shape: {sweep.time_seconds.shape}")
+        print(f"Voltage shape: {sweep.voltage_mv.shape}")
+        print(
+            "Current shape: "
+            f"{None if sweep.current_na is None else sweep.current_na.shape}"
+        )
+        for warning in sweep.warnings:
+            logger.warning(f"{warning}")
+        print(f"Cache directory: {transport.cache_dir}")
+        return 0
+
+    recording = asset.load_recording(current_unit_override=options.current_unit_override)
     print(recording.header)
     print(f"Time shape: {recording.time_seconds.shape}")
     print(f"Voltage shape: {recording.voltage_mv.shape}")

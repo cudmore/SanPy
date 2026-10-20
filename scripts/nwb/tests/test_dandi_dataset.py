@@ -13,12 +13,18 @@ from pynwb.icephys import (
 )
 
 from dandi_dataset import (
+    DandiAssetMetadata,
     DandiDataset,
     DandiDatasetError,
+    DandiNwbAsset,
+    DandiSweep,
+    NwbHeaderMetadata,
     UnsupportedNwbError,
     _convert_current_to_na,
     _inspect_nwbfile,
     _materialize_recording,
+    _materialize_sweep,
+    _min_max_downsample,
 )
 from sanpy.fileloaders.fileLoader_nwb import fileLoader_nwb
 
@@ -205,3 +211,130 @@ def test_explicit_pa_override_repairs_known_stored_units() -> None:
     )
 
     np.testing.assert_allclose(current_na, [-0.06, 0.0, 0.2])
+
+
+def test_materializes_only_selected_sweep(tmp_path: Path) -> None:
+    """Materialize one selected sweep as one-dimensional complete arrays.
+
+    Args:
+        tmp_path: Temporary directory for the NWB fixture.
+    """
+    path = _write_current_clamp(tmp_path / "selected-sweep.nwb")
+
+    with NWBHDF5IO(str(path), mode="r") as io:
+        nwbfile = io.read()
+        header, references = _inspect_nwbfile(nwbfile)
+        sweep = _materialize_sweep(header, references[1], sweep_index=1)
+
+    assert sweep.sweep_index == 1
+    assert sweep.time_seconds.shape == (5,)
+    assert sweep.voltage_mv.shape == (5,)
+    assert sweep.current_na is not None
+    assert sweep.current_na.shape == (5,)
+    np.testing.assert_allclose(sweep.voltage_mv, -61.0)
+    np.testing.assert_allclose(sweep.current_na, 0.2)
+
+
+def test_min_max_downsampling_preserves_fast_action_potential() -> None:
+    """Keep a narrow action-potential peak when reducing a long trace."""
+    time_seconds = np.arange(10_000, dtype=np.float64) / 10_000.0
+    voltage_mv = np.full(10_000, -70.0)
+    voltage_mv[4_999] = 35.0
+
+    plot_time, plot_voltage = _min_max_downsample(
+        time_seconds,
+        voltage_mv,
+        max_points=500,
+    )
+
+    assert len(plot_time) <= 500
+    assert len(plot_time) == len(plot_voltage)
+    assert 35.0 in plot_voltage
+    assert np.all(np.diff(plot_time) >= 0)
+
+
+def test_sweep_plot_data_supplies_units_and_preserves_complete_arrays() -> None:
+    """Expose pA plot values and labels without modifying complete nA data."""
+    time_seconds = np.arange(10, dtype=np.float64) / 1000.0
+    voltage_mv = np.linspace(-70.0, 30.0, 10)
+    current_na = np.linspace(-0.1, 0.2, 10)
+    header = _test_header(samples_per_sweep=10)
+    sweep = DandiSweep(
+        header=header,
+        sweep_index=0,
+        time_seconds=time_seconds,
+        voltage_mv=voltage_mv,
+        current_na=current_na,
+        warnings=(),
+    )
+
+    plot_data = sweep.to_plot_data(max_points=6)
+
+    assert plot_data.voltage.x_axis_label == "Time (s)"
+    assert plot_data.voltage.y_axis_label == "Voltage (mV)"
+    assert plot_data.current is not None
+    assert plot_data.current.y_axis_label == "Current (pA)"
+    assert np.max(plot_data.current.values) == pytest.approx(200.0)
+    np.testing.assert_allclose(sweep.current_na, current_na)
+
+
+def test_asset_summary_provides_complete_table_row(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Build a table-ready row entirely in the backend API.
+
+    Args:
+        monkeypatch: Pytest fixture used to isolate header loading from the network.
+    """
+    dataset = DandiDataset.from_url("DANDI:001261/0.250917.2023")
+    metadata = DandiAssetMetadata(
+        asset_id="asset-id",
+        path="subject/session.nwb",
+        size_bytes=12_500_000,
+        created=None,
+        modified=None,
+    )
+    asset = DandiNwbAsset(dataset, metadata)
+    header = _test_header(samples_per_sweep=10)
+
+    def load_header() -> NwbHeaderMetadata:
+        """Return deterministic header metadata without opening a file.
+
+        Returns:
+            Test header metadata.
+        """
+        return header
+
+    monkeypatch.setattr(asset, "load_header", load_header)
+
+    row = asset.load_summary(index=3).to_row()
+
+    assert row["index"] == 3
+    assert row["path"] == "subject/session.nwb"
+    assert row["size_mb"] == 12.5
+    assert row["status"] == "ready"
+    assert row["subject_id"] == "subject"
+    assert row["num_sweeps"] == 1
+    assert row["duration_seconds"] == pytest.approx(0.009)
+
+
+def _test_header(samples_per_sweep: int) -> NwbHeaderMetadata:
+    """Build compact header metadata for value-object tests.
+
+    Args:
+        samples_per_sweep: Number of samples represented by the header.
+
+    Returns:
+        Header metadata accepted by ``DandiSweep``.
+    """
+    return NwbHeaderMetadata(
+        subject_id="subject",
+        session_id="session",
+        acquisition_datetime="2026-10-20T00:00:00+00:00",
+        num_sweeps=1,
+        num_channels=1,
+        sample_rate_hz=1000.0,
+        samples_per_sweep=samples_per_sweep,
+        sweep_duration_seconds=(samples_per_sweep - 1) / 1000.0,
+        has_stimulus=True,
+    )

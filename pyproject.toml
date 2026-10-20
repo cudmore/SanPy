@@ -48,6 +48,7 @@ dependencies = [
 dandi = [
     "dandi>=0.81,<0.82",
     "fsspec[http]>=2025.9,<2027",
+    "nicegui>=3.18,<4",
 ]
 plot = [
     "matplotlib>=3.9,<4",

@@ -52,7 +52,21 @@ Path-based selection remains available through `--header ASSET_PATH`.
 
 ## Stream one recording
 
-Materialize every sweep from the asset at index `0`:
+Stream only sweep `2` from the asset at index `0`:
+
+```shell
+uv run --extra dandi python scripts/nwb/demo_dandi_dataset.py \
+  DANDI:001261/0.250917.2023 \
+  --recording-index 0 \
+  --sweep-index 2 \
+  --current-unit-override pA
+```
+
+The selected sweep is cached in memory. Repeating the same sweep and unit
+override on the same `DandiNwbAsset` returns the same cached result object. The
+fsspec disk cache separately retains downloaded remote byte ranges.
+
+To materialize every sweep from the asset at index `0`:
 
 ```shell
 uv run --extra dandi python scripts/nwb/demo_dandi_dataset.py \
@@ -76,6 +90,28 @@ uv run --extra dandi python scripts/nwb/demo_dandi_dataset.py \
 
 Supported explicit units are `A`, `mA`, `uA`, `nA`, and `pA`.
 
+## Run the browser GUI
+
+The NiceGUI demonstration imports the same backend API; it contains no NWB
+parsing, unit conversion, caching, downsampling, or summary-row construction:
+
+```shell
+uv run --extra dandi python scripts/nwb/demo_dandi_dataset_gui.py
+```
+
+The GUI opens in the default browser. Native desktop mode is intentionally not
+enabled and `pywebview` is not part of the `dandi` extra.
+
+Voltage and current charts are reduced to at most 5,000 points with a min/max
+envelope. This preserves fast action-potential extrema while the complete
+loaded NumPy arrays remain unchanged.
+
+Loading a dandiset incrementally inspects each NWB header and populates one
+summary row per recording. Click a ready row to stream sweep `0`; changing the
+sweep index automatically streams the newly selected sweep. This demonstration
+uses the known `pA` raw-current interpretation required by the reference
+dandiset without changing the backend API's explicit, safe unit behavior.
+
 ## Python API
 
 After adding `scripts/nwb` to the import path, the collection supports length
@@ -90,7 +126,8 @@ dataset.load_assets()
 print(len(dataset))
 asset = dataset[0]
 header = asset.load_header()
-recording = asset.load_recording(current_unit_override="pA")
+sweep = asset.load_sweep(2, current_unit_override="pA")
+plot_data = sweep.to_plot_data(max_points=5000)
 ```
 
 Assets are sorted by their DANDI-relative paths, so the integer index is stable
