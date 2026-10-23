@@ -157,18 +157,6 @@ analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
 
-# abb 20261018 removed, use epoch level
-# key = "dacCommand"
-# analysisResultDict[key] = getDefaultDict()
-# analysisResultDict[key]["category"] = AnalysisResultCategory.ACQUISITION
-# analysisResultDict[key]["type"] = "float"
-# analysisResultDict[key]["default"] = defaultVal
-# analysisResultDict[key]["units"] = "mV"  # will be pA for voltage-clamp
-# analysisResultDict[key]["axis_label"] = "DAC command (mV)"
-# analysisResultDict[key]["show_in_plot_menu"] = True
-# analysisResultDict[key]["is_categorical"] = True
-# analysisResultDict[key]["description"] = "Value of DAC command at AP threshold point."
-
 ###############################################################################
 # DETECTION PROPERTIES
 ###############################################################################

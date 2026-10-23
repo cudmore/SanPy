@@ -1631,11 +1631,6 @@ class bAnalysis:
                 spikeTime
             ]  # in dvdt, spikeTime is points
 
-            # spikeTime falls into wrong epoch for first fast spike
-            # DAC command at the precise spike point
-            # spikeDict[i]['dacCommand'] = sweepC[spikeTime]  # spikeTime is in points
-            # spikeDict[i]['dacCommand'] = sweepC[peakPnt]  # spikeTime is in points
-
             spikeDict[i]["peakPnt"] = peakPnt
             spikeDict[i]["peakSec"] = peakSec
             spikeDict[i]["peakVal"] = peakVal
@@ -2036,7 +2031,9 @@ class bAnalysis:
         # print(self.spikeDict)
 
         # run all user analysis ... what if this fails ???
-        sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
+        # abb 20261023 removed. we are switching analysis results to pydantic
+        # there are no allowed additions to analysis results pydantic model
+        # sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
 
         self.regenerateAnalysisDataFrame()
 
