@@ -12,6 +12,7 @@ import pytest
 
 zarr = pytest.importorskip(
     "zarr",
+    minversion="3.1",
     reason="Install the zarr-export extra to run Zarr export tests",
 )
 

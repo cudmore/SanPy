@@ -1,4 +1,10 @@
-import os, math
+"""File-table view for the SanPy desktop window."""
+
+import math
+import os
+import platform
+import subprocess
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -14,6 +20,151 @@ import sanpy.bDetection
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
+
+
+def file_manager_reveal_label() -> str:
+    """Return the context-menu label for revealing a recording.
+
+    Returns:
+        Finder, Explorer, or file-manager label for the current platform.
+    """
+    system = platform.system()
+    if system == "Darwin":
+        return "Reveal in Finder"
+    if system == "Windows":
+        return "Show in Explorer"
+    return "Show in File Manager"
+
+
+def recording_path_for_visual_row(
+    table: sanpy.analysisDir,
+    visual_row: int,
+) -> str | None:
+    """Return the recording path for one visible file-table row.
+
+    Args:
+        table: Folder catalog backing the file table.
+        visual_row: Row position in the current table order.
+
+    Returns:
+        Full path stored for that row, or None when the row or its relative
+        path is missing.
+    """
+    row_labels = table.index
+    if visual_row < 0 or visual_row >= len(row_labels):
+        return None
+    relative_path = table.loc[row_labels[visual_row], "relPath"]
+    if not isinstance(relative_path, str) or relative_path == "":
+        return None
+    return table.getPathFromRelPath(relative_path)
+
+
+def reveal_in_file_manager(file_path: str) -> bool:
+    """Reveal a file in the platform file manager.
+
+    macOS uses Finder and Windows uses Explorer. Linux asks the desktop file
+    manager to select the file, then opens the parent folder if that call fails.
+
+    Args:
+        file_path: Path of the file to reveal.
+
+    Returns:
+        True when the platform command accepts the request. A missing file
+        returns False.
+    """
+    try:
+        path = Path(file_path).resolve()
+    except OSError:
+        return False
+    if not path.is_file():
+        return False
+
+    system = platform.system()
+    if system == "Darwin":
+        return _run_reveal_command(["open", "-R", str(path)])
+    if system == "Windows":
+        if '"' in str(path):
+            logger.warning(f'Cannot reveal a path that contains a quote: "{path}"')
+            return False
+        # Explorer treats a space after the comma as a separate argument, and
+        # it exits 1 after a successful handoff to the running shell.
+        return _run_reveal_command(
+            f'explorer.exe /select,"{path}"',
+            accept_any_exit_code=True,
+        )
+    if system == "Linux":
+        return _reveal_with_linux_file_manager(path)
+    logger.warning(f'No file-manager reveal for platform "{system}"')
+    return False
+
+
+def _run_reveal_command(
+    command: list[str] | str,
+    accept_any_exit_code: bool = False,
+) -> bool:
+    """Run one file-manager command.
+
+    Args:
+        command: Argument list, or a Windows command line that must preserve quotes.
+        accept_any_exit_code: Whether any exit code counts as success.
+
+    Returns:
+        True when the command starts and, unless requested, exits 0.
+    """
+    try:
+        completed = subprocess.run(command, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning(f"Could not run file-manager command: {exc}")
+        return False
+    if accept_any_exit_code:
+        return True
+    return completed.returncode == 0
+
+
+def _reveal_with_linux_file_manager(path: Path) -> bool:
+    """Select a file in the Linux file manager, or open its parent folder.
+
+    Args:
+        path: Existing file to reveal.
+
+    Returns:
+        True when either the file-manager call or the folder fallback accepts
+        the request.
+    """
+    dbus_command = [
+        "dbus-send",
+        "--session",
+        "--print-reply",
+        "--reply-timeout=5000",
+        "--dest=org.freedesktop.FileManager1",
+        "/org/freedesktop/FileManager1",
+        "org.freedesktop.FileManager1.ShowItems",
+        f'array:string:"{path.as_uri()}"',
+        'string:""',
+    ]
+    try:
+        completed = subprocess.run(
+            dbus_command,
+            check=False,
+            timeout=5,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning(f"File manager selection failed: {exc}")
+    else:
+        if completed.returncode == 0:
+            return True
+        logger.warning(
+            f"File manager selection failed with exit code {completed.returncode}"
+        )
+
+    try:
+        completed = subprocess.run(["xdg-open", str(path.parent)], check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        logger.warning(f"Could not open the parent folder: {exc}")
+        return False
+    return completed.returncode == 0
 
 
 class bTableView(QtWidgets.QTableView):
@@ -381,12 +532,19 @@ class bTableView(QtWidgets.QTableView):
         return True
     """
 
-    def contextMenuEvent(self, event):
-        """Handle right mouse click"""
+    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
+        """Open the file-table context menu.
+
+        Args:
+            event: Right-click event that positions the menu.
+        """
         contextMenu = QtWidgets.QMenu(self)
 
         #
         unloadData = contextMenu.addAction("Unload Data")
+        reveal_path = self._recording_path_for_event(event)
+        reveal_action = contextMenu.addAction(file_manager_reveal_label())
+        reveal_action.setEnabled(reveal_path is not None)
 
         # contextMenu.addSeparator()
         # removeFromDatabase = contextMenu.addAction("Remove From Database")
@@ -449,6 +607,10 @@ class bTableView(QtWidgets.QTableView):
             # self.signalFindNewFiles.emit()
             self.model().mySyncDfWithPath()
 
+        elif action == reveal_action:
+            if reveal_path is not None:
+                self._reveal_recording(reveal_path)
+
         # elif action == saveAllAnalysis:
         #     # self.signalSaveFileTable.emit()
         #     self.model().mySave()
@@ -465,6 +627,44 @@ class bTableView(QtWidgets.QTableView):
         else:
             # user did not select action
             pass
+
+    def _recording_path_for_event(self, event: QtGui.QContextMenuEvent) -> str | None:
+        """Return the recording path under a context-menu click.
+
+        Args:
+            event: Right-click event received by the table.
+
+        Returns:
+            Full recording path, or None when the click is not on an analysis row.
+        """
+        model = self.model()
+        if model is None or not model.isAnalysisDir:
+            return None
+        viewport_position = self.viewport().mapFromGlobal(event.globalPos())
+        index = self.indexAt(viewport_position)
+        if not index.isValid():
+            return None
+        return recording_path_for_visual_row(model._data, index.row())
+
+    def _reveal_recording(self, file_path: str) -> None:
+        """Show one recording in the platform file manager.
+
+        Args:
+            file_path: Recording path from the clicked file-table row.
+        """
+        title = file_manager_reveal_label()
+        if not os.path.isfile(file_path):
+            message = f"File was not found:\n{file_path}"
+            logger.warning(message)
+            QtWidgets.QMessageBox.warning(self, title, message)
+            return
+        if not reveal_in_file_manager(file_path):
+            message = f"Could not reveal file:\n{file_path}"
+            logger.warning(message)
+            QtWidgets.QMessageBox.warning(self, title, message)
+            return
+        logger.info(f'Revealed "{file_path}"')
+        self.signalUpdateStatus.emit(f"Revealed {file_path}")
 
     #
     # frozen
