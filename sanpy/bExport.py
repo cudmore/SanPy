@@ -58,97 +58,57 @@ class bExport:
         
         return df
     
-    def report2(self, sweep='All',
-                epoch='All',
-                theMin : Optional[float] = None,
-                theMax : Optional[float] = None,
-                ) -> pd.DataFrame:
-
-        """Generate a human readable report of spikes.
-        Include spike times between theMin and theMax (Sec).
+    def report2(
+        self,
+        sweep: Union[str, int] = "All",
+        epoch: Union[str, int] = "All",
+        theMin: Optional[float] = None,
+        theMax: Optional[float] = None,
+    ) -> Optional[pd.DataFrame]:
+        """Return analysis-result columns for the spikes included in ``report3``.
 
         Args:
-            sweep ('All' or int') : 'All' for all sweeps or int for one sweep
-            epoch ('All' or int) : 'All' for all epochs or int for one epoch
-            theMin (float): Start seconds to save, inclusive
-            theMax (float): Stop seconds to save, inclusive
+            sweep: ``"All"`` or one sweep number.
+            epoch: ``"All"`` or one epoch number.
+            theMin: Start time in seconds, inclusive. A time filter is applied
+                only when both bounds are set.
+            theMax: Stop time in seconds, exclusive. A time filter is applied
+                only when both bounds are set.
 
         Returns:
-            df: pd.DataFrame
+            Selected schema columns for the same spikes as ``report3``, or
+            ``None`` when the recording has no spikes.
         """
+        df = self.report3(sweep=sweep, epoch=epoch, theMin=theMin, theMax=theMax)
+        if df is None:
+            return None
 
-        spikeList = self.ba.getStat('spikeNumber', sweepNumber=sweep, epochNumber=epoch)
-
-        newList = []
-        for spikeIdx in spikeList:
-            spike = self.ba.getOneSpikeDict(spikeIdx)
-            
-            # if current spike time is out of bounds
-            # then continue (e.g. it is not between theMin (sec) and theMax (sec)
-            spikeTime_sec = self.ba.fileLoader.pnt2Sec_(spike["thresholdPnt"])
-            if theMin is not None and theMax is not None:
-                if spikeTime_sec < theMin or spikeTime_sec > theMax:
-                    continue
-
-            spikeDict = (
-                OrderedDict()
-            )  # use OrderedDict so Pandas output is in the correct order
-
-            spikeDict["Sweep"] = spike["sweep"]
-            spikeDict["Epoch"] = spike["epoch"]
-            spikeDict["Spike"] = spikeIdx
-            spikeDict["Take Off Potential (s)"] = self.ba.fileLoader.pnt2Sec_(
-                spike["thresholdPnt"]
-            )
-            spikeDict["Take Off Potential (ms)"] = self.ba.fileLoader.pnt2Ms_(
-                spike["thresholdPnt"]
-            )
-            spikeDict["Take Off Potential (mV)"] = spike["thresholdVal"]
-            spikeDict["AP Peak (ms)"] = self.ba.fileLoader.pnt2Ms_(spike["peakPnt"])
-            spikeDict["AP Peak (mV)"] = spike["peakVal"]
-            spikeDict["AP Height (mV)"] = spike["peakHeight"]
-            spikeDict["Pre AP Min (mV)"] = spike["preMinVal"]
-            # spikeDict['Post AP Min (mV)'] = spike['postMinVal']
-            #
-            # spikeDict['AP Duration (ms)'] = spike['apDuration_ms']
-            spikeDict["Early Diastolic Duration (ms)"] = spike[
-                "earlyDiastolicDuration_ms"
-            ]
-            spikeDict["Early Diastolic Depolarization Rate (dV/s)"] = spike[
-                "earlyDiastolicDurationRate"
-            ]  # abb 202012
-            spikeDict["Diastolic Duration (ms)"] = spike["diastolicDuration_ms"]
-            #
-            spikeDict["Inter-Spike-Interval (ms)"] = spike["isi_ms"]
-            spikeDict["Spike Frequency (Hz)"] = spike["spikeFreq_hz"]
-            spikeDict["ISI (ms)"] = spike["isi_ms"]
-
-            spikeDict["Cycle Length (ms)"] = spike["cycleLength_ms"]
-
-            spikeDict["Max AP Upstroke (dV/dt)"] = spike["preSpike_dvdt_max_val2"]
-            spikeDict["Max AP Upstroke (mV)"] = spike["preSpike_dvdt_max_val"]
-
-            spikeDict["Max AP Repolarization (dV/dt)"] = spike[
-                "postSpike_dvdt_min_val2"
-            ]
-            spikeDict["Max AP Repolarization (mV)"] = spike["postSpike_dvdt_min_val"]
-
-            # half-width
-            for widthDict in spike["widths"]:
-                keyName = "width_" + str(widthDict["halfHeight"])
-                spikeDict[keyName] = widthDict["widthMs"]
-
-            spikeDict["File"] = self.ba.fileLoader.filename
-
-            # errors
-            # spikeDict['numError'] = spike['numError']
-            spikeDict["errors"] = spike["errors"]
-
-            # append
-            newList.append(spikeDict)
-
-        df = pd.DataFrame(newList)
-        return df
+        columns = [
+            "sweep",
+            "epoch",
+            "spikeNumber",
+            "thresholdSec",
+            "thresholdVal",
+            "peakSec",
+            "peakVal",
+            "peakHeight",
+            "preMinVal",
+            "earlyDiastolicDuration_ms",
+            "earlyDiastolicDurationRate",
+            "diastolicDuration_ms",
+            "isi_ms",
+            "spikeFreq_hz",
+            "cycleLength_ms",
+            "preSpike_dvdt_max_val2",
+            "preSpike_dvdt_max_val",
+            "postSpike_dvdt_min_val2",
+            "postSpike_dvdt_min_val",
+        ]
+        columns.extend(
+            column for column in df.columns if str(column).startswith("widths_")
+        )
+        columns.extend(["file", "errors"])
+        return df.loc[:, columns].copy()
 
     def getSummary(self,
                    sweep='All',
@@ -218,7 +178,7 @@ class bExport:
         # 'stats' has xxx columns (name, mean, sd, se, n)
         headerDict["stats"] = []
 
-        ignoreColumns = ["Sweep", "Epoch", "Spike", "File"]
+        ignoreColumns = ["sweep", "epoch", "spikeNumber", "file"]
         for idx, col in enumerate(cardiac_df):
             if col in ignoreColumns:
                 # in general, skip non numerical columns
@@ -417,21 +377,3 @@ class bExport:
         df.to_csv(textFilePath, sep=",", index_label="index", mode="w")
 
         return analysisName, df
-
-
-def test():
-    path = "data/19114001.abf"
-    ba = sanpy.bAnalysis(path)
-
-    bd = sanpy.bDetection()  # gets default
-    dDict = bd.getDetectionDict("SA Node")
-    ba.spikeDetect(dDict)
-
-    be = bExport(ba)
-    df = be.getSummary()
-    logger.info("")
-    print(df)
-
-
-if __name__ == "__main__":
-    test()
