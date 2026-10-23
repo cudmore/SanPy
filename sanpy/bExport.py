@@ -8,6 +8,7 @@ import pandas as pd
 
 import sanpy
 
+from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
@@ -76,8 +77,8 @@ class bExport:
                 only when both bounds are set.
 
         Returns:
-            Selected schema columns for the same spikes as ``report3``, or
-            ``None`` when the recording has no spikes.
+            The same spikes as ``report3``, with column names taken from each
+            result's ``axis_label``, or ``None`` when the recording has no spikes.
         """
         df = self.report3(sweep=sweep, epoch=epoch, theMin=theMin, theMax=theMax)
         if df is None:
@@ -108,7 +109,12 @@ class bExport:
             column for column in df.columns if str(column).startswith("widths_")
         )
         columns.extend(["file", "errors"])
-        return df.loc[:, columns].copy()
+        return df.loc[:, columns].rename(
+            columns={
+                column: analysisResultDict[column]["axis_label"]
+                for column in columns
+            }
+        )
 
     def getSummary(self,
                    sweep='All',
@@ -178,7 +184,7 @@ class bExport:
         # 'stats' has xxx columns (name, mean, sd, se, n)
         headerDict["stats"] = []
 
-        ignoreColumns = ["sweep", "epoch", "spikeNumber", "file"]
+        ignoreColumns = ["Sweep", "Epoch", "Spike number", "File"]
         for idx, col in enumerate(cardiac_df):
             if col in ignoreColumns:
                 # in general, skip non numerical columns
@@ -188,22 +194,22 @@ class bExport:
         # mean
         theMean = cardiac_df.mean(numeric_only=True)  # skipna default is True
 
-        logger.info('cardiac_df:')
-        print(cardiac_df)
-        logger.info('theMean:')
-        print(theMean)
+        # logger.info('cardiac_df:')
+        # print(cardiac_df)
+        # logger.info('theMean:')
+        # print(theMean)
 
-        theMean["errors"] = ""
+        theMean["Errors"] = ""
                 
         # sd
         theSD = cardiac_df.std(numeric_only=True)  # skipna default is True
-        theSD["errors"] = ""
+        theSD["Errors"] = ""
         # se
         theSE = cardiac_df.sem(numeric_only=True)  # skipna default is True
-        theSE["errors"] = ""
+        theSE["Errors"] = ""
         # n
         theN = cardiac_df.count(numeric_only=True)  # skipna default is True
-        theN["errors"] = ""
+        theN["Errors"] = ""
 
         statCols = ["mean", "sd", "se", "n"]
         for j, stat in enumerate(statCols):

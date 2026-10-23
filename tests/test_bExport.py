@@ -6,11 +6,12 @@ from pathlib import Path
 import pandas as pd
 
 import sanpy
+from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bExport import bExport
 
 
 def test_summary_header_uses_file_metadata(test_data_dir: Path) -> None:
-    """Report file metadata and schema names in the summary.
+    """Report file metadata and axis-label stat names in the summary.
 
     Args:
         test_data_dir: Stable test-only data directory.
@@ -27,9 +28,11 @@ def test_summary_header_uses_file_metadata(test_data_dir: Path) -> None:
     assert summary.loc["Cell Type", 0] == "SAN"
     assert summary.loc["Sex", 0] == "female"
     assert summary.loc["Condition", 0] == "drug"
-    assert "thresholdSec" in summary.index
-    assert "spikeNumber" not in summary.index
-    assert "file" not in summary.index
+    assert "Threshold time (s)" in summary.index
+    assert "Errors" in summary.index
+    assert "Spike number" not in summary.index
+    assert "File" not in summary.index
+    assert "thresholdSec" not in summary.index
     assert "Take Off Potential (s)" not in summary.index
 
 
@@ -59,6 +62,34 @@ def test_clip_csv_time_axis_is_milliseconds(
     assert float(row["xMs"]) == expected[1][0][0]
 
 
+def _assert_report2_matches_report3(readable: pd.DataFrame, full: pd.DataFrame) -> None:
+    """Assert ``report2`` values match ``report3`` under schema axis labels.
+
+    Args:
+        readable: Human-readable report.
+        full: Full report for the same spikes.
+    """
+    source_columns: list[str] = []
+    for label in readable.columns:
+        matches = [
+            key
+            for key, definition in analysisResultDict.items()
+            if definition["axis_label"] == label
+        ]
+        assert len(matches) == 1
+        source_columns.append(matches[0])
+    renamed = full.loc[:, source_columns].rename(
+        columns={
+            column: analysisResultDict[column]["axis_label"]
+            for column in source_columns
+        }
+    )
+    pd.testing.assert_frame_equal(
+        readable.reset_index(drop=True),
+        renamed.reset_index(drop=True),
+    )
+
+
 def test_report2_matches_report3_rows_and_schema_columns(test_data_dir: Path) -> None:
     """Keep ``report2`` on the same spikes and schema columns as ``report3``.
 
@@ -77,15 +108,16 @@ def test_report2_matches_report3_rows_and_schema_columns(test_data_dir: Path) ->
 
     assert full is not None
     assert readable is not None
-    pd.testing.assert_frame_equal(readable, full.loc[:, list(readable.columns)])
-    assert "thresholdSec" in readable.columns
-    assert "peakSec" in readable.columns
-    assert "isi_ms" in readable.columns
-    assert "widths_50" in readable.columns
+    _assert_report2_matches_report3(readable, full)
+    assert "Threshold time (s)" in readable.columns
+    assert "Peak time (s)" in readable.columns
+    assert "Spike height (mV)" in readable.columns
+    assert "Interspike interval (ms)" in readable.columns
+    assert "Spike width at 50% (ms)" in readable.columns
+    assert "thresholdSec" not in readable.columns
+    assert "peakHeight" not in readable.columns
     assert "Take Off Potential (s)" not in readable.columns
-    assert "Take Off Potential (ms)" not in readable.columns
     assert "AP Peak (ms)" not in readable.columns
-    assert "ISI (ms)" not in readable.columns
     assert "width_50" not in readable.columns
 
     stop = float(full["thresholdSec"].max())
@@ -93,6 +125,6 @@ def test_report2_matches_report3_rows_and_schema_columns(test_data_dir: Path) ->
     clipped_full = export.report3(theMin=0, theMax=stop)
     assert clipped is not None
     assert clipped_full is not None
-    pd.testing.assert_frame_equal(clipped, clipped_full.loc[:, list(clipped.columns)])
+    _assert_report2_matches_report3(clipped, clipped_full)
     assert len(clipped) < len(readable)
-    assert bool((clipped["thresholdSec"] < stop).all())
+    assert bool((clipped["Threshold time (s)"] < stop).all())

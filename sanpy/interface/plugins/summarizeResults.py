@@ -159,7 +159,7 @@ class SummarizeResults(sanpyPlugin):
         
         buttonName = radioButton.text()
         isChecked = radioButton.isChecked()
-        logger.info(f'buttonName:{buttonName} isChecked:{isChecked}')
+        # logger.info(f'buttonName:{buttonName} isChecked:{isChecked}')
         if isChecked:
             self._reportType = buttonName
             self.replot()
@@ -172,7 +172,7 @@ class SummarizeResults(sanpyPlugin):
         """Generate report with sanpy.bExport.report2()
         and put it into a table.
         """
-        logger.info("")
+        # logger.info("")
         # update
         if self.ba is None:
             return
