@@ -382,7 +382,7 @@ class bTableView(QtWidgets.QTableView):
     """
 
     def contextMenuEvent(self, event):
-        """hHandle right mouse click"""
+        """Handle right mouse click"""
         contextMenu = QtWidgets.QMenu(self)
 
         #

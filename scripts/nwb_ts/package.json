@@ -1,0 +1,28 @@
+{
+  "name": "nwb_ts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.31",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "h5wasm": "^0.10.3",
+    "plotly.js-dist-min": "^4.1.2",
+    "vue": "^3.5.44"
+  }
+}

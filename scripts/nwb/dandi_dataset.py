@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, fields
 from typing import Optional
 
@@ -17,23 +18,22 @@ from pynwb.icephys import (
     CurrentClampStimulusSeries,
     IZeroClampSeries,
     PatchClampSeries,
+    VoltageClampSeries,
+    VoltageClampStimulusSeries,
 )
 
 from sanpy.sanpyLogger import get_logger
-from dandi_transport import FsspecNwbTransport
+from dandi_transport import LindiNwbTransport, NwbTransport
 
 logger = get_logger(__name__)
 
 _RTOL = 1e-9
 _ATOL = 1e-12
-_MAX_ABS_CURRENT_NA = 1000.0
-_CURRENT_UNIT_TO_NA = {
-    "A": 1e9,
-    "mA": 1e6,
-    "uA": 1e3,
-    "nA": 1.0,
-    "pA": 1e-3,
-}
+_DANDI_DOI_PATTERN = re.compile(
+    r"^https://doi\.org/10\.48324/dandi\.(?P<dandiset>\d{6})/"
+    r"(?P<version>[^/?#]+)$",
+    flags=re.IGNORECASE,
+)
 
 
 class DandiDatasetError(RuntimeError):
@@ -64,8 +64,31 @@ class DandiAssetMetadata:
 
 
 @dataclass(frozen=True)
+class DandiDatasetMetadata:
+    """Store published metadata describing one immutable dandiset version.
+
+    Attributes:
+        dandiset_id: Six-digit DANDI identifier.
+        version: Published dandiset version.
+        name: Published dandiset title.
+        description: Published dandiset description.
+        doi: Published DOI, when present.
+        url: Canonical DANDI Archive URL.
+        citation: Published dataset citation.
+    """
+
+    dandiset_id: str
+    version: str
+    name: str
+    description: str
+    doi: str | None
+    url: str
+    citation: str
+
+
+@dataclass(frozen=True)
 class NwbHeaderMetadata:
-    """Describe a compatible intracellular current-clamp NWB asset.
+    """Describe a compatible intracellular NWB recording.
 
     Attributes:
         subject_id: NWB subject identifier, when present.
@@ -76,7 +99,8 @@ class NwbHeaderMetadata:
         sample_rate_hz: Common sweep sampling rate.
         samples_per_sweep: Common response sample count.
         sweep_duration_seconds: Time from the first through last sample.
-        has_stimulus: Whether at least one sweep has a current stimulus.
+        has_stimulus: Whether at least one sweep has a stimulus.
+        clamp_mode: Recording mode, either current clamp or voltage clamp.
     """
 
     subject_id: str | None
@@ -88,6 +112,7 @@ class NwbHeaderMetadata:
     samples_per_sweep: int
     sweep_duration_seconds: float
     has_stimulus: bool
+    clamp_mode: str
 
     def __str__(self) -> str:
         """Return one metadata field per line.
@@ -110,7 +135,7 @@ class DandiAssetSummary:
         asset_id: Immutable DANDI asset identifier.
         path: Asset path relative to the dandiset root.
         size_mb: Asset size in decimal megabytes.
-        status: Header inspection result, either ``ready`` or ``error``.
+        status: Header inspection result, either ``summary ready`` or ``error``.
         error: Header inspection error text, or ``None``.
         subject_id: NWB subject identifier, when available.
         session_id: NWB session identifier, when available.
@@ -119,6 +144,7 @@ class DandiAssetSummary:
         sample_rate_hz: Common sample rate, when available.
         samples_per_sweep: Common sample count, when available.
         duration_seconds: Common sweep duration, when available.
+        clamp_mode: Recording clamp mode, when available.
     """
 
     index: int
@@ -134,6 +160,7 @@ class DandiAssetSummary:
     sample_rate_hz: float | None
     samples_per_sweep: int | None
     duration_seconds: float | None
+    clamp_mode: str | None
 
     def to_row(self) -> dict[str, object]:
         """Return a complete row suitable for tables and data frames.
@@ -146,21 +173,25 @@ class DandiAssetSummary:
 
 @dataclass(frozen=True)
 class DandiRecording:
-    """Store one materialized current-clamp recording in SanPy units.
+    """Store one materialized intracellular recording in NWB base units.
 
     Attributes:
         header: Header metadata validated while opening the asset.
         time_seconds: Sweep-local time, with one column per sweep.
-        voltage_mv: Membrane voltage in millivolts.
-        current_na: Command current in nanoamps, or ``None`` when every sweep
-            lacks a usable stimulus.
+        response_values: Response values after NWB conversion and offset.
+        response_unit: Declared NWB response base unit.
+        stimulus_values: Stimulus values after NWB conversion and offset, or
+            ``None`` when every sweep lacks a usable stimulus.
+        stimulus_unit: Declared NWB stimulus base unit, when present.
         warnings: Nonfatal data-normalization messages.
     """
 
     header: NwbHeaderMetadata
     time_seconds: np.ndarray
-    voltage_mv: np.ndarray
-    current_na: np.ndarray | None
+    response_values: np.ndarray
+    response_unit: str
+    stimulus_values: np.ndarray | None
+    stimulus_unit: str | None
     warnings: tuple[str, ...]
 
 
@@ -183,35 +214,39 @@ class DandiTracePlotData:
 
 @dataclass(frozen=True)
 class DandiSweepPlotData:
-    """Store renderer-independent voltage and optional current plot data.
+    """Store renderer-independent response and optional stimulus plot data.
 
     Attributes:
-        voltage: Membrane-voltage plot data.
-        current: Command-current plot data, or ``None`` without a stimulus.
+        response: Recorded response plot data.
+        stimulus: Command-stimulus plot data, or ``None`` without a stimulus.
     """
 
-    voltage: DandiTracePlotData
-    current: DandiTracePlotData | None
+    response: DandiTracePlotData
+    stimulus: DandiTracePlotData | None
 
 
 @dataclass(frozen=True)
 class DandiSweep:
-    """Store one fully materialized current-clamp sweep in SanPy units.
+    """Store one fully materialized intracellular sweep in NWB base units.
 
     Attributes:
         header: Header metadata validated while opening the asset.
         sweep_index: Zero-based sweep position in the NWB recording table.
         time_seconds: Complete sweep-local time values.
-        voltage_mv: Complete membrane-voltage values in millivolts.
-        current_na: Complete command-current values in nanoamps, or ``None``.
+        response_values: Complete response values after NWB conversion and offset.
+        response_unit: Declared NWB response base unit.
+        stimulus_values: Complete stimulus values after NWB conversion and offset.
+        stimulus_unit: Declared NWB stimulus base unit, when present.
         warnings: Nonfatal data-normalization messages.
     """
 
     header: NwbHeaderMetadata
     sweep_index: int
     time_seconds: np.ndarray
-    voltage_mv: np.ndarray
-    current_na: np.ndarray | None
+    response_values: np.ndarray
+    response_unit: str
+    stimulus_values: np.ndarray | None
+    stimulus_unit: str | None
     warnings: tuple[str, ...]
 
     def to_plot_data(self, max_points: int = 5000) -> DandiSweepPlotData:
@@ -229,31 +264,31 @@ class DandiSweep:
         Raises:
             ValueError: If fewer than four plot points are requested.
         """
-        voltage_time, voltage_values = _min_max_downsample(
+        response_time, response_values = _min_max_downsample(
             self.time_seconds,
-            self.voltage_mv,
+            self.response_values,
             max_points=max_points,
         )
-        voltage = DandiTracePlotData(
-            time_seconds=voltage_time,
-            values=voltage_values,
+        response = DandiTracePlotData(
+            time_seconds=response_time,
+            values=response_values,
             x_axis_label="Time (s)",
-            y_axis_label="Voltage (mV)",
+            y_axis_label=_quantity_axis_label(self.response_unit),
         )
-        current: DandiTracePlotData | None = None
-        if self.current_na is not None:
-            current_time, current_values = _min_max_downsample(
+        stimulus: DandiTracePlotData | None = None
+        if self.stimulus_values is not None and self.stimulus_unit is not None:
+            stimulus_time, stimulus_values = _min_max_downsample(
                 self.time_seconds,
-                self.current_na * 1000.0,
+                self.stimulus_values,
                 max_points=max_points,
             )
-            current = DandiTracePlotData(
-                time_seconds=current_time,
-                values=current_values,
+            stimulus = DandiTracePlotData(
+                time_seconds=stimulus_time,
+                values=stimulus_values,
                 x_axis_label="Time (s)",
-                y_axis_label="Current (pA)",
+                y_axis_label=_quantity_axis_label(self.stimulus_unit),
             )
-        return DandiSweepPlotData(voltage=voltage, current=current)
+        return DandiSweepPlotData(response=response, stimulus=stimulus)
 
 
 class DandiNwbAsset:
@@ -273,9 +308,13 @@ class DandiNwbAsset:
         self._dataset = dataset
         self.metadata = metadata
         self._header: NwbHeaderMetadata | None = None
+        self._header_is_validated = False
         self._header_error: str | None = None
-        self._sweep_cache_key: tuple[int, str | None] | None = None
+        self._sweep_cache_key: int | None = None
         self._sweep_cache: DandiSweep | None = None
+        self._sweep_plot_cache: dict[
+            tuple[int, int], DandiSweepPlotData
+        ] = {}
 
     @property
     def header(self) -> NwbHeaderMetadata | None:
@@ -302,13 +341,13 @@ class DandiNwbAsset:
             refresh: Whether to reread a previously cached header.
 
         Returns:
-            Validated current-clamp header metadata.
+            Validated intracellular header metadata.
 
         Raises:
             DandiDatasetError: If the remote asset cannot be opened.
             UnsupportedNwbError: If SanPy cannot represent the recording.
         """
-        if self._header is not None and not refresh:
+        if self._header is not None and self._header_is_validated and not refresh:
             return self._header
         try:
             with self._open_nwbfile() as nwbfile:
@@ -322,6 +361,7 @@ class DandiNwbAsset:
                 f'Could not inspect remote NWB asset "{self.metadata.path}": {error}'
             ) from error
         self._header = header
+        self._header_is_validated = True
         self._header_error = None
         return header
 
@@ -338,8 +378,12 @@ class DandiNwbAsset:
             Successful or failed header summary with stable asset identity.
         """
         try:
-            header = self.load_header()
-        except (DandiDatasetError, UnsupportedNwbError) as error:
+            if self._header is None:
+                with self._open_nwbfile() as nwbfile:
+                    self._header = _summarize_nwbfile(nwbfile)
+            header = self._header
+        except Exception as error:
+            self._header_error = str(error)
             return DandiAssetSummary(
                 index=index,
                 asset_id=self.metadata.asset_id,
@@ -354,13 +398,14 @@ class DandiNwbAsset:
                 sample_rate_hz=None,
                 samples_per_sweep=None,
                 duration_seconds=None,
+                clamp_mode=None,
             )
         return DandiAssetSummary(
             index=index,
             asset_id=self.metadata.asset_id,
             path=self.metadata.path,
             size_mb=round(self.metadata.size_bytes / 1_000_000, 2),
-            status="ready",
+            status="summary ready",
             error=None,
             subject_id=header.subject_id,
             session_id=header.session_id,
@@ -369,17 +414,11 @@ class DandiNwbAsset:
             sample_rate_hz=header.sample_rate_hz,
             samples_per_sweep=header.samples_per_sweep,
             duration_seconds=header.sweep_duration_seconds,
+            clamp_mode=header.clamp_mode,
         )
 
-    def load_recording(
-        self,
-        current_unit_override: str | None = None,
-    ) -> DandiRecording:
-        """Stream and materialize all current-clamp sweeps from this asset.
-
-        Args:
-            current_unit_override: Optional physical unit of the raw stored
-                stimulus values. When omitted, NWB conversion metadata is used.
+    def load_recording(self) -> DandiRecording:
+        """Stream and materialize all compatible sweeps from this asset.
 
         Returns:
             Recording arrays converted to SanPy time, voltage, and current units.
@@ -394,7 +433,6 @@ class DandiNwbAsset:
                 recording = _materialize_recording(
                     header,
                     references,
-                    current_unit_override=current_unit_override,
                 )
         except UnsupportedNwbError:
             raise
@@ -403,23 +441,21 @@ class DandiNwbAsset:
                 f'Could not load remote NWB asset "{self.metadata.path}": {error}'
             ) from error
         self._header = header
+        self._header_is_validated = True
         self._header_error = None
         return recording
 
     def load_sweep(
         self,
         sweep_index: int,
-        current_unit_override: str | None = None,
     ) -> DandiSweep:
-        """Stream and materialize one current-clamp sweep from this asset.
+        """Stream and materialize one intracellular sweep from this asset.
 
         The most recently loaded sweep is retained in memory. An identical
         subsequent request returns the same result object.
 
         Args:
             sweep_index: Zero-based sweep position in the NWB recording table.
-            current_unit_override: Optional physical unit of the raw stored
-                stimulus values. When omitted, NWB conversion metadata is used.
 
         Returns:
             Complete selected sweep converted to display-independent SanPy units.
@@ -429,21 +465,21 @@ class DandiNwbAsset:
             DandiDatasetError: If the remote asset cannot be opened or read.
             UnsupportedNwbError: If SanPy cannot represent the sweep.
         """
-        cache_key = (sweep_index, current_unit_override)
+        cache_key = sweep_index
         if self._sweep_cache_key == cache_key and self._sweep_cache is not None:
             return self._sweep_cache
         try:
             with self._open_nwbfile() as nwbfile:
-                header, references = _inspect_nwbfile(nwbfile)
+                references = _collect_sweep_references(nwbfile)
                 if sweep_index < 0 or sweep_index >= len(references):
                     raise IndexError(
                         f"Sweep index {sweep_index} is outside 0..{len(references) - 1}"
                     )
+                header = self._header or _summarize_nwbfile(nwbfile, references)
                 sweep = _materialize_sweep(
                     header,
                     references[sweep_index],
                     sweep_index=sweep_index,
-                    current_unit_override=current_unit_override,
                 )
         except (IndexError, UnsupportedNwbError):
             raise
@@ -456,6 +492,35 @@ class DandiNwbAsset:
         self._sweep_cache_key = cache_key
         self._sweep_cache = sweep
         return sweep
+
+    def load_sweep_plot_data(
+        self,
+        sweep_index: int,
+        max_points: int = 5000,
+    ) -> DandiSweepPlotData:
+        """Load and cache renderer-independent plot data for one sweep.
+
+        Args:
+            sweep_index: Zero-based sweep position in the NWB recording table.
+            max_points: Maximum plotted points in each output trace.
+
+        Returns:
+            Cached or newly loaded voltage and optional current plot data.
+
+        Raises:
+            IndexError: If ``sweep_index`` is outside the recording.
+            DandiDatasetError: If the remote asset cannot be opened or read.
+            UnsupportedNwbError: If SanPy cannot represent the sweep.
+            ValueError: If fewer than four plot points are requested.
+        """
+        cache_key = (sweep_index, max_points)
+        cached = self._sweep_plot_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        sweep = self.load_sweep(sweep_index)
+        plot_data = sweep.to_plot_data(max_points=max_points)
+        self._sweep_plot_cache[cache_key] = plot_data
+        return plot_data
 
     def _open_nwbfile(self) -> _OpenNwbFile:
         """Create a context manager for this asset's remote NWB file.
@@ -473,7 +538,7 @@ class DandiDataset:
     def __init__(
         self,
         parsed_url: DandisetURL,
-        transport: FsspecNwbTransport | None = None,
+        transport: NwbTransport | None = None,
     ) -> None:
         """Initialize a parsed dandiset without performing network access.
 
@@ -484,19 +549,21 @@ class DandiDataset:
         self._parsed_url = parsed_url
         self.dandiset_id = str(parsed_url.dandiset_id)
         self.version = str(parsed_url.version_id)
-        self.transport = transport or FsspecNwbTransport()
+        self.transport = transport or LindiNwbTransport()
         self._assets: tuple[DandiNwbAsset, ...] = ()
+        self._metadata: DandiDatasetMetadata | None = None
 
     @classmethod
     def from_url(
         cls,
         resource: str,
-        transport: FsspecNwbTransport | None = None,
+        transport: NwbTransport | None = None,
     ) -> DandiDataset:
         """Parse a whole published dandiset identifier without loading assets.
 
         Args:
-            resource: DANDI identifier or canonical whole-dandiset URL.
+            resource: DANDI identifier, canonical whole-dandiset URL, or
+                published DANDI DOI URL.
             transport: Optional remote-file transport override.
 
         Returns:
@@ -506,8 +573,9 @@ class DandiDataset:
             DandiDatasetError: If the resource is not an explicitly versioned,
                 published, whole production DANDI dandiset.
         """
+        normalized_resource = _normalize_dandi_resource(resource)
         try:
-            parsed_url = parse_dandi_url(resource)
+            parsed_url = parse_dandi_url(normalized_resource)
         except Exception as error:
             raise DandiDatasetError(
                 f'Could not parse DANDI resource "{resource}": {error}'
@@ -535,6 +603,48 @@ class DandiDataset:
             Assets loaded by ``load_assets()``, or an empty tuple beforehand.
         """
         return self._assets
+
+    @property
+    def metadata(self) -> DandiDatasetMetadata | None:
+        """Return cached published dandiset metadata.
+
+        Returns:
+            Published metadata loaded by ``load_metadata()`` or ``load_assets()``.
+        """
+        return self._metadata
+
+    def load_metadata(self, refresh: bool = False) -> DandiDatasetMetadata:
+        """Fetch and cache published dandiset-level metadata.
+
+        Args:
+            refresh: Whether to replace already cached metadata.
+
+        Returns:
+            Typed published metadata for this dandiset version.
+
+        Raises:
+            DandiDatasetError: If the DANDI metadata request fails.
+        """
+        if self._metadata is not None and not refresh:
+            return self._metadata
+        try:
+            with self._parsed_url.navigate(strict=True) as (
+                _client,
+                remote_dandiset,
+                _remote_assets,
+            ):
+                raw_metadata = remote_dandiset.get_raw_metadata()
+        except Exception as error:
+            raise DandiDatasetError(
+                f"Could not load metadata for DANDI:{self.dandiset_id}/{self.version}: "
+                f"{error}"
+            ) from error
+        self._metadata = _dataset_metadata(
+            raw_metadata,
+            dandiset_id=self.dandiset_id,
+            version=self.version,
+        )
+        return self._metadata
 
     def __len__(self) -> int:
         """Return the number of loaded NWB assets.
@@ -576,9 +686,15 @@ class DandiDataset:
         try:
             with self._parsed_url.navigate(strict=True) as (
                 _client,
-                _dandiset,
+                remote_dandiset,
                 remote_assets,
             ):
+                if self._metadata is None:
+                    self._metadata = _dataset_metadata(
+                        remote_dandiset.get_raw_metadata(),
+                        dandiset_id=self.dandiset_id,
+                        version=self.version,
+                    )
                 metadata = [
                     _asset_metadata(asset)
                     for asset in remote_assets
@@ -630,6 +746,8 @@ class DandiDataset:
                     "modified": asset.metadata.modified,
                     "header_status": (
                         "compatible"
+                        if header is not None and asset._header_is_validated
+                        else "summary ready"
                         if header is not None
                         else "error"
                         if asset.header_error is not None
@@ -646,6 +764,7 @@ class DandiDataset:
                         None if header is None else header.sweep_duration_seconds
                     ),
                     "has_stimulus": None if header is None else header.has_stimulus,
+                    "clamp_mode": None if header is None else header.clamp_mode,
                 }
             )
         return pd.DataFrame(rows)
@@ -668,7 +787,7 @@ class DandiDataset:
 class _OpenNwbFile:
     """Own the nested remote-file, HDF5, and PyNWB resource stack."""
 
-    def __init__(self, transport: FsspecNwbTransport, content_url: str) -> None:
+    def __init__(self, transport: NwbTransport, content_url: str) -> None:
         """Initialize a remote NWB context manager.
 
         Args:
@@ -678,7 +797,6 @@ class _OpenNwbFile:
         self._transport = transport
         self._content_url = content_url
         self._remote_context: object | None = None
-        self._remote_file: object | None = None
         self._h5_file: h5py.File | None = None
         self._io: NWBHDF5IO | None = None
 
@@ -688,9 +806,8 @@ class _OpenNwbFile:
         Returns:
             NWB file whose lazy datasets remain accessible inside the context.
         """
-        self._remote_context = self._transport.open(self._content_url)
-        self._remote_file = self._remote_context.__enter__()  # type: ignore[attr-defined]
-        self._h5_file = h5py.File(self._remote_file, mode="r")
+        self._remote_context = self._transport.open_h5(self._content_url)
+        self._h5_file = self._remote_context.__enter__()  # type: ignore[attr-defined]
         self._io = NWBHDF5IO(file=self._h5_file, load_namespaces=True)
         return self._io.read()
 
@@ -709,14 +826,27 @@ class _OpenNwbFile:
         """
         if self._io is not None:
             self._io.close()
-        if self._h5_file is not None:
-            self._h5_file.close()
         if self._remote_context is not None:
             self._remote_context.__exit__(  # type: ignore[attr-defined]
                 exception_type,
                 exception,
                 traceback,
             )
+
+
+def _normalize_dandi_resource(resource: str) -> str:
+    """Normalize a supported DANDI DOI URL into a published identifier.
+
+    Args:
+        resource: DANDI identifier, canonical URL, or supported DOI URL.
+
+    Returns:
+        Original resource or normalized published DANDI identifier.
+    """
+    match = _DANDI_DOI_PATTERN.fullmatch(resource.strip())
+    if match is None:
+        return resource
+    return f"DANDI:{match.group('dandiset')}/{match.group('version')}"
 
 
 def _asset_metadata(asset: RemoteAsset) -> DandiAssetMetadata:
@@ -737,13 +867,169 @@ def _asset_metadata(asset: RemoteAsset) -> DandiAssetMetadata:
     )
 
 
+def _dataset_metadata(
+    raw_metadata: dict[str, object],
+    dandiset_id: str,
+    version: str,
+) -> DandiDatasetMetadata:
+    """Convert raw published DANDI metadata into the stable backend model.
+
+    Args:
+        raw_metadata: Raw version metadata returned by the DANDI API.
+        dandiset_id: Six-digit DANDI identifier.
+        version: Published dandiset version.
+
+    Returns:
+        Typed subset used by command-line and graphical clients.
+    """
+    doi_value = raw_metadata.get("doi")
+    doi = None if doi_value in (None, "") else str(doi_value)
+    if doi is not None:
+        doi = doi.removeprefix("https://doi.org/")
+    return DandiDatasetMetadata(
+        dandiset_id=dandiset_id,
+        version=version,
+        name=str(raw_metadata.get("name") or ""),
+        description=str(raw_metadata.get("description") or ""),
+        doi=doi,
+        url=str(
+            raw_metadata.get("url")
+            or f"https://dandiarchive.org/dandiset/{dandiset_id}/{version}"
+        ),
+        citation=str(raw_metadata.get("citation") or ""),
+    )
+
+
+def _series_semantics(
+    response: object,
+    stimulus: object | None,
+    label: str,
+) -> tuple[str, str, str | None]:
+    """Validate series roles and return their NWB base units.
+
+    Args:
+        response: Candidate patch-clamp response series.
+        stimulus: Candidate patch-clamp stimulus series, when present.
+        label: Human-readable location used in validation errors.
+
+    Returns:
+        Clamp mode, response unit, and optional stimulus unit.
+
+    Raises:
+        UnsupportedNwbError: If series types or declared units are incompatible.
+    """
+    if isinstance(response, (CurrentClampSeries, IZeroClampSeries)):
+        mode = "current clamp"
+        response_unit = "volts"
+        stimulus_unit = "amperes"
+        stimulus_type = CurrentClampStimulusSeries
+    elif isinstance(response, VoltageClampSeries):
+        mode = "voltage clamp"
+        response_unit = "amperes"
+        stimulus_unit = "volts"
+        stimulus_type = VoltageClampStimulusSeries
+    else:
+        raise UnsupportedNwbError(
+            f"{label} response type {type(response).__name__} is unsupported"
+        )
+    if response.unit != response_unit:
+        raise UnsupportedNwbError(
+            f"{label} response unit must be {response_unit!r}; got {response.unit!r}"
+        )
+    if stimulus is None:
+        return mode, response_unit, None
+    if not isinstance(stimulus, stimulus_type):
+        raise UnsupportedNwbError(
+            f"{label} stimulus type {type(stimulus).__name__} is incompatible "
+            f"with {mode}"
+        )
+    if stimulus.unit != stimulus_unit:
+        raise UnsupportedNwbError(
+            f"{label} stimulus unit must be {stimulus_unit!r}; got {stimulus.unit!r}"
+        )
+    return mode, response_unit, stimulus_unit
+
+
+def _summarize_nwbfile(
+    nwbfile: NWBFile,
+    references: list[
+        tuple[TimeSeriesReference, Optional[TimeSeriesReference]]
+    ]
+    | None = None,
+) -> NwbHeaderMetadata:
+    """Read table metadata without exhaustive all-sweep timing validation.
+
+    Args:
+        nwbfile: Open NWB file.
+        references: Optional previously collected response/stimulus references.
+
+    Returns:
+        Lightweight recording summary suitable for a remote catalog.
+
+    Raises:
+        UnsupportedNwbError: If basic intracellular structure is unavailable.
+    """
+    sweep_references = references or _collect_sweep_references(nwbfile)
+    electrode_ids: set[str] = set()
+    has_stimulus = False
+    clamp_mode: str | None = None
+    for sweep_index, (response_reference, stimulus_reference) in enumerate(
+        sweep_references
+    ):
+        response = response_reference.timeseries
+        mode, _response_unit, _stimulus_unit = _series_semantics(
+            response,
+            stimulus_reference.timeseries if stimulus_reference is not None else None,
+            label=f"sweep {sweep_index}",
+        )
+        if clamp_mode is None:
+            clamp_mode = mode
+        elif mode != clamp_mode:
+            raise UnsupportedNwbError("NWB asset mixes clamp modes")
+        electrode_id = getattr(response.electrode, "object_id", None)
+        if electrode_id is None:
+            raise UnsupportedNwbError(
+                f"Sweep {sweep_index} response has no electrode ID"
+            )
+        electrode_ids.add(str(electrode_id))
+        has_stimulus = has_stimulus or stimulus_reference is not None
+
+    if len(electrode_ids) != 1:
+        raise UnsupportedNwbError(
+            f"The NWB reader requires one electrode; found {len(electrode_ids)}"
+        )
+    if clamp_mode is None:
+        raise UnsupportedNwbError("NWB file contains no usable response sweeps")
+    first_response = sweep_references[0][0]
+    sample_interval, duration, _start = _reference_timing_summary(
+        first_response,
+        label="first response",
+    )
+    subject_id = None
+    if nwbfile.subject is not None and nwbfile.subject.subject_id is not None:
+        subject_id = str(nwbfile.subject.subject_id)
+    session_id = None if nwbfile.session_id is None else str(nwbfile.session_id)
+    return NwbHeaderMetadata(
+        subject_id=subject_id,
+        session_id=session_id,
+        acquisition_datetime=nwbfile.session_start_time.isoformat(),
+        num_sweeps=len(sweep_references),
+        num_channels=len(electrode_ids),
+        sample_rate_hz=1.0 / sample_interval,
+        samples_per_sweep=int(first_response.count),
+        sweep_duration_seconds=duration,
+        has_stimulus=has_stimulus,
+        clamp_mode=clamp_mode,
+    )
+
+
 def _inspect_nwbfile(
     nwbfile: NWBFile,
 ) -> tuple[
     NwbHeaderMetadata,
     list[tuple[TimeSeriesReference, Optional[TimeSeriesReference]]],
 ]:
-    """Validate current-clamp structure without reading response values.
+    """Validate intracellular structure without reading response values.
 
     Args:
         nwbfile: Open NWB file.
@@ -760,17 +1046,19 @@ def _inspect_nwbfile(
     common_duration: float | None = None
     common_count: int | None = None
     has_stimulus = False
+    clamp_mode: str | None = None
 
     for sweep, (response_reference, stimulus_reference) in enumerate(references):
         response = response_reference.timeseries
-        if not isinstance(response, (CurrentClampSeries, IZeroClampSeries)):
-            raise UnsupportedNwbError(
-                f"Sweep {sweep} response is {type(response).__name__}, not current clamp"
-            )
-        if response.unit != "volts":
-            raise UnsupportedNwbError(
-                f"Sweep {sweep} response unit must be 'volts'; got {response.unit!r}"
-            )
+        mode, _response_unit, _stimulus_unit = _series_semantics(
+            response,
+            stimulus_reference.timeseries if stimulus_reference is not None else None,
+            label=f"sweep {sweep}",
+        )
+        if clamp_mode is None:
+            clamp_mode = mode
+        elif mode != clamp_mode:
+            raise UnsupportedNwbError("NWB asset mixes clamp modes")
         electrode_id = getattr(response.electrode, "object_id", None)
         if electrode_id is None:
             raise UnsupportedNwbError(f"Sweep {sweep} response has no electrode ID")
@@ -798,14 +1086,6 @@ def _inspect_nwbfile(
             continue
         has_stimulus = True
         stimulus = stimulus_reference.timeseries
-        if not isinstance(stimulus, CurrentClampStimulusSeries):
-            raise UnsupportedNwbError(
-                f"Sweep {sweep} stimulus is {type(stimulus).__name__}, not current clamp"
-            )
-        if stimulus.unit != "amperes":
-            raise UnsupportedNwbError(
-                f"Sweep {sweep} stimulus unit must be 'amperes'; got {stimulus.unit!r}"
-            )
         if getattr(stimulus.electrode, "object_id", None) != electrode_id:
             raise UnsupportedNwbError(
                 f"Sweep {sweep} stimulus and response reference different electrodes"
@@ -833,6 +1113,8 @@ def _inspect_nwbfile(
         )
     if common_interval is None or common_duration is None or common_count is None:
         raise UnsupportedNwbError("NWB file contains no usable response sweeps")
+    if clamp_mode is None:
+        raise UnsupportedNwbError("NWB file contains no usable response sweeps")
 
     subject_id = None
     if nwbfile.subject is not None and nwbfile.subject.subject_id is not None:
@@ -848,6 +1130,7 @@ def _inspect_nwbfile(
         samples_per_sweep=common_count,
         sweep_duration_seconds=common_duration,
         has_stimulus=has_stimulus,
+        clamp_mode=clamp_mode,
     )
     return header, references
 
@@ -855,17 +1138,14 @@ def _inspect_nwbfile(
 def _materialize_recording(
     header: NwbHeaderMetadata,
     references: list[tuple[TimeSeriesReference, Optional[TimeSeriesReference]]],
-    current_unit_override: str | None = None,
 ) -> DandiRecording:
-    """Read validated voltage and current values into rectangular arrays.
+    """Read validated response and stimulus values into rectangular arrays.
 
     Args:
         header: Previously validated header metadata.
         references: Ordered response and optional stimulus references.
-        current_unit_override: Optional unit of raw stored stimulus values.
-
     Returns:
-        Materialized recording in SanPy units.
+        Materialized recording in declared NWB base units.
 
     Raises:
         UnsupportedNwbError: If trace timestamps are irregular or misaligned.
@@ -875,44 +1155,41 @@ def _materialize_recording(
             header,
             reference_pair,
             sweep_index=sweep_index,
-            current_unit_override=current_unit_override,
         )
         for sweep_index, reference_pair in enumerate(references)
     ]
     times = [sweep.time_seconds for sweep in sweeps]
-    voltages = [sweep.voltage_mv for sweep in sweeps]
-    currents = [sweep.current_na for sweep in sweeps]
+    responses = [sweep.response_values for sweep in sweeps]
+    stimuli = [sweep.stimulus_values for sweep in sweeps]
     missing_stimuli: list[int] = []
-    for sweep_index, current in enumerate(currents):
-        if current is None:
+    for sweep_index, stimulus in enumerate(stimuli):
+        if stimulus is None:
             missing_stimuli.append(sweep_index)
 
     warnings: list[str] = []
-    current_matrix: np.ndarray | None
-    if len(missing_stimuli) == len(currents):
-        current_matrix = None
-        warnings.append("No usable current-clamp stimuli were present")
+    stimulus_matrix: np.ndarray | None
+    if len(missing_stimuli) == len(stimuli):
+        stimulus_matrix = None
+        warnings.append("No usable stimuli were present")
     else:
-        current_matrix = np.column_stack(
+        stimulus_matrix = np.column_stack(
             [
-                np.zeros_like(voltages[sweep]) if current is None else current
-                for sweep, current in enumerate(currents)
+                np.zeros_like(responses[sweep]) if stimulus is None else stimulus
+                for sweep, stimulus in enumerate(stimuli)
             ]
         )
         if missing_stimuli:
             warnings.append(
-                f"Inserted zero current for missing stimulus sweeps {missing_stimuli}"
+                f"Inserted zero stimulus for missing sweeps {missing_stimuli}"
             )
-    if current_unit_override is not None and current_matrix is not None:
-        warnings.append(
-            f"Interpreted raw stimulus values as {current_unit_override} by explicit override"
-        )
 
     return DandiRecording(
         header=header,
         time_seconds=np.column_stack(times),
-        voltage_mv=np.column_stack(voltages),
-        current_na=current_matrix,
+        response_values=np.column_stack(responses),
+        response_unit=sweeps[0].response_unit,
+        stimulus_values=stimulus_matrix,
+        stimulus_unit=sweeps[0].stimulus_unit,
         warnings=tuple(warnings),
     )
 
@@ -921,24 +1198,30 @@ def _materialize_sweep(
     header: NwbHeaderMetadata,
     references: tuple[TimeSeriesReference, Optional[TimeSeriesReference]],
     sweep_index: int,
-    current_unit_override: str | None = None,
 ) -> DandiSweep:
-    """Read one validated voltage/current pair into complete arrays.
+    """Read one validated response/stimulus pair into complete arrays.
 
     Args:
         header: Validated recording header metadata.
         references: Response and optional stimulus references for one sweep.
         sweep_index: Zero-based sweep position used in labels and the result.
-        current_unit_override: Optional unit of raw stored stimulus values.
-
     Returns:
-        Materialized sweep in SanPy units.
+        Materialized sweep in declared NWB base units.
 
     Raises:
         UnsupportedNwbError: If timestamps are irregular or misaligned.
     """
     response_reference, stimulus_reference = references
     response = response_reference.timeseries
+    stimulus = None if stimulus_reference is None else stimulus_reference.timeseries
+    _mode, response_unit, stimulus_unit = _series_semantics(
+        response,
+        stimulus,
+        label=f"sweep {sweep_index}",
+    )
+    electrode_id = getattr(response.electrode, "object_id", None)
+    if electrode_id is None:
+        raise UnsupportedNwbError(f"Sweep {sweep_index} response has no electrode ID")
     response_time = _reference_timestamps(
         response_reference, label=f"response for sweep {sweep_index}"
     )
@@ -947,16 +1230,19 @@ def _materialize_sweep(
     response_values = _reference_values(
         response_reference, label=f"response for sweep {sweep_index}"
     )
-    voltage = (
-        response_values * float(response.conversion) + float(response.offset)
-    ) * 1e3
+    converted_response = _apply_nwb_conversion(response_values, response)
 
     warnings: list[str] = []
-    current: np.ndarray | None = None
+    converted_stimulus: np.ndarray | None = None
     if stimulus_reference is None:
-        warnings.append("No usable current-clamp stimulus was present")
+        warnings.append("No usable stimulus was present")
     else:
-        stimulus = stimulus_reference.timeseries
+        assert stimulus is not None
+        if getattr(stimulus.electrode, "object_id", None) != electrode_id:
+            raise UnsupportedNwbError(
+                f"Sweep {sweep_index} stimulus and response reference different "
+                "electrodes"
+            )
         stimulus_time = _reference_timestamps(
             stimulus_reference, label=f"stimulus for sweep {sweep_index}"
         )
@@ -971,25 +1257,16 @@ def _materialize_sweep(
         stimulus_values = _reference_values(
             stimulus_reference, label=f"stimulus for sweep {sweep_index}"
         )
-        current = _convert_current_to_na(
-            stimulus_values,
-            conversion=float(stimulus.conversion),
-            offset_amperes=float(stimulus.offset),
-            stored_unit_override=current_unit_override,
-            label=f"stimulus for sweep {sweep_index}",
-        )
-        if current_unit_override is not None:
-            warnings.append(
-                f"Interpreted raw stimulus values as {current_unit_override} by "
-                "explicit override"
-            )
+        converted_stimulus = _apply_nwb_conversion(stimulus_values, stimulus)
 
     return DandiSweep(
         header=header,
         sweep_index=sweep_index,
         time_seconds=local_time.astype(np.float64, copy=False),
-        voltage_mv=voltage.astype(np.float64, copy=False),
-        current_na=None if current is None else current.astype(np.float64, copy=False),
+        response_values=converted_response,
+        response_unit=response_unit,
+        stimulus_values=converted_stimulus,
+        stimulus_unit=stimulus_unit,
         warnings=tuple(warnings),
     )
 
@@ -1040,64 +1317,40 @@ def _min_max_downsample(
     return time_seconds[indexes], values[indexes]
 
 
-def _convert_current_to_na(
-    stored_values: np.ndarray,
-    conversion: float,
-    offset_amperes: float,
-    stored_unit_override: str | None,
-    label: str,
-) -> np.ndarray:
-    """Convert stored NWB current values to nanoamps in one place.
+def _apply_nwb_conversion(stored_values: np.ndarray, series: object) -> np.ndarray:
+    """Apply the NWB conversion and offset without additional unit scaling.
 
     Args:
-        stored_values: Raw numeric stimulus values from the NWB dataset.
-        conversion: NWB multiplier that converts stored values to amperes.
-        offset_amperes: NWB offset applied after conversion, in amperes.
-        stored_unit_override: Explicit physical unit for raw values, or ``None``
-            to follow NWB metadata.
-        label: Human-readable series location used in errors.
+        stored_values: Selected raw values from an NWB series dataset.
+        series: PyNWB series providing ``conversion`` and ``offset``.
 
     Returns:
-        Current values in nanoamps.
+        Values expressed in the series' declared NWB base unit.
 
     Raises:
-        UnsupportedNwbError: If values are nonfinite, an override is unknown,
-            or the converted magnitude exceeds SanPy's whole-cell limit.
+        UnsupportedNwbError: If converted values are not finite.
     """
-    if stored_unit_override is None:
-        current_na = (stored_values * conversion + offset_amperes) * 1e9
-        conversion_description = (
-            f"NWB conversion={conversion!r}, offset={offset_amperes!r} A"
-        )
-    else:
-        try:
-            scale_to_na = _CURRENT_UNIT_TO_NA[stored_unit_override]
-        except KeyError as error:
-            supported = ", ".join(_CURRENT_UNIT_TO_NA)
-            raise UnsupportedNwbError(
-                f"{label} current-unit override {stored_unit_override!r} is not "
-                f"supported; choose one of {supported}"
-            ) from error
-        current_na = stored_values * scale_to_na + offset_amperes * 1e9
-        conversion_description = (
-            f"explicit raw-unit override={stored_unit_override!r}, "
-            f"NWB offset={offset_amperes!r} A"
-        )
-
-    if not np.isfinite(current_na).all():
-        raise UnsupportedNwbError(f"{label} converted current contains nonfinite values")
-    max_absolute_na = float(np.max(np.abs(current_na), initial=0.0))
-    if max_absolute_na > _MAX_ABS_CURRENT_NA:
-        raw_min = float(np.min(stored_values))
-        raw_max = float(np.max(stored_values))
+    converted = (
+        stored_values * float(series.conversion) + float(series.offset)
+    ).astype(np.float64, copy=False)
+    if not np.isfinite(converted).all():
         raise UnsupportedNwbError(
-            f"{label} converts to {max_absolute_na:g} nA, exceeding SanPy's "
-            f"whole-cell limit of {_MAX_ABS_CURRENT_NA:g} nA. Raw range is "
-            f"{raw_min:g} to {raw_max:g}; {conversion_description}. The NWB "
-            "scaling metadata may be incomplete; provide an explicit stored-current "
-            "unit only when the correct unit is known."
+            f"Series {series.name!r} contains nonfinite converted values"
         )
-    return current_na.astype(np.float64, copy=False)
+    return converted
+
+
+def _quantity_axis_label(unit: str) -> str:
+    """Return a concise physical-quantity label for an NWB base unit.
+
+    Args:
+        unit: Declared NWB unit.
+
+    Returns:
+        Axis label for volts, amperes, or an otherwise unknown unit.
+    """
+    labels = {"volts": "Voltage (V)", "amperes": "Current (A)"}
+    return labels.get(unit, f"Signal ({unit})")
 
 
 def _collect_sweep_references(
@@ -1139,9 +1392,14 @@ def _collect_sweep_references(
             references.append((response, stimulus))
         return references
 
-    responses: dict[int, CurrentClampSeries | IZeroClampSeries] = {}
+    responses: dict[
+        int, CurrentClampSeries | IZeroClampSeries | VoltageClampSeries
+    ] = {}
     for series in nwbfile.acquisition.values():
-        if isinstance(series, (CurrentClampSeries, IZeroClampSeries)):
+        if isinstance(
+            series,
+            (CurrentClampSeries, IZeroClampSeries, VoltageClampSeries),
+        ):
             sweep_number = _require_sweep_number(series)
             if sweep_number in responses:
                 raise UnsupportedNwbError(
@@ -1149,11 +1407,11 @@ def _collect_sweep_references(
                 )
             responses[sweep_number] = series
     if not responses:
-        raise UnsupportedNwbError("NWB file contains no current-clamp responses")
+        raise UnsupportedNwbError("NWB file contains no supported clamp responses")
 
-    stimuli: dict[int, CurrentClampStimulusSeries] = {}
+    stimuli: dict[int, CurrentClampStimulusSeries | VoltageClampStimulusSeries] = {}
     for series in nwbfile.stimulus.values():
-        if isinstance(series, CurrentClampStimulusSeries):
+        if isinstance(series, (CurrentClampStimulusSeries, VoltageClampStimulusSeries)):
             sweep_number = _require_sweep_number(series)
             if sweep_number in stimuli:
                 raise UnsupportedNwbError(
@@ -1237,6 +1495,47 @@ def _require_reference(value: object, label: str) -> TimeSeriesReference:
     if reference is None:
         raise UnsupportedNwbError(f"NWB file has no valid {label}")
     return reference
+
+
+def _reference_timing_summary(
+    reference: TimeSeriesReference,
+    label: str,
+) -> tuple[float, float, float]:
+    """Read minimal timing values without materializing a complete time axis.
+
+    Args:
+        reference: Valid NWB time-series reference.
+        label: Human-readable reference location.
+
+    Returns:
+        Sample interval, duration, and starting time in seconds.
+
+    Raises:
+        UnsupportedNwbError: If basic timing metadata is invalid.
+    """
+    count = int(reference.count)
+    if count < 2:
+        raise UnsupportedNwbError(f"{label} must contain at least two samples")
+    series = reference.timeseries
+    start_index = int(reference.idx_start)
+    if series.timestamps is None:
+        rate = float(series.rate)
+        if not np.isfinite(rate) or rate <= 0:
+            raise UnsupportedNwbError(f"{label} sampling rate must be positive")
+        sample_interval = 1.0 / rate
+        start = float(series.starting_time) + start_index * sample_interval
+        return sample_interval, (count - 1) * sample_interval, start
+
+    timestamps = series.timestamps
+    first = float(timestamps[start_index])
+    second = float(timestamps[start_index + 1])
+    last = float(timestamps[start_index + count - 1])
+    if not np.isfinite([first, second, last]).all():
+        raise UnsupportedNwbError(f"{label} timestamps must be finite")
+    sample_interval = second - first
+    if sample_interval <= 0 or last < second:
+        raise UnsupportedNwbError(f"{label} timestamps must be strictly increasing")
+    return sample_interval, last - first, first
 
 
 def _reference_timing(

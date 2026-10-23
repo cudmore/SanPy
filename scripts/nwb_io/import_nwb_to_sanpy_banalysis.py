@@ -7,6 +7,8 @@ registry. Edit ``NWB_PATH`` in the ``__main__`` block before running it.
 run with:
     uv run --with pynwb scripts/nwb/import_nwb_to_sanpy_banalysis.py
 
+note:
+    see runtime implementation in sanpy/fileloaders/fileLoader_nwb.py
 """
 
 from __future__ import annotations

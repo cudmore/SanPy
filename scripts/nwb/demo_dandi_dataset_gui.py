@@ -1,287 +1,405 @@
-"""Exercise the standalone DANDI NWB API through a thin NiceGUI interface."""
+"""Run the standalone DANDI NWB API through a thin NiceGUI interface."""
 
 from __future__ import annotations
 
-from nicegui import run, ui
+from nicegui import ui
 from nicegui.events import GenericEventArguments, ValueChangeEventArguments
 
-from dandi_dataset import DandiDataset, DandiSweepPlotData, DandiTracePlotData
-from dandi_transport import FsspecNwbTransport
+from dandi_dataset import DandiSweepPlotData, DandiTracePlotData
+from gui.app_state import DandiAppState, DandiAppStateStore
+from gui.controller import DandiController
+from gui.widgets.left_navigation import LeftNavigationWidget
 
 _DEFAULT_DANDISET = "DANDI:001261/0.250917.2023"
-_GUI_CURRENT_UNIT_OVERRIDE = "pA"
-_MAX_PLOT_POINTS = 5000
 
 
 class DandiDatasetDemo:
-    """Coordinate GUI controls with the standalone DANDI backend API.
-
-    Attributes:
-        dataset: Currently loaded published dandiset, or ``None``.
-    """
+    """Compose application state, controller, and thin NiceGUI views."""
 
     def __init__(self) -> None:
         """Build the browser interface without performing network access."""
-        self.dataset: DandiDataset | None = None
-        self._selected_asset_index: int | None = None
+        self._store = DandiAppStateStore()
+        self._controller = DandiController(self._store)
         self._suppress_sweep_change = False
-        self._sweep_request_id = 0
+        self._suppress_plot_mode_change = False
+        self._rendered_selection: tuple[str | None, int | None] = (None, None)
 
-        ui.label("DANDI current-clamp streaming demo").classes("text-h4")
-        ui.label(
-            "Load a published dandiset, then select a recording and sweep."
-        ).classes("text-subtitle1")
+        with ui.row().classes("w-full items-start no-wrap"):
+            self.navigation = LeftNavigationWidget(self._store)
+            with ui.column().classes("grow min-w-0 gap-4"):
+                ui.label("DANDI intracellular streaming demo").classes("text-h5")
+                with ui.row().classes("w-full items-end no-wrap"):
+                    self.resource_input = ui.input(
+                        "Published DANDI identifier or URL",
+                        value=_DEFAULT_DANDISET,
+                    ).classes("grow")
+                    self.load_dataset_button = ui.button(
+                        "Load dandiset", on_click=self._handle_load_dataset
+                    )
+                    self.cancel_button = ui.button(
+                        "Cancel", icon="cancel", on_click=self._handle_cancel
+                    ).props("outline")
+                self.cancel_button.disable()
+                self.asset_table = ui.table(
+                    columns=self._table_columns(),
+                    rows=[],
+                    row_key="asset_id",
+                    pagination=10,
+                ).props("dense flat bordered").classes("w-full text-xs")
+                self.asset_table.on(
+                    "rowClick",
+                    self._handle_row_click,
+                    js_handler="(_event, row) => emit(row)",
+                )
+                with ui.row().classes("w-full items-center"):
+                    self.sweep_input = ui.number(
+                        "Sweep index",
+                        value=0,
+                        min=0,
+                        max=0,
+                        step=1,
+                        precision=0,
+                        on_change=self._handle_sweep_change,
+                    ).classes("w-40")
+                    self.plot_all_checkbox = ui.checkbox(
+                        "Plot all sweeps",
+                        value=False,
+                        on_change=self._handle_plot_all_change,
+                    )
+                    self.show_stimulus_checkbox = ui.checkbox(
+                        "Show stimulus",
+                        value=True,
+                        on_change=self._handle_show_stimulus_change,
+                    )
+                self.sweep_input.disable()
+                self.plot_all_checkbox.disable()
+                self.plot_container = ui.column().classes("w-full")
 
-        with ui.row().classes("w-full items-end"):
-            self.resource_input = ui.input(
-                "Published DANDI identifier or URL", value=_DEFAULT_DANDISET
-            ).classes("grow")
-            self.load_dataset_button = ui.button(
-                "Load dandiset", on_click=self._handle_load_dataset
-            )
+        with ui.footer().classes("items-center gap-3 bg-grey-2 text-grey-9"):
+            self.status_spinner = ui.spinner(size="sm")
+            self.status_spinner.set_visibility(False)
+            self.status_label = ui.label("Ready").classes("text-sm")
+            self.status_progress = ui.linear_progress(value=0).classes("w-48")
+            self.status_progress.set_visibility(False)
+        self._store.subscribe(self._on_state_changed)
 
-        self.status = ui.label("Ready")
-        self.asset_table = ui.table(
-            columns=[
-                {"name": "index", "label": "Index", "field": "index"},
-                {"name": "subject_id", "label": "Subject", "field": "subject_id"},
-                {"name": "session_id", "label": "Session", "field": "session_id"},
-                {
-                    "name": "acquisition_datetime",
-                    "label": "Acquired",
-                    "field": "acquisition_datetime",
-                },
-                {"name": "num_sweeps", "label": "Sweeps", "field": "num_sweeps"},
-                {
-                    "name": "sample_rate_hz",
-                    "label": "Rate (Hz)",
-                    "field": "sample_rate_hz",
-                },
-                {
-                    "name": "samples_per_sweep",
-                    "label": "Samples",
-                    "field": "samples_per_sweep",
-                },
-                {
-                    "name": "duration_seconds",
-                    "label": "Duration (s)",
-                    "field": "duration_seconds",
-                },
-                {"name": "size_mb", "label": "Size (MB)", "field": "size_mb"},
-                {"name": "status", "label": "Status", "field": "status"},
-                {"name": "path", "label": "NWB asset", "field": "path"},
-            ],
-            rows=[],
-            row_key="index",
-            pagination=10,
-        ).classes("w-full")
-        self.asset_table.on(
-            "rowClick",
-            self._handle_row_click,
-            js_handler="(_event, row) => emit(row)",
-        )
+    @staticmethod
+    def _table_columns() -> list[dict[str, str]]:
+        """Return fixed recording-summary table columns.
 
-        self.sweep_input = ui.number(
-            "Sweep index",
-            value=0,
-            min=0,
-            max=0,
-            step=1,
-            precision=0,
-            on_change=self._handle_sweep_change,
-        ).classes("w-40")
-        self.sweep_input.disable()
-
-        self.voltage_container = ui.column().classes("w-full")
-        self.current_container = ui.column().classes("w-full")
+        Returns:
+            NiceGUI table column definitions.
+        """
+        return [
+            {"name": "index", "label": "Index", "field": "index"},
+            {"name": "subject_id", "label": "Subject", "field": "subject_id"},
+            {"name": "clamp_mode", "label": "Clamp", "field": "clamp_mode"},
+            {"name": "session_id", "label": "Session", "field": "session_id"},
+            {
+                "name": "acquisition_datetime",
+                "label": "Acquired",
+                "field": "acquisition_datetime",
+            },
+            {"name": "num_sweeps", "label": "Sweeps", "field": "num_sweeps"},
+            {
+                "name": "sample_rate_hz",
+                "label": "Rate (Hz)",
+                "field": "sample_rate_hz",
+            },
+            {
+                "name": "samples_per_sweep",
+                "label": "Samples",
+                "field": "samples_per_sweep",
+            },
+            {
+                "name": "duration_seconds",
+                "label": "Duration (s)",
+                "field": "duration_seconds",
+            },
+            {"name": "size_mb", "label": "Size (MB)", "field": "size_mb"},
+        ]
 
     async def _handle_load_dataset(self) -> None:
-        """Load the asset catalog and incrementally inspect every NWB header."""
+        """Ask the controller to load and inspect a published dandiset."""
         resource = str(self.resource_input.value).strip()
         if not resource:
             ui.notify("Enter a published DANDI identifier", type="warning")
             return
-        self._reset_recording_selection()
-        self.load_dataset_button.disable()
-        self.status.set_text("Loading asset catalog…")
         try:
-            dataset = await run.io_bound(self._load_dataset, resource)
-            self.dataset = dataset
-            total = len(dataset)
-            for index, asset in enumerate(dataset.assets):
-                self.status.set_text(f"Inspecting {index + 1} of {total}…")
-                summary = await run.io_bound(asset.load_summary, index)
-                self.asset_table.rows.append(summary.to_row())
-                self.asset_table.update()
-            error_count = sum(
-                row["status"] == "error" for row in self.asset_table.rows
-            )
-            self.status.set_text(
-                f"Loaded {total} NWB recordings"
-                if error_count == 0
-                else f"Loaded {total} NWB recordings; {error_count} header errors"
-            )
+            await self._controller.load_dataset(resource)
         except Exception as error:
             self._show_error(error)
-        finally:
-            self.load_dataset_button.enable()
 
-    def _load_dataset(self, resource: str) -> DandiDataset:
-        """Create a dataset and fetch its inexpensive asset catalog.
-
-        Args:
-            resource: Published DANDI identifier or canonical URL.
-
-        Returns:
-            Dataset with its immutable asset collection loaded.
-        """
-        dataset = DandiDataset.from_url(
-            resource,
-            transport=FsspecNwbTransport(),
-        )
-        dataset.load_assets()
-        return dataset
+    def _handle_cancel(self) -> None:
+        """Request cooperative cancellation of header inspection."""
+        self._controller.cancel_header_inspection()
 
     async def _handle_row_click(self, event: GenericEventArguments) -> None:
-        """Select a ready recording row and automatically load sweep zero.
+        """Select a ready recording row and load its first sweep.
 
         Args:
-            event: NiceGUI row-click event containing a backend summary row.
+            event: NiceGUI row-click event containing a summary row.
         """
         row = event.args
         if not isinstance(row, dict):
             self._show_error(ValueError("The selected table row is invalid"))
             return
-        if row.get("status") != "ready":
-            error = str(row.get("error") or "This NWB header could not be loaded")
-            ui.notify(error, type="negative", timeout=0, close_button=True)
+        if row.get("status") != "summary ready":
+            message = str(row.get("error") or "This NWB header could not be loaded")
+            ui.notify(message, type="negative", timeout=0, close_button=True)
             return
-        self._selected_asset_index = int(row["index"])
-        num_sweeps = int(row["num_sweeps"])
-        self._suppress_sweep_change = True
         try:
-            self.sweep_input.props(f"max={num_sweeps - 1}")
-            self.sweep_input.set_value(0)
-            self.sweep_input.enable()
-        finally:
-            self._suppress_sweep_change = False
-        await self._load_selected_sweep(0)
+            await self._controller.select_asset(int(row["index"]))
+        except Exception as error:
+            self._show_error(error)
 
     async def _handle_sweep_change(
         self,
         event: ValueChangeEventArguments[float | int | None],
     ) -> None:
-        """Automatically load a sweep selected with the numeric control.
+        """Load the sweep selected with the numeric control.
 
         Args:
-            event: NiceGUI value-change event containing the sweep index.
+            event: NiceGUI event containing the sweep index.
         """
         if self._suppress_sweep_change or event.value is None:
             return
-        await self._load_selected_sweep(int(event.value))
-
-    async def _load_selected_sweep(self, sweep_index: int) -> None:
-        """Stream and display the selected recording and sweep.
-
-        Args:
-            sweep_index: Zero-based sweep position to load.
-        """
-        if self.dataset is None or self._selected_asset_index is None:
+        if bool(self.plot_all_checkbox.value):
             return
-        self._sweep_request_id += 1
-        request_id = self._sweep_request_id
-        asset_index = self._selected_asset_index
-        self.status.set_text(
-            f"Streaming recording {asset_index}, sweep {sweep_index}…"
-        )
         try:
-            sweep = await run.io_bound(
-                self.dataset[asset_index].load_sweep,
-                sweep_index,
-                _GUI_CURRENT_UNIT_OVERRIDE,
-            )
-            if request_id != self._sweep_request_id:
-                return
-            plot_data = sweep.to_plot_data(_MAX_PLOT_POINTS)
-            self._render_plots(plot_data)
-            self.status.set_text(
-                f"Recording {asset_index}, sweep {sweep_index}: "
-                f"{len(sweep.time_seconds):,} samples"
-            )
+            await self._controller.load_sweep(int(event.value))
         except Exception as error:
-            if request_id == self._sweep_request_id:
-                self._show_error(error)
+            self._show_error(error)
 
-    def _reset_recording_selection(self) -> None:
-        """Clear table, charts, and sweep state before loading a dandiset."""
-        self.dataset = None
-        self._selected_asset_index = None
-        self._sweep_request_id += 1
-        self.asset_table.rows = []
-        self.asset_table.update()
-        self.sweep_input.disable()
-        self.voltage_container.clear()
-        self.current_container.clear()
-
-    def _render_plots(self, plot_data: DandiSweepPlotData) -> None:
-        """Translate backend plot data into NiceGUI ECharts options.
+    async def _handle_plot_all_change(
+        self,
+        event: ValueChangeEventArguments[bool],
+    ) -> None:
+        """Switch between selected-sweep and all-sweep display.
 
         Args:
-            plot_data: Renderer-independent labeled voltage/current traces.
+            event: NiceGUI event containing the all-sweeps setting.
         """
-        self.voltage_container.clear()
-        with self.voltage_container:
-            ui.echart(self._chart_options(plot_data.voltage)).classes("w-full h-72")
+        if self._suppress_plot_mode_change:
+            return
+        try:
+            if event.value:
+                await self._controller.load_all_sweeps()
+            else:
+                await self._controller.load_sweep(int(self.sweep_input.value or 0))
+        except Exception as error:
+            self._show_error(error)
 
-        self.current_container.clear()
-        if plot_data.current is not None:
-            with self.current_container:
-                ui.echart(self._chart_options(plot_data.current)).classes(
-                    "w-full h-64"
-                )
-
-    @staticmethod
-    def _chart_options(trace: DandiTracePlotData) -> dict[str, object]:
-        """Build ECharts configuration from one backend trace.
+    def _handle_show_stimulus_change(
+        self,
+        event: ValueChangeEventArguments[bool],
+    ) -> None:
+        """Show or hide stimulus traces without loading remote data.
 
         Args:
-            trace: Backend trace with time, values, and axis labels.
+            event: NiceGUI event containing stimulus visibility.
+        """
+        del event
+        self._render_plots(self._store.state.displayed_plot_data)
+
+    def _on_state_changed(
+        self,
+        previous: DandiAppState,
+        current: DandiAppState,
+    ) -> None:
+        """Render one complete application-state transition.
+
+        Args:
+            previous: State before the transition.
+            current: State after the transition.
+        """
+        if previous.asset_summaries != current.asset_summaries:
+            self.asset_table.rows = [item.to_row() for item in current.asset_summaries]
+            self.asset_table.update()
+        self.load_dataset_button.set_enabled(not current.catalog_status.busy)
+        self.cancel_button.set_enabled(current.catalog_status.cancellable)
+        selection = (current.selected_asset_id, current.selected_asset_index)
+        if selection != self._rendered_selection:
+            self._rendered_selection = selection
+            self._update_selection_controls(current)
+        self._suppress_plot_mode_change = True
+        try:
+            if bool(self.plot_all_checkbox.value) != current.plot_all_sweeps:
+                self.plot_all_checkbox.set_value(current.plot_all_sweeps)
+        finally:
+            self._suppress_plot_mode_change = False
+        self.sweep_input.set_enabled(
+            current.selected_asset_index is not None and not current.plot_all_sweeps
+        )
+        if previous.displayed_plot_data is not current.displayed_plot_data:
+            self._render_plots(current.displayed_plot_data)
+        self._render_status(current)
+
+    def _update_selection_controls(self, state: DandiAppState) -> None:
+        """Configure sweep controls for the selected recording.
+
+        Args:
+            state: Current state containing the new selection.
+        """
+        if state.selected_asset_index is None or state.dataset is None:
+            self.sweep_input.disable()
+            self.plot_all_checkbox.disable()
+            return
+        header = state.dataset[state.selected_asset_index].header
+        if header is None:
+            return
+        self._suppress_sweep_change = True
+        try:
+            self.sweep_input.props(f"max={header.num_sweeps - 1}")
+            self.sweep_input.set_value(state.selected_sweep_index or 0)
+        finally:
+            self._suppress_sweep_change = False
+        self.sweep_input.enable()
+        self.plot_all_checkbox.enable()
+
+    def _render_status(self, state: DandiAppState) -> None:
+        """Render the highest-priority operation in the shared footer.
+
+        Args:
+            state: Current application state.
+        """
+        status = state.visible_status
+        self.status_label.set_text(status.message)
+        self.status_spinner.set_visibility(status.busy)
+        self.status_progress.set_visibility(
+            status.busy and status.progress is not None
+        )
+        if status.progress is not None:
+            self.status_progress.set_value(status.progress)
+
+    def _render_plots(self, plot_data: tuple[DandiSweepPlotData, ...]) -> None:
+        """Translate backend sweep plots into one combined EChart.
+
+        Args:
+            plot_data: Renderer-independent traces for one or more sweeps.
+        """
+        self.plot_container.clear()
+        if plot_data:
+            with self.plot_container:
+                ui.echart(self._chart_options(plot_data)).classes("w-full h-96")
+
+    def _chart_options(
+        self,
+        plot_data: tuple[DandiSweepPlotData, ...],
+    ) -> dict[str, object]:
+        """Build dual-axis ECharts configuration for sweep traces.
+
+        Args:
+            plot_data: Renderer-independent response and stimulus traces.
 
         Returns:
-            NiceGUI-compatible ECharts option dictionary.
+            NiceGUI-compatible ECharts options.
+        """
+        show_stimulus = bool(self.show_stimulus_checkbox.value)
+        multiple = len(plot_data) > 1
+        series: list[dict[str, object]] = []
+        for sweep_index, sweep in enumerate(plot_data):
+            series.append(
+                self._trace_series(
+                    sweep.response,
+                    0,
+                    "rgba(30,110,190,.35)" if multiple else "rgb(30,110,190)",
+                    f"Response {sweep_index}",
+                )
+            )
+            if show_stimulus and sweep.stimulus is not None:
+                series.append(
+                    self._trace_series(
+                        sweep.stimulus,
+                        1,
+                        "rgba(220,120,30,.25)" if multiple else "rgb(220,120,30)",
+                        f"Stimulus {sweep_index}",
+                    )
+                )
+        y_axes: list[dict[str, object]] = [
+            self._axis(plot_data[0].response.y_axis_label, "left")
+        ]
+        if show_stimulus:
+            stimulus = plot_data[0].stimulus
+            y_axes.append(
+                self._axis(
+                    stimulus.y_axis_label if stimulus is not None else "Stimulus",
+                    "right",
+                )
+            )
+        return {
+            "animation": False,
+            "tooltip": {"trigger": "axis"},
+            "legend": {"show": False},
+            "grid": {"left": 75, "right": 75, "top": 20, "bottom": 55},
+            "xAxis": {
+                "type": "value",
+                "name": plot_data[0].response.x_axis_label,
+                "nameLocation": "middle",
+                "nameGap": 35,
+            },
+            "yAxis": y_axes,
+            "series": series,
+        }
+
+    @staticmethod
+    def _axis(label: str, position: str) -> dict[str, object]:
+        """Build one vertical chart axis.
+
+        Args:
+            label: Displayed unit label.
+            position: Left or right chart position.
+
+        Returns:
+            ECharts axis configuration.
+        """
+        return {
+            "type": "value",
+            "name": label,
+            "nameLocation": "middle",
+            "nameGap": 55,
+            "position": position,
+        }
+
+    @staticmethod
+    def _trace_series(
+        trace: DandiTracePlotData,
+        y_axis_index: int,
+        color: str,
+        name: str,
+    ) -> dict[str, object]:
+        """Convert one backend trace into an ECharts line series.
+
+        Args:
+            trace: Renderer-independent trace data.
+            y_axis_index: ECharts vertical-axis position.
+            color: CSS line color.
+            name: Internal tooltip series name.
+
+        Returns:
+            ECharts line-series configuration.
         """
         points = [
             [float(time), float(value)]
             for time, value in zip(trace.time_seconds, trace.values)
         ]
         return {
-            "animation": False,
-            "tooltip": {"trigger": "axis"},
-            "grid": {"left": 75, "right": 25, "top": 20, "bottom": 55},
-            "xAxis": {
-                "type": "value",
-                "name": trace.x_axis_label,
-                "nameLocation": "middle",
-                "nameGap": 35,
-            },
-            "yAxis": {
-                "type": "value",
-                "name": trace.y_axis_label,
-                "nameLocation": "middle",
-                "nameGap": 55,
-            },
-            "series": [{"type": "line", "showSymbol": False, "data": points}],
+            "name": name,
+            "type": "line",
+            "showSymbol": False,
+            "yAxisIndex": y_axis_index,
+            "lineStyle": {"color": color, "width": 1},
+            "data": points,
         }
 
     def _show_error(self, error: Exception) -> None:
-        """Display one backend or input error without hiding its details.
+        """Publish and notify one backend or input failure.
 
         Args:
             error: Exception raised while handling a GUI action.
         """
-        message = str(error)
-        self.status.set_text(f"Error: {message}")
-        ui.notify(message, type="negative", timeout=0, close_button=True)
+        self._controller.report_error(error)
+        ui.notify(str(error), type="negative", timeout=0, close_button=True)
 
 
 def main() -> None:

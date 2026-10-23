@@ -50,3 +50,4 @@ flask-vue/server/node_modules
 
 # Legacy local PyInstaller files
 /pyinstaller/
+node_modules/

@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import logging
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator
@@ -20,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 import numpy as np
 from pynwb import NWBHDF5IO, NWBFile, validate
+from pynwb.file import Subject
 from pynwb.icephys import CurrentClampSeries, CurrentClampStimulusSeries
 
 import sanpy
@@ -31,18 +33,44 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class NwbExportMetadata:
+    """Provide authoritative metadata for one SanPy-derived NWB export.
+
+    Attributes:
+        subject_id: Biological-subject identifier written to NWB.
+        cell_id: Recorded-cell identifier written to the intracellular electrode.
+        species: Scientific species name written to NWB.
+        fallback_acquisition_datetime: Explicit datetime used only when the
+            SanPy runtime has no usable acquisition timestamp.
+        age: Optional NWB age value.
+        sex: Optional NWB sex value.
+        genotype: Optional subject genotype.
+    """
+
+    subject_id: str
+    cell_id: str
+    species: str
+    fallback_acquisition_datetime: datetime
+    age: str | None = None
+    sex: str | None = None
+    genotype: str | None = None
+
+
 class SanPyNwbExporter:
     """Export one loaded SanPy current-clamp analysis to an NWB file."""
 
     def __init__(
         self,
         analysis: bAnalysis,
+        metadata: NwbExportMetadata,
         timezone_name: str = "America/New_York",
     ) -> None:
         """Initialize the exporter.
 
         Args:
             analysis: Loaded SanPy ``bAnalysis`` instance.
+            metadata: Explicit scientific metadata for this export.
             timezone_name: IANA timezone used to interpret acquisition date and
                 time strings. SanPy currently does not retain a source timezone.
 
@@ -51,10 +79,29 @@ class SanPyNwbExporter:
         """
         if analysis.loadError or analysis.fileLoader is None:
             raise ValueError("SanPy analysis does not contain a loaded recording")
+        if not metadata.subject_id.strip():
+            raise ValueError("NWB subject_id must not be empty")
+        if not metadata.cell_id.strip():
+            raise ValueError("NWB cell_id must not be empty")
+        if not metadata.species.strip():
+            raise ValueError("NWB species must not be empty")
+        if metadata.fallback_acquisition_datetime.tzinfo is None:
+            raise ValueError("Fallback acquisition datetime must include a timezone")
 
         self._analysis = analysis
         self._loader = analysis.fileLoader
+        self._metadata = metadata
         self._timezone = ZoneInfo(timezone_name)
+        self._used_fallback_acquisition_datetime = False
+
+    @property
+    def used_fallback_acquisition_datetime(self) -> bool:
+        """Return whether this export used its configured fallback datetime.
+
+        Returns:
+            True after building an NWB file without a usable runtime timestamp.
+        """
+        return self._used_fallback_acquisition_datetime
 
     def export(self, output_path: Path) -> Path:
         """Build and write an NWB file.
@@ -71,9 +118,10 @@ class SanPyNwbExporter:
         """
         output_path = output_path.expanduser().resolve()
 
-        # if output_path.exists():
-        #     # Avoid silently replacing an existing scientific data file.
-        #     raise FileExistsError(f"Refusing to overwrite existing file: {output_path}")
+        if output_path.exists():
+            raise FileExistsError(
+                f"Refusing to overwrite existing scientific data file: {output_path}"
+            )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         self._validate_recording()
@@ -97,6 +145,13 @@ class SanPyNwbExporter:
             ),
             identifier=str(self._analysis.uuid),
             session_start_time=self._get_session_start_time(),
+            subject=Subject(
+                subject_id=self._metadata.subject_id,
+                species=self._metadata.species,
+                age=self._metadata.age,
+                sex=self._metadata.sex,
+                genotype=self._metadata.genotype,
+            ),
         )
 
         # SanPy does not currently expose amplifier hardware details.
@@ -108,6 +163,7 @@ class SanPyNwbExporter:
             name="electrode_0",
             description="Intracellular electrode; hardware details not provided",
             device=device,
+            cell_id=self._metadata.cell_id,
         )
 
         # NWB uses Hz, while SanPy recordingFrequency is expressed in kHz.
@@ -174,7 +230,7 @@ class SanPyNwbExporter:
 
         # Preserve mapping order; do not sort metadata keys during serialization.
         nwbfile.add_scratch(
-            data=json.dumps(self._loader.metadata),
+            data=json.dumps(self._analysis.metaData),
             name="sanpy_metadata_json",
             description="SanPy file/session metadata serialized as JSON",
         )
@@ -192,30 +248,59 @@ class SanPyNwbExporter:
         """Return a timezone-aware acquisition datetime.
 
         Returns:
-            The parsed acquisition datetime, or the current system datetime when
-            SanPy does not provide both acquisition date and acquisition time.
+            The runtime acquisition datetime, or the explicit configured fallback.
 
         Raises:
             ValueError: If non-empty acquisition strings are not valid ISO date
                 and time values.
         """
-        acquisition_date = self._loader.acqDate
-        acquisition_time = self._loader.acqTime
+        file_metadata = self._loader.fileMetadata
+        acquisition_datetime = file_metadata.acq_datetime
+        if acquisition_datetime:
+            try:
+                parsed_datetime = datetime.fromisoformat(acquisition_datetime)
+            except ValueError:
+                LOGGER.warning(
+                    f"SanPy acquisition datetime is invalid for "
+                    f"{self._loader.filename}: {acquisition_datetime!r}"
+                )
+            else:
+                if parsed_datetime.tzinfo is None:
+                    parsed_datetime = parsed_datetime.replace(tzinfo=self._timezone)
+                return parsed_datetime
+
+        acquisition_date = file_metadata.acq_date
+        acquisition_time = file_metadata.acq_time
 
         if not acquisition_date or not acquisition_time:
-            fallback = datetime.now(self._timezone)
-            LOGGER.warning(
-                "SanPy acquisition date or time is empty; using current system "
-                "time %s as NWB session_start_time",
-                fallback.isoformat(),
-            )
-            return fallback
+            return self._fallback_session_start_time("is empty")
 
         # SanPy documents these as ISO-style YYYY-MM-DD and HH:MM:SS strings.
-        parsed = datetime.fromisoformat(f"{acquisition_date}T{acquisition_time}")
+        try:
+            parsed = datetime.fromisoformat(f"{acquisition_date}T{acquisition_time}")
+        except ValueError:
+            return self._fallback_session_start_time("is invalid")
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=self._timezone)
         return parsed
+
+    def _fallback_session_start_time(self, reason: str) -> datetime:
+        """Return and record use of the configured development timestamp.
+
+        Args:
+            reason: Short explanation of why runtime acquisition metadata failed.
+
+        Returns:
+            Explicit configured fallback acquisition datetime.
+        """
+        fallback = self._metadata.fallback_acquisition_datetime
+        self._used_fallback_acquisition_datetime = True
+        LOGGER.warning(
+            f"SanPy acquisition datetime {reason} for {self._loader.filename}; "
+            f"using configured development fallback {fallback.isoformat()} "
+            f"as NWB session_start_time"
+        )
+        return fallback
 
     def _validate_recording(self) -> None:
         """Validate recording-level assumptions for the v1 exporter.
@@ -361,7 +446,7 @@ class NwbExportVerifier:
         expected_rate_hz = float(self._loader.recordingFrequency) * 1000.0
 
         expected_scratch = {
-            "sanpy_metadata_json": json.dumps(self._loader.metadata),
+            "sanpy_metadata_json": json.dumps(self._analysis.metaData),
             # "file_metadata_json": json.dumps(self._loader.fileMetadata),
         }
 
@@ -461,7 +546,20 @@ if __name__ == "__main__":
     if analysis.loadError or analysis.fileLoader is None:
         raise RuntimeError(f"SanPy could not load the recording: {ABF_PATH}")
 
-    exporter = SanPyNwbExporter(analysis)
+    exporter = SanPyNwbExporter(
+        analysis,
+        metadata=NwbExportMetadata(
+            subject_id="development-subject-001",
+            cell_id="development-cell-001",
+            species="Mus musculus",
+            fallback_acquisition_datetime=datetime(
+                1970,
+                1,
+                1,
+                tzinfo=ZoneInfo("America/New_York"),
+            ),
+        ),
+    )
     written_path = exporter.export(NWB_PATH)
 
     verifier = NwbExportVerifier(analysis, written_path)

@@ -9,7 +9,11 @@ import numpy as np
 import pandas as pd
 import pyabf
 import pytest
-import zarr
+
+zarr = pytest.importorskip(
+    "zarr",
+    reason="Install the zarr-export extra to run Zarr export tests",
+)
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict

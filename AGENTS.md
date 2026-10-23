@@ -79,3 +79,24 @@ When updating `CHANGELOG.md`:
 - Base each entry on the executed code in the diff, not on commit messages.
 - Add a version heading such as `## [0.3.1] - YYYY-MM-DD` only when the user
   explicitly asks for one.
+
+## DANDI streaming scope
+
+For work on the standalone DANDI/NWB streaming prototype, default all searches,
+edits, and focused tests to:
+
+- `scripts/nwb/`
+- `pyproject.toml`
+- `uv.lock`
+
+Do not inspect or edit other repository paths unless a direct dependency,
+packaging change, or failing focused test requires it. Before expanding scope,
+state which additional path is needed and why. Production code under `sanpy/`
+is read-only unless the user explicitly approves changing it.
+
+Prefer synthetic local NWB fixtures for automated tests. Run public DANDI
+network smoke tests only when remote behavior must be verified, and never
+download an entire dandiset when metadata or selected-range access is sufficient.
+
+Do not inspect or modify `scripts/nwb_ts/` as part of Python DANDI work unless
+the user explicitly requests cross-implementation comparison.

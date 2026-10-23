@@ -1,8 +1,13 @@
 """Shared pytest fixtures for SanPy backend and interface tests."""
 
+import importlib.util
 from pathlib import Path
 
 import pytest
+
+collect_ignore: list[str] = (
+    ["interface"] if importlib.util.find_spec("qtpy") is None else []
+)
 
 
 @pytest.fixture(scope="session")
