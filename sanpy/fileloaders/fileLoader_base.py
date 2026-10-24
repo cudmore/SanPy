@@ -10,7 +10,7 @@ import numpy as np
 import scipy.signal
 
 import sanpy.fileloaders
-from sanpy.config import DO_KYMOGRAPH_ANALYSIS
+# from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 
 import sanpy.metaData
 from sanpy.fileloaders.fileMetadata import FileMetadata
@@ -39,8 +39,9 @@ def getFileLoaders(verbose: bool = False) -> dict:
         "hekaUtils",
     ]
 
-    if not DO_KYMOGRAPH_ANALYSIS:
-        ignoreModuleList.append('fileLoader_tif')
+    # if not DO_KYMOGRAPH_ANALYSIS:
+    #     ignoreModuleList.append('fileLoader_tif')
+
     #
     # system file loaders from sanpy.fileloaders
     loadedList = []
@@ -151,7 +152,7 @@ class recordingModes(enum.Enum):
 
     iclamp = "I-Clamp"
     vclamp = "V-Clamp"
-    kymograph = "Kymograph"
+    # kymograph = "Kymograph"
     unknown = "unknown"
 
 
@@ -299,8 +300,8 @@ class fileLoader_base(ABC):
     def setLoadError(self, value : bool):
         self._loadError = value
 
-    def isKymograph(self) -> bool:
-        return isinstance(self, sanpy.fileloaders.fileLoader_tif)
+    # def isKymograph(self) -> bool:
+    #     return isinstance(self, sanpy.fileloaders.fileLoader_tif)
 
     @property
     def filepath(self) -> str:

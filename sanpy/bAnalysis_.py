@@ -11,20 +11,15 @@ import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly c
 
 from typing import Union, List, Optional, Dict
 
-# import h5py
-
 import numpy as np
 import pandas as pd
 import scipy
 import scipy.signal
-import scipy.stats
-
-# import pyabf  # see: https://github.com/swharden/pyABF
+# import scipy.stats
 
 import sanpy
 import sanpy.bDetection
-import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
-# import sanpy.h5Util
+# import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
 import sanpy.fileloaders
 import sanpy.bAnalysisResults
 import sanpy._util
@@ -144,7 +139,7 @@ class bAnalysis:
         # need to parse folder of file loaders in fileloders/ and determine
         # class to use to load file (using fileLoader.filetype
         self._fileLoader = None
-        self._kymAnalysis = None
+        # self._kymAnalysis = None
         if filepath is None:
             pass
         elif not os.path.isfile(filepath):
@@ -171,21 +166,22 @@ class bAnalysis:
                 logger.error(f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}')
                 self.loadError = True
             
-            if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
-                # Kymograph support is optional, so avoid loading its plotting
-                # dependencies during ordinary electrophysiology imports.
-                from sanpy.kymAnalysis import kymAnalysis
+            # if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
+            #     # Kymograph support is optional, so avoid loading its plotting
+            #     # dependencies during ordinary electrophysiology imports.
+            #     from sanpy.kymAnalysis import kymAnalysis
 
-                if verbose:
-                    logger.info('creating kymAnalysis')
-                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
-                    logger.info(f'    self.fileLoader.tifData:{self.fileLoader.tifData.shape}')
-                    logger.info(f'    self.fileLoader.tifHeader:{self.fileLoader.tifHeader}')
-                self._kymAnalysis = kymAnalysis(
-                    self.fileLoader.filepath,
-                    self.fileLoader.tifData,
-                    self.fileLoader.tifHeader,
-                )
+            #     if verbose:
+            #         logger.info('creating kymAnalysis')
+            #         logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
+            #         logger.info(f'    self.fileLoader.tifData:{self.fileLoader.tifData.shape}')
+            #         logger.info(f'    self.fileLoader.tifHeader:{self.fileLoader.tifHeader}')
+
+            #     self._kymAnalysis = kymAnalysis(
+            #         self.fileLoader.filepath,
+            #         self.fileLoader.tifData,
+            #         self.fileLoader.tifHeader,
+            #     )
 
             # abb 202610 moving metadata back to banalysis
             # if self._fileLoader is not None:
@@ -210,11 +206,11 @@ class bAnalysis:
     def metaData(self):
         return self._metaData
     
-    @property
-    def kymAnalysis(self):
-        """Get the kymAnalysis object (if it exists).
-        """
-        return self._kymAnalysis
+    # @property
+    # def kymAnalysis(self):
+    #     """Get the kymAnalysis object (if it exists).
+    #     """
+    #     return self._kymAnalysis
     
     @property
     def fileLoader(self) -> Optional[sanpy.fileloaders.fileLoader_base]:
@@ -267,9 +263,9 @@ class bAnalysis:
         """
 
         # save kym diameter analysis
-        if self._kymAnalysis is not None:
-            if self._kymAnalysis.hasDiamAnalysis() and self._kymAnalysis._analysisDirty:
-                self._kymAnalysis.saveAnalysis()
+        # if self._kymAnalysis is not None:
+        #     if self._kymAnalysis.hasDiamAnalysis() and self._kymAnalysis._analysisDirty:
+        #         self._kymAnalysis.saveAnalysis()
 
 
         detection_dirty = self.detectionDirty

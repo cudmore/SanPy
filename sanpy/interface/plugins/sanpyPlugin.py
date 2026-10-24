@@ -148,7 +148,6 @@ class sanpyPlugin(QtWidgets.QWidget):
         # self._closeAction.setShortcut('Ctrl+W')
         # self._closeAction.triggered.connect(self.close)
 
-        # derived classes will set this in init (see kymographPlugin)
         self._initError: bool = False
 
         # underlying bAnalaysis

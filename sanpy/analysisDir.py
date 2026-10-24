@@ -212,24 +212,6 @@ def getFileList(path, theseFileTypes, depth=1):
     fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
     return fileList
 
-def stripSantanaTif(fileList : List[str]) -> List[str]:
-    """Given a list of files, if tif, only return _C002
-    """
-    retList = []
-    for file in fileList:
-        _filePath, _filename = os.path.split(file)
-        if not _filename.endswith('.tif'):
-            retList.append(file)
-            continue
-        # elif _filename.find('_C002') != -1:
-        #     retList.append(file)
-        elif _filename.find('_C001') != -1:
-            continue
-        else:
-            retList.append(file)
-        
-    return retList
-
 class analysisDir:
     """Manage a folder-backed collection of SanPy recordings and analyses.
 
@@ -1128,7 +1110,6 @@ class analysisDir:
 
     def getFileList(self,
                     path: str = None,
-                    santanaTif=False
                     ) -> List[str]:
         """Get file paths from path.
 
@@ -1144,8 +1125,6 @@ class analysisDir:
             path = self.path
 
         fileList = getFileList(path, self.theseFileTypes, self.folderDepth)
-        if santanaTif:
-            fileList = stripSantanaTif(fileList)
         return fileList
     
     def getRowDict(self, rowIdx):

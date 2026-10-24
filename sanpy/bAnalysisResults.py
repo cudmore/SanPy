@@ -42,73 +42,73 @@ def getDefaultDict() -> dict[str, Any]:
 analysisResultDict: dict[str, dict[str, Any]] = {}
 
 
-def register_analysis_result(
-    name: str,
-    *,
-    category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
-    value_type: str = "unknown",
-    default: Any = None,
-    units: str = "",
-    axis_label: str = "",
-    show_in_plot_menu: bool,
-    is_categorical: bool,
-    description: str = "",
-    depends_on_detection: str = "",
-    error: str = "",
-) -> bool:
-    """Register a user-defined result in the authoritative runtime schema.
+# def register_analysis_result(
+#     name: str,
+#     *,
+#     category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
+#     value_type: str = "unknown",
+#     default: Any = None,
+#     units: str = "",
+#     axis_label: str = "",
+#     show_in_plot_menu: bool,
+#     is_categorical: bool,
+#     description: str = "",
+#     depends_on_detection: str = "",
+#     error: str = "",
+# ) -> bool:
+#     """Register a user-defined result in the authoritative runtime schema.
 
-    Identical repeated registration is accepted because SanPy may discover a
-    user-analysis plugin more than once. Conflicting or invalid definitions
-    fail immediately because they are programmer errors.
+#     Identical repeated registration is accepted because SanPy may discover a
+#     user-analysis plugin more than once. Conflicting or invalid definitions
+#     fail immediately because they are programmer errors.
 
-    Args:
-        name: Internal analysis-result name used as the dataframe column.
-        category: Presentation category for the result.
-        value_type: Runtime value type name.
-        default: Default value for newly created results.
-        units: Physical or logical units.
-        axis_label: Human-readable plot-axis label.
-        show_in_plot_menu: Whether X/Y statistic selectors show the result.
-        is_categorical: Whether plots interpret values as discrete groups.
-        description: Human-readable explanation of the result.
-        depends_on_detection: Detection parameter dependencies, if any.
-        error: Error condition documented for the result, if any.
+#     Args:
+#         name: Internal analysis-result name used as the dataframe column.
+#         category: Presentation category for the result.
+#         value_type: Runtime value type name.
+#         default: Default value for newly created results.
+#         units: Physical or logical units.
+#         axis_label: Human-readable plot-axis label.
+#         show_in_plot_menu: Whether X/Y statistic selectors show the result.
+#         is_categorical: Whether plots interpret values as discrete groups.
+#         description: Human-readable explanation of the result.
+#         depends_on_detection: Detection parameter dependencies, if any.
+#         error: Error condition documented for the result, if any.
 
-    Returns:
-        ``True`` when the definition was added or already registered
-        identically.
+#     Returns:
+#         ``True`` when the definition was added or already registered
+#         identically.
 
-    Raises:
-        TypeError: If ``category`` is not an ``AnalysisResultCategory``.
-        ValueError: If ``name`` already has a different definition.
-    """
-    if not isinstance(category, AnalysisResultCategory):
-        raise TypeError(
-            f'Analysis-result category for "{name}" must be AnalysisResultCategory'
-        )
-    definition = getDefaultDict()
-    definition.update(
-        {
-            "category": category,
-            "type": value_type,
-            "default": default,
-            "units": units,
-            "axis_label": axis_label or name,
-            "show_in_plot_menu": show_in_plot_menu,
-            "is_categorical": is_categorical,
-            "depends on detection": depends_on_detection,
-            "error": error,
-            "description": description,
-        }
-    )
-    existing = analysisResultDict.get(name)
-    if existing is None:
-        analysisResultDict[name] = definition
-        return True
-    if existing == definition:
-        return True
-    raise ValueError(f'Conflicting analysis-result definition for "{name}"')
+#     Raises:
+#         TypeError: If ``category`` is not an ``AnalysisResultCategory``.
+#         ValueError: If ``name`` already has a different definition.
+#     """
+#     if not isinstance(category, AnalysisResultCategory):
+#         raise TypeError(
+#             f'Analysis-result category for "{name}" must be AnalysisResultCategory'
+#         )
+#     definition = getDefaultDict()
+#     definition.update(
+#         {
+#             "category": category,
+#             "type": value_type,
+#             "default": default,
+#             "units": units,
+#             "axis_label": axis_label or name,
+#             "show_in_plot_menu": show_in_plot_menu,
+#             "is_categorical": is_categorical,
+#             "depends on detection": depends_on_detection,
+#             "error": error,
+#             "description": description,
+#         }
+#     )
+#     existing = analysisResultDict.get(name)
+#     if existing is None:
+#         analysisResultDict[name] = definition
+#         return True
+#     if existing == definition:
+#         return True
+#     raise ValueError(f'Conflicting analysis-result definition for "{name}"')
 
 ###############################################################################
 # ACQUISITION PROPERTIES
@@ -937,10 +937,10 @@ class analysisResultList:
             # analysisResult is for one spike
             self._myList.append(analysisResult)
 
-    def addAnalysisResult(self, theKey, theDefault=None):
-        # go through list and add to each [i] dict
-        for spike in self:
-            spike.addNewKey(theKey, theDefault=theDefault)
+    # def addAnalysisResult(self, theKey, theDefault=None):
+    #     # go through list and add to each [i] dict
+    #     for spike in self:
+    #         spike.addNewKey(theKey, theDefault=theDefault)
 
     def asList(self):
         """
@@ -1020,29 +1020,29 @@ class analysisResult:
                 printList.append(f"{k} : {v} {type(v)}")
         return "\n".join(printList)
 
-    def addNewKey(self, theKey, theDefault=None):
-        """
-        Add a new key to this spike.
+    # def addNewKey(self, theKey, theDefault=None):
+    #     """
+    #     Add a new key to this spike.
 
-        Returns: (bool) True if new key added, false if key already exists.
-        """
-        if theDefault is None:
-            # theType = 'float'
-            theDefault = float("nan")
+    #     Returns: (bool) True if new key added, false if key already exists.
+    #     """
+    #     if theDefault is None:
+    #         # theType = 'float'
+    #         theDefault = float("nan")
 
-        # check if key exists
-        keyExists = theKey in self._rDict.keys()
-        addedKey = False
-        if keyExists:
-            # key exists, don't modify
-            # logger.warning(f'The key "{theKey}" already exists and has value "{self._rDict[theKey]}"')
-            pass
-        else:
-            self._rDict[theKey] = theDefault
-            addedKey = True
+    #     # check if key exists
+    #     keyExists = theKey in self._rDict.keys()
+    #     addedKey = False
+    #     if keyExists:
+    #         # key exists, don't modify
+    #         # logger.warning(f'The key "{theKey}" already exists and has value "{self._rDict[theKey]}"')
+    #         pass
+    #     else:
+    #         self._rDict[theKey] = theDefault
+    #         addedKey = True
 
-        #
-        return addedKey
+    #     #
+    #     return addedKey
 
     def asDict(self):
         """
@@ -1063,12 +1063,21 @@ class analysisResult:
         #
         return ret
 
-    def __setitem__(self, key, value):
-        # to mimic a dictionary
-        try:
-            self._rDict[key] = value
-        except KeyError as e:
-            logger.error(f"{e}")
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Assign a value for an existing analysis-result key.
+
+        Args:
+            key: Name already present on this result.
+            value: Value to store for ``key``.
+
+        Raises:
+            KeyError: If ``key`` is not already a result name.
+        """
+        if key not in self._rDict:
+            logger.error(f'Error setting key "{key}"')
+            logger.error(f"possible keys are: {list(self._rDict)}")
+            raise KeyError(key)
+        self._rDict[key] = value
 
     def items(self):
         # to mimic a dictionary

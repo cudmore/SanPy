@@ -80,7 +80,7 @@ import sys
 import sanpy
 import sanpy.analysisPlot
 import sanpy.atfStim
-import sanpy.kymAnalysis
+# import sanpy.kymAnalysis
 
 for module_name in sys.modules:
     assert not module_name.startswith((

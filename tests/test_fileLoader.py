@@ -7,7 +7,7 @@ import numpy as np
 import sanpy
 from sanpy.fileloaders.fileLoader_abf import fileLoader_abf
 from sanpy.fileloaders.fileLoader_base import fileLoader_base
-from sanpy.fileloaders.fileLoader_tif import fileLoader_tif
+# from sanpy.fileloaders.fileLoader_tif import fileLoader_tif
 
 
 def test_file_loader_abf(test_data_dir: Path) -> None:

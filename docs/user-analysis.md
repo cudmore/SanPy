@@ -1,1 +1,0 @@
-We provide a simple to use API for users to extend the analysis of SanPy.

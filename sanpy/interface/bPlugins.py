@@ -3,7 +3,6 @@
 import os
 import sys
 
-# import pathlib
 import glob
 import importlib
 import inspect
@@ -12,9 +11,8 @@ from typing import Union, Dict, List, Tuple, Optional
 
 import sanpy
 
-# import sanpy.interface
 import sanpy.interface.plugins
-from sanpy.config import DO_KYMOGRAPH_ANALYSIS
+# from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 from sanpy.sanpy_paths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
@@ -76,8 +74,8 @@ class bPlugins:
             "myStatListWidget",
         ]
 
-        if not DO_KYMOGRAPH_ANALYSIS:
-            ignoreModuleList.append('kymographPlugin')
+        # if not DO_KYMOGRAPH_ANALYSIS:
+        #     ignoreModuleList.append('kymographPlugin')
 
         #
         # system plugins from sanpy.interface.plugins

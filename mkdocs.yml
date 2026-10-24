@@ -13,7 +13,6 @@ site_dir: site
 exclude_docs: |
   /hooks/
   /readme.md
-  /sanpy-kymograph/
   /site/
   /theme/
   # Temporarily unpublished API pages
@@ -102,8 +101,8 @@ nav:
         - Getting Started: scripting.ipynb
         - Writing A File Loader: api/writing-a-file-loader.md
         - Writing A Plugin: api/writing-a-plugin.md
-        - Writing New Analysis: api/writing-new-analysis.md
-        - Adding To Core Analysis: api/adding-to-core-analysis.md
+        # - Writing New Analysis: api/writing-new-analysis.md
+        # - Adding To Core Analysis: api/adding-to-core-analysis.md
         - bAnalysis: api/bAnalysis.md
         # - bAnalysisResults: api/bAnalysisResults.md
         # - epochTable: api/epochTable.md
@@ -116,7 +115,7 @@ nav:
             - fileLoader_base: api/fileloader/fileLoader_base.md
             - fileLoader_abf: api/fileloader/fileLoader_abf.md
             - fileLoader_sanpy: api/fileloader/fileLoader_sanpy.md
-        - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
+        # - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md
             - plugins:

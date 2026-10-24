@@ -22,7 +22,7 @@ If you find SanPy interesting, please email Robert Cudmore at robert.cudmore@gma
 
 - An extensible [file loader](api/writing-a-file-loader.md) architecture so any type of raw data can be opened. We provide file loaders for Molecular Devices (Axon Instruments) abf and atf file formats (using pyAbf), as well as general purpose comma-seperated-value files (csv).
 
-- A rich range of [analysis results](methods.md#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis. Like the plugin and file loading architecures, SanPy also provide a software architecute to add [new analysis](api/writing-new-analysis.md) measurements.
+- A rich range of [analysis results](methods.md#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis.
 
 ## [Desktop Application](desktop-application.md)
 <IMG SRC="img/sanpy-pyqt-1.png" width=700>

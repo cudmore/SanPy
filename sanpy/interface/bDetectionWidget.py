@@ -16,7 +16,7 @@ from pyqtgraph.exporters import ImageExporter
 
 import sanpy
 import sanpy.analysisUtil as analysis_util
-from sanpy.config import DO_KYMOGRAPH_ANALYSIS
+# from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 import sanpy.bDetection
 import sanpy.interface
 from sanpy.bExport import bExport
@@ -890,11 +890,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.linearRegionItem2.setRegion([0, self.ba.fileLoader.recordingDur])
 
         # kymograph
-        # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
-        #self.myKymWidget.kymographPlot.autoRange()  # row major is different
-        if DO_KYMOGRAPH_ANALYSIS:
-            if self.ba.fileLoader.isKymograph():
-                self.myKymWidget.kymographPlot.autoRange()
+        # if DO_KYMOGRAPH_ANALYSIS:
+        #     if self.ba.fileLoader.isKymograph():
+        #         self.myKymWidget.kymographPlot.autoRange()
 
         #
         # update detection toolbar
@@ -1093,10 +1091,6 @@ class bDetectionWidget(QtWidgets.QWidget):
                 _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
 
-                    # print('_epochTable:')
-                    # print(_epochTable)
-
-                    # happens when file is tif kymograph
                     sweepY = self.ba.fileLoader.sweepY
                     # filteredVm = self.ba.filteredVm
                     xPlot, yPlot = _epochTable.getEpochLines(
@@ -2046,9 +2040,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         widget.close()
         widget.deleteLater()
 
-    def slot_kymographChanged(self):
-        self._replot(startSec=None, stopSec=None, userUpdate=True)
-        self.signalDetect.emit(self.ba)  # underlying _abf has new rect
+    # def slot_kymographChanged(self):
+    #     self._replot(startSec=None, stopSec=None, userUpdate=True)
+    #     self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
     def _buildUI(self) -> bool:
         """Build the detection controls and plots, including signal wiring.
@@ -2126,13 +2120,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # for publication, don't do kymographs
         # make a branch and get this working
-        if DO_KYMOGRAPH_ANALYSIS:
-            self.myKymWidget = sanpy.interface.kymographWidget()
-            self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
-            self.myKymWidget.setVisible(False)
-            self.myKymWidget.showSliceLine(False)
-            self.myKymWidget.showLineSlider(False)
-            vBoxLayoutForPlot.addWidget(self.myKymWidget)
+        # if DO_KYMOGRAPH_ANALYSIS:
+        #     self.myKymWidget = sanpy.interface.kymographWidget()
+        #     self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
+        #     self.myKymWidget.setVisible(False)
+        #     self.myKymWidget.showSliceLine(False)
+        #     self.myKymWidget.showLineSlider(False)
+        #     vBoxLayoutForPlot.addWidget(self.myKymWidget)
 
         xPlotEmpty = []  # np.arange(0, _recordingDur)
         yPlotEmpty = []  # xPlot * np.nan
@@ -2772,17 +2766,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
-        if DO_KYMOGRAPH_ANALYSIS:
-            if self.ba.fileLoader.isKymograph():
-                self.myKymWidget.setVisible(True)
-                # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
-                self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
-                # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
-                self.myKymWidget.slot_switchFile(ba)
-            else:
-                self.myKymWidget.setVisible(False)
-                # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
-                self.vmPlot.setXLink(None)
+        # if DO_KYMOGRAPH_ANALYSIS:
+        #     if self.ba.fileLoader.isKymograph():
+        #         self.myKymWidget.setVisible(True)
+        #         # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+        #         self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
+        #         # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+        #         self.myKymWidget.slot_switchFile(ba)
+        #     else:
+        #         self.myKymWidget.setVisible(False)
+        #         # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
+        #         self.vmPlot.setXLink(None)
 
         return True
 
@@ -3022,49 +3016,49 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.replotOverlays()
 
 
-class kymographImage(pg.ImageItem):
-    def mouseClickEvent(self, event):
-        # print("Click", event.pos())
-        x = event.pos().x()
-        y = event.pos().y()
+# class kymographImage(pg.ImageItem):
+#     def mouseClickEvent(self, event):
+#         # print("Click", event.pos())
+#         x = event.pos().x()
+#         y = event.pos().y()
 
-    def mouseDragEvent(self, event):
-        return
+#     def mouseDragEvent(self, event):
+#         return
 
-        if event.isStart():
-            print("Start drag", event.pos())
-        elif event.isFinish():
-            print("Stop drag", event.pos())
-        else:
-            print("Drag", event.pos())
+#         if event.isStart():
+#             print("Start drag", event.pos())
+#         elif event.isFinish():
+#             print("Stop drag", event.pos())
+#         else:
+#             print("Drag", event.pos())
 
-    def hoverEvent(self, event):
-        if not event.isExit():
-            # the mouse is hovering over the image; make sure no other items
-            # will receive left click/drag events from here.
-            event.acceptDrags(pg.QtCore.Qt.LeftButton)
-            event.acceptClicks(pg.QtCore.Qt.LeftButton)
+#     def hoverEvent(self, event):
+#         if not event.isExit():
+#             # the mouse is hovering over the image; make sure no other items
+#             # will receive left click/drag events from here.
+#             event.acceptDrags(pg.QtCore.Qt.LeftButton)
+#             event.acceptClicks(pg.QtCore.Qt.LeftButton)
 
 
-class myImageExporter(ImageExporter):
-    def __init__(self, item):
-        pg.exporters.ImageExporter.__init__(self, item)
-        print(
-            "QtGui.QImageWriter.supportedImageFormats():",
-            QtGui.QImageWriter.supportedImageFormats(),
-        )
+# class myImageExporter(ImageExporter):
+#     def __init__(self, item):
+#         pg.exporters.ImageExporter.__init__(self, item)
+#         print(
+#             "QtGui.QImageWriter.supportedImageFormats():",
+#             QtGui.QImageWriter.supportedImageFormats(),
+#         )
 
-    def widthChanged(self):
-        sr = self.getSourceRect()
-        ar = float(sr.height()) / sr.width()
-        myHeight = int(self.params["width"] * ar)
-        self.params.param("height").setValue(myHeight, blockSignal=self.heightChanged)
+#     def widthChanged(self):
+#         sr = self.getSourceRect()
+#         ar = float(sr.height()) / sr.width()
+#         myHeight = int(self.params["width"] * ar)
+#         self.params.param("height").setValue(myHeight, blockSignal=self.heightChanged)
 
-    def heightChanged(self):
-        sr = self.getSourceRect()
-        ar = float(sr.width()) / sr.height()
-        myWidth = int(self.params["height"] * ar)
-        self.params.param("width").setValue(myWidth, blockSignal=self.widthChanged)
+#     def heightChanged(self):
+#         sr = self.getSourceRect()
+#         ar = float(sr.width()) / sr.height()
+#         myWidth = int(self.params["height"] * ar)
+#         self.params.param("width").setValue(myWidth, blockSignal=self.widthChanged)
 
 
 # class MultiLine(pg.QtGui.QGraphicsPathItem):
