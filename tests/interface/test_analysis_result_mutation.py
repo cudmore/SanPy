@@ -19,8 +19,8 @@ def _analysis_with_two_spikes() -> bAnalysis:
     """
     analysis = bAnalysis.__new__(bAnalysis)
     analysis.spikeDict = analysisResultList()
-    analysis.spikeDict.appendDefault()
-    analysis.spikeDict.appendDefault()
+    analysis.spikeDict.append_result({})
+    analysis.spikeDict.append_result({})
     analysis._detectionDirty = False
     return analysis
 
@@ -78,12 +78,8 @@ def test_analysis_result_filtering_combines_sweep_and_epoch() -> None:
         1.0,
         2.0,
     ]
-    assert analysis.getStat("thresholdSec", sweepNumber=1, epochNumber="All") == [
-        2.0
-    ]
-    assert analysis.getStat("thresholdSec", sweepNumber="All", epochNumber=1) == [
-        1.0
-    ]
+    assert analysis.getStat("thresholdSec", sweepNumber=1, epochNumber="All") == [2.0]
+    assert analysis.getStat("thresholdSec", sweepNumber="All", epochNumber=1) == [1.0]
     assert analysis.getStat("thresholdSec", sweepNumber=1, epochNumber=2) == [2.0]
 
 

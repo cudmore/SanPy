@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 import sanpy
-from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bAnalysisResults import get_analysis_result_definitions
 from sanpy.bExport import bExport
 
 
@@ -73,14 +73,14 @@ def _assert_report2_matches_report3(readable: pd.DataFrame, full: pd.DataFrame) 
     for label in readable.columns:
         matches = [
             key
-            for key, definition in analysisResultDict.items()
+            for key, definition in get_analysis_result_definitions().items()
             if definition["axis_label"] == label
         ]
         assert len(matches) == 1
         source_columns.append(matches[0])
     renamed = full.loc[:, source_columns].rename(
         columns={
-            column: analysisResultDict[column]["axis_label"]
+            column: get_analysis_result_definitions()[column]["axis_label"]
             for column in source_columns
         }
     )

@@ -9,7 +9,7 @@ import io
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
-from typing import Union, List, Optional, Dict
+from typing import Any, Union, List, Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,7 @@ import scipy.signal
 
 import sanpy
 import sanpy.bDetection
+
 # import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
 import sanpy.fileloaders
 import sanpy.bAnalysisResults
@@ -32,10 +33,13 @@ from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 from sanpy.spike_clips import SpikeClips
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
 
-def analysis_dataframe(spike_df: pd.DataFrame, metadata: Dict[str, str]) -> pd.DataFrame:
+def analysis_dataframe(
+    spike_df: pd.DataFrame, metadata: Dict[str, str]
+) -> pd.DataFrame:
     """Return spike results with one column per file metadata value.
 
     Args:
@@ -163,9 +167,11 @@ class bAnalysis:
                     self.loadError = True
 
             except KeyError as e:
-                logger.error(f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}')
+                logger.error(
+                    f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}'
+                )
                 self.loadError = True
-            
+
             # if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
             #     # Kymograph support is optional, so avoid loading its plotting
             #     # dependencies during ordinary electrophysiology imports.
@@ -205,13 +211,13 @@ class bAnalysis:
     @property
     def metaData(self):
         return self._metaData
-    
+
     # @property
     # def kymAnalysis(self):
     #     """Get the kymAnalysis object (if it exists).
     #     """
     #     return self._kymAnalysis
-    
+
     @property
     def fileLoader(self) -> Optional[sanpy.fileloaders.fileLoader_base]:
         """Return the loader containing recording data and file metadata.
@@ -267,7 +273,6 @@ class bAnalysis:
         #     if self._kymAnalysis.hasDiamAnalysis() and self._kymAnalysis._analysisDirty:
         #         self._kymAnalysis.saveAnalysis()
 
-
         detection_dirty = self.detectionDirty
         sweep_conditions_dirty = self.sweepConditionsDirty
         if not detection_dirty and not sweep_conditions_dirty:
@@ -289,8 +294,7 @@ class bAnalysis:
             {
                 "sweep": self.fileLoader.sweepList,
                 "condition": [
-                    self.getSweepCondition(sweep)
-                    for sweep in self.fileLoader.sweepList
+                    self.getSweepCondition(sweep) for sweep in self.fileLoader.sweepList
                 ],
             }
         )
@@ -319,7 +323,7 @@ class bAnalysis:
 
             key = uuid + "/" + "sweep_conditions"
             dfSweepConditions.to_hdf(hdfStore, key=key)
-            
+
             if detection_dirty and len(self.spikeDict) > 0:
                 key = uuid + "/" + "analysisList"
                 dfAnalysis.to_hdf(hdfStore, key=key)
@@ -331,27 +335,26 @@ class bAnalysis:
         return True
 
     def _findUuid(self, hdfPath):
-        """Find this analysis uuid in an h5 file. If analysis is not saved, it will not exists.
-        """
+        """Find this analysis uuid in an h5 file. If analysis is not saved, it will not exists."""
 
         # load the database
-        detectionDictKey = 'sanpy_recording_db'
+        detectionDictKey = "sanpy_recording_db"
         dfDetection = pd.read_hdf(hdfPath, key=detectionDictKey)
-        
-        fileList = dfDetection['File'].to_list()
-        
+
+        fileList = dfDetection["File"].to_list()
+
         filename = self.fileLoader.filename
         try:
             idx = fileList.index(filename)
-        except (ValueError) as e:
-            #logger.warning(f'did not find file {filename} in file list {fileList}')
+        except ValueError as e:
+            # logger.warning(f'did not find file {filename} in file list {fileList}')
             return
-        
-        uuid = dfDetection['uuid'].to_list()[idx]
+
+        uuid = dfDetection["uuid"].to_list()[idx]
 
         return uuid
-    
-    def _loadHdf_pytables(self, hdfPath, uuid = None):
+
+    def _loadHdf_pytables(self, hdfPath, uuid=None):
         """Load analysis from an h5 file using key 'uuid'.
 
         Parameters
@@ -375,10 +378,14 @@ class bAnalysis:
         if uuid is None:
             uuid = self._findUuid(hdfPath)
             if uuid is None:
-                logger.warning(f'did not find a uuid for {self.getFileName()} in h5 file {hdfPath}')
-                logger.warning(f'  this usually happens when the analysis was not saved')
+                logger.warning(
+                    f"did not find a uuid for {self.getFileName()} in h5 file {hdfPath}"
+                )
+                logger.warning(
+                    f"  this usually happens when the analysis was not saved"
+                )
                 return
-            
+
         # logger.info(f"loading {uuid} from {hdfPath}")
 
         # load pandas dataframe(s) from h5 file
@@ -391,15 +398,15 @@ class bAnalysis:
             dfDetection = pd.read_hdf(hdfPath, detectionDictKey)
             loadedDetection = True
         except KeyError as e:
-            logger.error(f'detectionDict: {e}')
+            logger.error(f"detectionDict: {e}")
             # didLoad = False
-            
+
         try:
             metaDataDictKey = uuid + "/" + "metaDataDict"  # group
             dfMetaData = pd.read_hdf(hdfPath, metaDataDictKey)
             loadedMetaData = True
         except KeyError as e:
-            logger.error(f'metaDataDict: {e}')
+            logger.error(f"metaDataDict: {e}")
             # didLoad = False
 
         try:
@@ -407,7 +414,7 @@ class bAnalysis:
             dfAnalysis = pd.read_hdf(hdfPath, analysisListKey)
             loadedAnalysis = True
         except KeyError as e:
-            logger.error(f'analysisList: {e}')
+            logger.error(f"analysisList: {e}")
             # didLoad = False
 
         try:
@@ -426,9 +433,9 @@ class bAnalysis:
 
             # convert to a dict
             if loadedDetection:
-                loadedDetectionDict = dfDetection.to_dict(
-                    "records", into=OrderedDict
-                )[0]
+                loadedDetectionDict = dfDetection.to_dict("records", into=OrderedDict)[
+                    0
+                ]
                 self._detectionDict = DetectionParameters.from_saved(
                     loadedDetectionDict
                 ).model_dump(mode="json")
@@ -436,16 +443,18 @@ class bAnalysis:
             if loadedMetaData:
                 # get default
                 defaultMetadataDict = sanpy.MetaData.getMetaDataDict()
-                
+
                 loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[0]
                 # we need to load current meta data dict with all current keys
                 # saved file may be out of date
 
-                for k,v in loadedMetaDataDict.items():
+                for k, v in loadedMetaDataDict.items():
                     if not k in defaultMetadataDict.keys():
                         if k in {"Acq Date", "Acq Time"}:
                             continue
-                        logger.error(f'  did not find loaded metadata key "{k}" in default metadata keys: {defaultMetadataDict.keys()}')
+                        logger.error(
+                            f'  did not find loaded metadata key "{k}" in default metadata keys: {defaultMetadataDict.keys()}'
+                        )
                         continue
                     defaultMetadataDict[k] = v
                 self.metaData.fromDict(defaultMetadataDict, triggerDirty=False)
@@ -464,7 +473,9 @@ class bAnalysis:
                         sweep = row.sweep
                         condition = row.condition
                         if pd.isna(sweep):
-                            logger.warning("Ignoring sweep condition with no sweep index")
+                            logger.warning(
+                                "Ignoring sweep condition with no sweep index"
+                            )
                             continue
                         try:
                             sweep = int(sweep)
@@ -483,7 +494,7 @@ class bAnalysis:
 
                         # abb todo move sweep condition from fileloader to banalysis
                         self.setSweepCondition(sweep, condition)
-                
+
                 #  abb todo move sweep condition from fileloader to banalysis
                 self.clearSweepConditionsDirty()
 
@@ -533,14 +544,13 @@ class bAnalysis:
 
     @property
     def numErrors(self) -> int:
-        """Get number of detection errors.
-        """
+        """Get number of detection errors."""
         if self.dfError is None:
             # no analysis
             return None
         else:
             return len(self.dfError)
-        
+
     def getSweepSpikeFromAbsolute(self, absSpikeIdx: int, sweep: int) -> int:
         """Get sweep spike from absolute spike.
 
@@ -571,9 +581,9 @@ class bAnalysis:
             theMean = np.nanmean(x)
         return theMean
 
-    def getSpikeStat(self, spikeList : List[int], stat : str):
+    def getSpikeStat(self, spikeList: List[int], stat: str):
         """Get one stat from a list of spikes
-        
+
         Parameters
         ----------
         spikeList : List[int]
@@ -587,7 +597,7 @@ class bAnalysis:
             return None
 
         # logger.info(f'spikeList: {spikeList} stat:{stat}')
-        
+
         retList = []
         # count = 0
         for idx, spike in enumerate(self.spikeDict):
@@ -612,11 +622,19 @@ class bAnalysis:
         ]
         self.setSpikeStat(spikeList, stat, value)
 
-    def setSpikeStat(self, spikeList: Union[list, int], stat: str, value):
-        """Set a spike stat for one spike or a list of spikes.
+    def setSpikeStat(
+        self, spikeList: Union[list[int], int], stat: str, value: Any
+    ) -> None:
+        """Set one supported result on one or more spikes.
 
-        Used to set things like ('isBad', 'userType1', 'condition', ...)
+        Args:
+            spikeList: One spike index or a list of spike indices.
+            stat: Result field to update.
+            value: New field value.
         """
+        if stat not in sanpy.bAnalysisResults.AnalysisResults.model_fields:
+            logger.error(f'Ignoring unknown analysis-result key "{stat}"')
+            return
         if isinstance(spikeList, int):
             spikeList = [spikeList]
 
@@ -656,7 +674,7 @@ class bAnalysis:
         sweepNumber: Optional[int] = None,
         epochNumber: Optional[int] = None,
         asArray: Optional[bool] = False,
-        getFullList : Optional[bool] = False
+        getFullList: Optional[bool] = False,
     ):
         """Get a list of values for one or two analysis results.
 
@@ -717,22 +735,22 @@ class bAnalysis:
         if not error:
             # original
             # x = [clean(spike[statName1]) for spike in self.spikeDict]
-            
+
             if getFullList:
                 # April 15, 2023, trying to fix bug in scatter plugin when we are
                 # using sweep and epoch
-                # strategy is to return all spikes, just nan out the ones we 
+                # strategy is to return all spikes, just nan out the ones we
                 # are not interested in
                 x = []
                 for spike in self.spikeDict:
-                    _include = \
-                        (sweepNumber == "All" or spike["sweep"] == sweepNumber) \
-                            and (epochNumber == "All" or spike["epoch"] == epochNumber)
+                    _include = (
+                        sweepNumber == "All" or spike["sweep"] == sweepNumber
+                    ) and (epochNumber == "All" or spike["epoch"] == epochNumber)
                     if _include:
                         x.append(clean(spike[statName1]))
                     else:
                         x.append(float("nan"))
-            
+
             else:
                 # only current sweep and epoch
                 # (1) was this
@@ -771,10 +789,12 @@ class bAnalysis:
         else:
             return x
 
-    def getSpikeTimes(self, sweepNumber=None, epochNumber='All'):
+    def getSpikeTimes(self, sweepNumber=None, epochNumber="All"):
         """Get spike times (points) for current sweep"""
         # theRet = [spike['thresholdPnt'] for spike in self.spikeDict if spike['sweep']==self.currentSweep]
-        theRet = self.getStat("thresholdPnt", sweepNumber=sweepNumber, epochNumber=epochNumber)
+        theRet = self.getStat(
+            "thresholdPnt", sweepNumber=sweepNumber, epochNumber=epochNumber
+        )
         return theRet
 
     def getSpikeSeconds(self, sweepNumber=None):
@@ -784,8 +804,7 @@ class bAnalysis:
         return theRet
 
     def getSpikeDictionaries(self, sweepNumber=None):
-        """Get spike dictionaries for current sweep
-        """
+        """Get spike dictionaries for current sweep"""
         if sweepNumber is None:
             sweepNumber = "All"
         # logger.info(f'sweepNumber:{sweepNumber}')
@@ -806,7 +825,7 @@ class bAnalysis:
             return
 
         self.fileLoader._getDerivative()
-        
+
         # if (
         #     self.fileLoader.recordingMode == recordingModes.iclamp
         #     or self.fileLoader.recordingMode == recordingModes.kymograph
@@ -987,31 +1006,28 @@ class bAnalysis:
 
     def _getHalfWidth(
         self,
-        vm,
-        iIdx,
-        spikeDict,
-        thresholdPnt,
-        peakPnt,
-        hwWindowPnts,
-        dataPointsPerMs,
-        halfHeightList,
-        verbose=False,
-    ):
-        """
-        Get half-widhts for one spike.
-
-        Note: Want to make this standalone function outside of class but we need self._getErrorDict()
+        vm: np.ndarray,
+        spike_index: int,
+        values: sanpy.bAnalysisResults.AnalysisResultValues,
+        thresholdPnt: int,
+        peakPnt: int,
+        hwWindowPnts: int,
+        dataPointsPerMs: float,
+        halfHeightList: list[int],
+        verbose: bool = False,
+    ) -> None:
+        """Calculate configured widths for one in-progress spike.
 
         Args:
-            vm ():
-            iIdx (int):
-            spikeDict (): new 20210928
-            #dictNumber (int):
-            thresholdPnt (int): AP threshold crossing
-            peakPnt (int): AP peak
-            hwWindowPnts (int): Window to look after peakPnt for falling vm
-            dataPointsPerMs (int):
-            halfHeightList (list): List of half-height [10,20,50,80,90]
+            vm: Filtered membrane-potential recording.
+            spike_index: Sweep-local spike index used in error records.
+            values: Mutable values for the current spike.
+            thresholdPnt: Action-potential threshold point.
+            peakPnt: Action-potential peak point.
+            hwWindowPnts: Falling-phase search window in points.
+            dataPointsPerMs: Recording samples per millisecond.
+            halfHeightList: Percent heights to measure.
+            verbose: Whether to print width errors.
         """
 
         halfWidthWindow_ms = hwWindowPnts / dataPointsPerMs
@@ -1027,7 +1043,7 @@ class bAnalysis:
         errorList = []
 
         # clear out any existing list
-        spikeDict[iIdx]["widths"] = []
+        values["widths"] = []
 
         tmpErrorType = None
         for j, halfHeight in enumerate(halfHeightList):
@@ -1092,19 +1108,19 @@ class bAnalysis:
                 errorStr = (
                     f'Half width {halfHeight} error in "{tmpErrorType}" '
                     f"with halfWidthWindow_ms:{halfWidthWindow_ms} "
-                    f"searching for Vm:{round(thisVm,2)} from peak sec {round(peakSec,2)}"
+                    f"searching for Vm:{round(thisVm, 2)} from peak sec {round(peakSec, 2)}"
                 )
 
                 # was this
                 # eDict = self._getErrorDict(spikeNumber, thresholdPnt, errorType, errorStr) # spikeTime is in pnts
                 eDict = self._getErrorDict(
-                    iIdx, thresholdPnt, errorType, errorStr
+                    spike_index, thresholdPnt, errorType, errorStr
                 )  # spikeTime is in pnts
                 # self.spikeDict[dictNumber]['errors'].append(eDict)
-                spikeDict[iIdx]["errors"].append(eDict)
+                values["errors"].append(eDict)
                 if verbose:
                     print(
-                        f"_getHalfWidth() error iIdx:{iIdx} j:{j} halfHeight:{halfHeight} eDict:{eDict}"
+                        f"_getHalfWidth() error iIdx:{spike_index} j:{j} halfHeight:{halfHeight} eDict:{eDict}"
                     )
             #
             # self.spikeDict[dictNumber]['widths_'+str(halfHeight)] = widthMs
@@ -1113,16 +1129,16 @@ class bAnalysis:
             # logger.info('================')
             # print(f'len(spikeDict):{len(spikeDict)} iIdx:{iIdx} j:{j} widthDict:{widthDict}')
 
-            spikeDict[iIdx]["widths_" + str(halfHeight)] = widthMs
-            # spikeDict[iIdx]['widths'][j] = widthDict
-            spikeDict[iIdx]["widths"].append(widthDict)
+            values["widths_" + str(halfHeight)] = widthMs
+            # values['widths'][j] = widthDict
+            values["widths"].append(widthDict)
 
         #
         # return widthDictList, errorList
 
-    def _getErrorDict(self, spikeNumber, pnt, _type : str, detailStr) -> dict:
+    def _getErrorDict(self, spikeNumber, pnt, _type: str, detailStr) -> dict:
         """Get error dict for one spike
-        
+
         Notes
         -----
         Can't use self.getSpikeStat() because it is not created yet.
@@ -1137,8 +1153,8 @@ class bAnalysis:
         eDict = {
             "Spike": spikeNumber,
             "Seconds": sec,
-            "Sweep": '',  # self.getSpikeStat([spikeNumber], 'sweep')[0],
-            "Epoch": '',  # self.getSpikeStat([spikeNumber], 'epoch')[0],
+            "Sweep": "",  # self.getSpikeStat([spikeNumber], 'sweep')[0],
+            "Epoch": "",  # self.getSpikeStat([spikeNumber], 'epoch')[0],
             "Type": _type,
             "Details": detailStr,
         }
@@ -1194,10 +1210,12 @@ class bAnalysis:
                 peakVal = np.max(sweepY[spikeTime : spikeTime + peakWindow_pnts])
                 if peakVal > dDict["mvThreshold"]:
                     goodSpikeTimes.append(spikeTime)
-            except (ValueError) as e:
+            except ValueError as e:
                 logger.error(e)
-                logger.error(f'   spikeTime:{spikeTime} peakWindow_pnts:{peakWindow_pnts}')
-                logger.error(f'   _dataPointsPerMs: {self.fileLoader._dataPointsPerMs}')
+                logger.error(
+                    f"   spikeTime:{spikeTime} peakWindow_pnts:{peakWindow_pnts}"
+                )
+                logger.error(f"   _dataPointsPerMs: {self.fileLoader._dataPointsPerMs}")
         spikeTimes0 = goodSpikeTimes
 
         #
@@ -1284,7 +1302,7 @@ class bAnalysis:
 
                 else:
                     errorType = "dvdt Percent"
-                    errStr = f"Did not find dvdt_percentOfMax: {dDict['dvdt_percentOfMax']} peak dV/dt is {round(peakVal,2)}"
+                    errStr = f"Did not find dvdt_percentOfMax: {dDict['dvdt_percentOfMax']} peak dV/dt is {round(peakVal, 2)}"
                     eDict = self._getErrorDict(
                         i, spikeTime, errorType, errStr
                     )  # spikeTime is in pnts
@@ -1445,7 +1463,7 @@ class bAnalysis:
 
         if detectionDict["verbose"]:
             logger.info(
-                f"Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds"
+                f"Detected {len(self.spikeDict)} spikes in {round(stopTime - startTime, 3)} seconds"
             )
 
     def _spikeDetect2(self, sweepNumber: int, sanpyProvenance: SanPyProvenance):
@@ -1463,8 +1481,8 @@ class bAnalysis:
         """
         dDict = self._detectionDict
 
-        # a list of dict of sanpy.bAnalysisResults.analysisResult (one dict per spike)
-        spikeDict = sanpy.bAnalysisResults.analysisResultList()
+        starting_spike_count = self.numSpikes
+        sweep_results: list[sanpy.bAnalysisResults.AnalysisResults] = []
 
         verbose = dDict["verbose"]
 
@@ -1524,7 +1542,7 @@ class bAnalysis:
         #
         # look in a window after each peak to get 'fast ahp'
         fastAhpWindow_pnts = self.fileLoader.ms2Pnt_(dDict["fastAhpWindow_ms"])
-        
+
         #
         # throw out spikes that have peak BELOW onlyPeaksAbove_mV
         # throw out spikes that have peak ABOVE onlyPeaksBelow_mV
@@ -1555,8 +1573,8 @@ class bAnalysis:
         for i, spikeTime in enumerate(spikeTimes):
             # spikeTime units is ALWAYS points
 
-            # new, add a spike dict for this spike time
-            spikeDict.appendDefault()
+            values = sanpy.bAnalysisResults.new_result_values()
+            previous = sweep_results[-1] if sweep_results else None
 
             # get the AP peak
             peakPnt = newSpikePeakPnt[i]
@@ -1566,81 +1584,78 @@ class bAnalysis:
             # create one spike dictionary
             # spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
 
-            # spikeDict[i]['isBad'] = False
-            spikeDict[i]["analysisDate"] = dateStr
-            spikeDict[i]["analysisTime"] = timeStr
+            # values['isBad'] = False
+            values["analysisDate"] = dateStr
+            values["analysisTime"] = timeStr
 
+            values["sanpy_version"] = sanpyProvenance.version
+            values["sanpy_git_commit"] = sanpyProvenance.commit or ""
+            values["sanpy_git_dirty"] = sanpyProvenance.git_dirty
 
-            spikeDict[i]["sanpy_version"] = sanpyProvenance.version
-            spikeDict[i]["sanpy_git_commit"] = sanpyProvenance.commit or ""
-            spikeDict[i]["sanpy_git_dirty"] = sanpyProvenance.git_dirty
+            values["file"] = self.getFileName()
 
-            spikeDict[i]["file"] = self.getFileName()
+            values["detectionType"] = detectionType
 
-            spikeDict[i]["detectionType"] = detectionType
+            values["sweep"] = sweepNumber
 
-            spikeDict[i]["sweep"] = sweepNumber
-
-            epoch = float("nan")
+            epoch = None
             epochLevel = float("nan")
             epochTable = self.fileLoader.getEpochTable(sweepNumber)
             if epochTable is not None:
                 epoch = epochTable.findEpoch(spikeTime)
                 epochLevel = epochTable.getLevel(epoch)
-            spikeDict[i]["epoch"] = epoch
-            spikeDict[i]["epochLevel"] = epochLevel
+            values["epoch"] = epoch
+            values["epochLevel"] = epochLevel
 
             # abb 202609
-            spikeDict[i]["sweepCondition"] = self.getSweepCondition(sweepNumber)
+            values["sweepCondition"] = self.getSweepCondition(sweepNumber)
 
             # keep track of per sweep spike and total spike
-            spikeDict[i]["sweepSpikeNumber"] = i
-            spikeDict[i]["spikeNumber"] = self.numSpikes + i
+            values["sweepSpikeNumber"] = i
+            values["spikeNumber"] = starting_spike_count + i
 
-            spikeDict[i]["spike_include"] = "yes"
+            values["spike_include"] = "yes"
 
             # todo: make this a byte encoding so we can have multiple user tyes per spike
-            spikeDict[i]["userType"] = 0  # One userType (int) that can have values
+            values["userType"] = 0  # One userType (int) that can have values
 
             # using bAnalysisResults will already be []
-            spikeDict[i]["errors"] = []
+            values["errors"] = []
 
             # append existing spikeErrorList from spikeDetect_dvdt() or spikeDetect_mv()
             tmpError = spikeErrorList[i]
             if tmpError is not None and tmpError != np.nan:
-                spikeDict[i]["errors"].append(tmpError)  # tmpError is from:
+                values["errors"].append(tmpError)  # tmpError is from:
                 if verbose:
                     print(f"  spike:{i} error:{tmpError}")
             #
             # detection params
-            spikeDict[i]["dvdtThreshold"] = dDict["dvdtThreshold"]
-            spikeDict[i]["mvThreshold"] = dDict["mvThreshold"]
-            spikeDict[i]["medianFilter"] = dDict["medianFilter"]
-            spikeDict[i]["halfHeights"] = dDict["halfHeights"]
+            values["dvdtThreshold"] = dDict["dvdtThreshold"]
+            values["mvThreshold"] = dDict["mvThreshold"]
+            values["medianFilter"] = dDict["medianFilter"]
+            values["halfHeights"] = dDict["halfHeights"]
 
-            spikeDict[i]["thresholdPnt"] = spikeTime
-            spikeDict[i]["thresholdSec"] = (
+            values["thresholdPnt"] = spikeTime
+            values["thresholdSec"] = (
                 spikeTime / self.fileLoader.dataPointsPerMs
             ) / 1000
-            spikeDict[i]["thresholdVal"] = filteredVm[spikeTime]  # in vm
-            spikeDict[i]["thresholdVal_dvdt"] = filteredDeriv[
+            values["thresholdVal"] = filteredVm[spikeTime]  # in vm
+            values["thresholdVal_dvdt"] = filteredDeriv[
                 spikeTime
             ]  # in dvdt, spikeTime is points
 
-            spikeDict[i]["peakPnt"] = peakPnt
-            spikeDict[i]["peakSec"] = peakSec
-            spikeDict[i]["peakVal"] = peakVal
+            values["peakPnt"] = peakPnt
+            values["peakSec"] = peakSec
+            values["peakVal"] = peakVal
 
-            spikeDict[i]["peakHeight"] = (
-                spikeDict[i]["peakVal"] - spikeDict[i]["thresholdVal"]
-            )
+            values["peakHeight"] = values["peakVal"] - values["thresholdVal"]
 
-            tmpThresholdSec = spikeDict[i]["thresholdSec"]
-            spikeDict[i]["timeToPeak_ms"] = (peakSec - tmpThresholdSec) * 1000
+            tmpThresholdSec = values["thresholdSec"]
+            values["timeToPeak_ms"] = (peakSec - tmpThresholdSec) * 1000
 
             # logger.info(f'  peakSec:{peakSec} {type(peakSec)} tmpThresholdSec:{tmpThresholdSec} {type(tmpThresholdSec)}')
             # logger.info(f'  peakSec - tmpThresholdSec:{peakSec - tmpThresholdSec} {type(peakSec - tmpThresholdSec)}')
-            
+
             # only append to spikeDict after we are done (accounting for spikes within a sweep)
             # self.spikeDict.append(spikeDict)
             # iIdx = len(self.spikeDict) - 1
@@ -1648,70 +1663,72 @@ class bAnalysis:
             iIdx = i
 
             # fast ahp, fastAhpWindow_pnts
-            if peakPnt+fastAhpWindow_pnts < len(sweepX):
-                fastAhpClip = filteredVm[peakPnt : peakPnt+fastAhpWindow_pnts]
+            if peakPnt + fastAhpWindow_pnts < len(sweepX):
+                fastAhpClip = filteredVm[peakPnt : peakPnt + fastAhpWindow_pnts]
                 fastAhpPnt = np.argmin(fastAhpClip)
-                
-                fastAhpError = fastAhpPnt == len(fastAhpClip)-1
-                
+
+                fastAhpError = fastAhpPnt == len(fastAhpClip) - 1
+
                 fastAhpPnt += peakPnt
                 fastAhpSec = self.fileLoader.pnt2Sec_(fastAhpPnt)
                 fastAhpValue = filteredVm[fastAhpPnt]
 
-                spikeDict[i]["fastAhpPnt"] = fastAhpPnt
-                spikeDict[i]["fastAhpSec"] = fastAhpSec
-                spikeDict[i]["fastAhpValue"] = fastAhpValue
+                values["fastAhpPnt"] = fastAhpPnt
+                values["fastAhpSec"] = fastAhpSec
+                values["fastAhpValue"] = fastAhpValue
 
                 # log error
                 if fastAhpError:
                     errorType = "Fast AHP was detected at end of fast AHP window"
-                    errorStr = "Consider increasing the fast AHP window with fastAhpWindow_ms"
+                    errorStr = (
+                        "Consider increasing the fast AHP window with fastAhpWindow_ms"
+                    )
                     eDict = self._getErrorDict(
                         i, spikeTimes[i], errorType, errorStr
                     )  # spikeTime is in pnts
-                    spikeDict[iIdx]["errors"].append(eDict)
+                    values["errors"].append(eDict)
 
             # todo: get rid of this
             defaultVal = float("nan")
 
             """
             # get pre/post spike minima
-            self.spikeDict[iIdx]['preMinPnt'] = None
-            self.spikeDict[iIdx]['preMinVal'] = defaultVal
+            self.values['preMinPnt'] = None
+            self.values['preMinVal'] = defaultVal
 
             # early diastolic duration
             # 0.1 to 0.5 of time between pre spike min and spike time
-            self.spikeDict[iIdx]['preLinearFitPnt0'] = None
-            self.spikeDict[iIdx]['preLinearFitPnt1'] = None
-            self.spikeDict[iIdx]['earlyDiastolicDuration_ms'] = defaultVal # seconds between preLinearFitPnt0 and preLinearFitPnt1
-            self.spikeDict[iIdx]['preLinearFitVal0'] = defaultVal
-            self.spikeDict[iIdx]['preLinearFitVal1'] = defaultVal
+            self.values['preLinearFitPnt0'] = None
+            self.values['preLinearFitPnt1'] = None
+            self.values['earlyDiastolicDuration_ms'] = defaultVal # seconds between preLinearFitPnt0 and preLinearFitPnt1
+            self.values['preLinearFitVal0'] = defaultVal
+            self.values['preLinearFitVal1'] = defaultVal
             # m,b = np.polyfit(x, y, 1)
-            self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
-            self.spikeDict[iIdx]['lateDiastolicDuration'] = defaultVal #
+            self.values['earlyDiastolicDurationRate'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
+            self.values['lateDiastolicDuration'] = defaultVal #
 
-            self.spikeDict[iIdx]['preSpike_dvdt_max_pnt'] = None
-            self.spikeDict[iIdx]['preSpike_dvdt_max_val'] = defaultVal # in units mV
-            self.spikeDict[iIdx]['preSpike_dvdt_max_val2'] = defaultVal # in units dv/dt
-            self.spikeDict[iIdx]['postSpike_dvdt_min_pnt'] = None
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val'] = defaultVal # in units mV
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val2'] = defaultVal # in units dv/dt
+            self.values['preSpike_dvdt_max_pnt'] = None
+            self.values['preSpike_dvdt_max_val'] = defaultVal # in units mV
+            self.values['preSpike_dvdt_max_val2'] = defaultVal # in units dv/dt
+            self.values['postSpike_dvdt_min_pnt'] = None
+            self.values['postSpike_dvdt_min_val'] = defaultVal # in units mV
+            self.values['postSpike_dvdt_min_val2'] = defaultVal # in units dv/dt
 
-            self.spikeDict[iIdx]['isi_pnts'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['isi_ms'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['spikeFreq_hz'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['cycleLength_pnts'] = defaultVal # time between successive MDPs
-            self.spikeDict[iIdx]['cycleLength_ms'] = defaultVal # time between successive MDPs
+            self.values['isi_pnts'] = defaultVal # time between successive AP thresholds (thresholdSec)
+            self.values['isi_ms'] = defaultVal # time between successive AP thresholds (thresholdSec)
+            self.values['spikeFreq_hz'] = defaultVal # time between successive AP thresholds (thresholdSec)
+            self.values['cycleLength_pnts'] = defaultVal # time between successive MDPs
+            self.values['cycleLength_ms'] = defaultVal # time between successive MDPs
 
             # Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
-            #self.spikeDict[iIdx]['apDuration_ms'] = defaultVal
-            self.spikeDict[iIdx]['diastolicDuration_ms'] = defaultVal
+            #self.values['apDuration_ms'] = defaultVal
+            self.values['diastolicDuration_ms'] = defaultVal
 
             # any number of spike widths
             #print('spikeDetect__() appending widths list to spike iIdx:', iIdx)
             # was this
-            #self.spikeDict[iIdx]['widths'] = []
-            # debug 20210929, self._getHalfWidth() will assign spikeDict[iIdx]['widths'] = []
+            #self.values['widths'] = []
+            # debug 20210929, self._getHalfWidth() will assign values['widths'] = []
             for halfHeight in dDict['halfHeights']:
                 widthDict = {
                     'halfHeight': halfHeight,
@@ -1723,8 +1740,8 @@ class bAnalysis:
                     'widthMs': defaultVal
                 }
                 # was this
-                #spikeDict[iIdx]['widths_' + str(halfHeight)] = defaultVal
-                spikeDict[iIdx]['widths'].append(widthDict)
+                #values['widths_' + str(halfHeight)] = defaultVal
+                values['widths'].append(widthDict)
             """
 
             #
@@ -1745,10 +1762,12 @@ class bAnalysis:
                 eDict = self._getErrorDict(
                     i, spikeTimes[i], errorType, errorStr
                 )  # spikeTime is in pnts
-                spikeDict[iIdx]["errors"].append(eDict)
+                values["errors"].append(eDict)
                 if verbose:
                     logger.error(f"  spike:{iIdx} error:{eDict}")
-                    logger.error(f'  going to index vmFiltered {startPnt} to spike time i {i} with value {spikeTimes[i]}')
+                    logger.error(
+                        f"  going to index vmFiltered {startPnt} to spike time i {i} with value {spikeTimes[i]}"
+                    )
 
             preRange = filteredVm[startPnt : spikeTimes[i]]  # EXCEPTION
             try:
@@ -1765,7 +1784,7 @@ class bAnalysis:
                 eDict = self._getErrorDict(
                     i, spikeTimes[i], errorType, errorStr
                 )  # spikeTime is in pnts
-                spikeDict[iIdx]["errors"].append(eDict)
+                values["errors"].append(eDict)
                 if verbose:
                     print(f"  spike:{iIdx} error:{eDict}")
             if preMinPnt is not None:
@@ -1777,10 +1796,10 @@ class bAnalysis:
                     eDict = self._getErrorDict(
                         i, spikeTimes[i], errorType, errorStr
                     )  # spikeTime is in pnts
-                    spikeDict[iIdx]["errors"].append(eDict)
+                    values["errors"].append(eDict)
                     if verbose:
                         print(f"  spike:{iIdx} error:{eDict}")
-                
+
                 else:
                     preMinPnt += startPnt
                     # the pre min is actually an average around the real minima
@@ -1792,22 +1811,24 @@ class bAnalysis:
 
                     # search backward from spike to find when vm reaches preMinVal (avg)
                     preRange = filteredVm[preMinPnt : spikeTimes[i]]
-                    preRange = np.flip(preRange)  # we want to search backwards from peak
+                    preRange = np.flip(
+                        preRange
+                    )  # we want to search backwards from peak
                     try:
                         preMinPnt2 = np.where(preRange < preMinVal)[0][0]
                         preMinPnt = spikeTimes[i] - preMinPnt2
-                        spikeDict[iIdx]["preMinPnt"] = preMinPnt
-                        spikeDict[iIdx]["preMinVal"] = preMinVal
+                        values["preMinPnt"] = preMinPnt
+                        values["preMinVal"] = preMinVal
 
                     except IndexError as e:
                         errorType = "Pre spike min (mdp)"
-                        errorStr = "Did not find preMinVal: " + str(
-                            round(preMinVal, 3)
+                        errorStr = (
+                            "Did not find preMinVal: " + str(round(preMinVal, 3))
                         )  # + ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
                         eDict = self._getErrorDict(
                             i, spikeTimes[i], errorType, errorStr
                         )  # spikeTime is in pnts
-                        spikeDict[iIdx]["errors"].append(eDict)
+                        values["errors"].append(eDict)
                         if verbose:
                             print(f"  spike:{iIdx} error:{eDict}")
 
@@ -1825,13 +1846,13 @@ class bAnalysis:
             preLinearFitVal1 = filteredVm[preLinearFitPnt1]
 
             # linear fit before spike
-            spikeDict[iIdx]["preLinearFitPnt0"] = preLinearFitPnt0
-            spikeDict[iIdx]["preLinearFitPnt1"] = preLinearFitPnt1
-            spikeDict[iIdx]["earlyDiastolicDuration_ms"] = self.fileLoader.pnt2Ms_(
+            values["preLinearFitPnt0"] = preLinearFitPnt0
+            values["preLinearFitPnt1"] = preLinearFitPnt1
+            values["earlyDiastolicDuration_ms"] = self.fileLoader.pnt2Ms_(
                 preLinearFitPnt1 - preLinearFitPnt0
             )
-            spikeDict[iIdx]["preLinearFitVal0"] = preLinearFitVal0
-            spikeDict[iIdx]["preLinearFitVal1"] = preLinearFitVal1
+            values["preLinearFitVal0"] = preLinearFitVal0
+            values["preLinearFitVal1"] = preLinearFitVal1
 
             # a linear fit where 'm,b = np.polyfit(x, y, 1)'
             # m*x+b"
@@ -1849,32 +1870,32 @@ class bAnalysis:
                     mLinear, bLinear = np.polyfit(
                         xFit, yFit, 1
                     )  # m is slope, b is intercept
-                    spikeDict[iIdx]["earlyDiastolicDurationRate"] = mLinear
+                    values["earlyDiastolicDurationRate"] = mLinear
                     # todo: make an error if edd rate is too low
                     lowestEddRate = dDict["lowEddRate_warning"]  # 8
                     if mLinear <= lowestEddRate:
                         errorType = "Fit EDD"
-                        errorStr = f"Early diastolic duration rate fit - Too low {round(mLinear,3)}<={lowestEddRate}"
+                        errorStr = f"Early diastolic duration rate fit - Too low {round(mLinear, 3)}<={lowestEddRate}"
                         eDict = self._getErrorDict(
                             i, spikeTimes[i], errorType, errorStr
                         )  # spikeTime is in pnts
-                        # print('fit edd start num error:', 'iIdx:', iIdx, 'num error:', len(spikeDict[iIdx]['errors']))
-                        spikeDict[iIdx]["errors"].append(eDict)
-                        # print('  after num error:', len(spikeDict[iIdx]['errors']))
+                        # print('fit edd start num error:', 'iIdx:', iIdx, 'num error:', len(values['errors']))
+                        values["errors"].append(eDict)
+                        # print('  after num error:', len(values['errors']))
                         if verbose:
                             print(f"  spike:{iIdx} error:{eDict}")
 
                 except (TypeError, RuntimeWarning) as e:
                     # catching exception:  expected non-empty vector for x
                     # xFit/yFit turn up empty when mdp and TOP points are within 1 point
-                    spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
+                    values["earlyDiastolicDurationRate"] = defaultVal
                     errorType = "Fit EDD"
                     # errorStr = 'Early diastolic duration rate fit - TypeError'
                     errorStr = (
                         "Early diastolic duration rate fit - preMinPnt == spikePnt"
                     )
                     eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-                    spikeDict[iIdx]["errors"].append(eDict)
+                    values["errors"].append(eDict)
                     if verbose:
                         print(f"  spike:{iIdx} error:{eDict}")
                 except np.RankWarning as e:
@@ -1882,11 +1903,11 @@ class bAnalysis:
                     # logger.error(f'  error is: {e}')
                     # print('RankWarning')
                     # also throws: RankWarning: Polyfit may be poorly conditioned
-                    spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
+                    values["earlyDiastolicDurationRate"] = defaultVal
                     errorType = "Fit EDD"
                     errorStr = "Early diastolic duration rate fit - RankWarning"
                     eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-                    spikeDict[iIdx]["errors"].append(eDict)
+                    values["errors"].append(eDict)
                     if verbose:
                         print(f"  spike:{iIdx} error:{eDict}")
                 # 20230422, don't ever catch an unknown exception
@@ -1894,7 +1915,7 @@ class bAnalysis:
                 #     logger.error(
                 #         f" !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}"
                 #     )
-                #     spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
+                #     values["earlyDiastolicDurationRate"] = defaultVal
                 #     errorType = "Fit EDD"
                 #     errorStr = "Early diastolic duration rate fit - Unknown Exception"
                 #     eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
@@ -1902,7 +1923,7 @@ class bAnalysis:
                 #         print(f"  spike:{iIdx} error:{eDict}")
 
             # not implemented
-            # self.spikeDict[i]['lateDiastolicDuration'] = ???
+            # self.values['lateDiastolicDuration'] = ???
 
             #
             # maxima in dv/dt before spike (between TOP and peak)
@@ -1910,11 +1931,11 @@ class bAnalysis:
                 preRange = filteredDeriv[spikeTimes[i] : peakPnt + 1]
                 preSpike_dvdt_max_pnt = np.argmax(preRange)
                 preSpike_dvdt_max_pnt += spikeTimes[i]
-                spikeDict[iIdx]["preSpike_dvdt_max_pnt"] = preSpike_dvdt_max_pnt
-                spikeDict[iIdx]["preSpike_dvdt_max_val"] = filteredVm[
+                values["preSpike_dvdt_max_pnt"] = preSpike_dvdt_max_pnt
+                values["preSpike_dvdt_max_val"] = filteredVm[
                     preSpike_dvdt_max_pnt
                 ]  # in units mV
-                spikeDict[iIdx]["preSpike_dvdt_max_val2"] = filteredDeriv[
+                values["preSpike_dvdt_max_val2"] = filteredDeriv[
                     preSpike_dvdt_max_pnt
                 ]  # in units mV
             except ValueError as e:
@@ -1924,7 +1945,7 @@ class bAnalysis:
                 eDict = self._getErrorDict(
                     i, spikeTimes[i], errorType, errorStr
                 )  # spikeTime is in pnts
-                spikeDict[iIdx]["errors"].append(eDict)
+                values["errors"].append(eDict)
                 if verbose:
                     print(f"  spike:{iIdx} error:{eDict}")
 
@@ -1941,57 +1962,43 @@ class bAnalysis:
 
             postSpike_dvdt_min_pnt = np.argmin(postRange)
             postSpike_dvdt_min_pnt += peakPnt
-            spikeDict[iIdx]["postSpike_dvdt_min_pnt"] = postSpike_dvdt_min_pnt
-            spikeDict[iIdx]["postSpike_dvdt_min_val"] = filteredVm[
-                postSpike_dvdt_min_pnt
-            ]
-            spikeDict[iIdx]["postSpike_dvdt_min_val2"] = filteredDeriv[
-                postSpike_dvdt_min_pnt
-            ]
+            values["postSpike_dvdt_min_pnt"] = postSpike_dvdt_min_pnt
+            values["postSpike_dvdt_min_val"] = filteredVm[postSpike_dvdt_min_pnt]
+            values["postSpike_dvdt_min_val2"] = filteredDeriv[postSpike_dvdt_min_pnt]
 
             #
             # diastolic duration was defined as the interval between MDP and TOP
             # one off error when preMinPnt is not defined
-            spikeDict[iIdx]["diastolicDuration_ms"] = self.fileLoader.pnt2Ms_(
+            values["diastolicDuration_ms"] = self.fileLoader.pnt2Ms_(
                 spikeTime - preMinPnt
             )
 
             #
             # calculate instantaneous spike frequency and ISI, for first spike this is not defined
-            spikeDict[iIdx]["cycleLength_ms"] = float("nan")
-            if iIdx > 0:
-                isiPnts = (
-                    spikeDict[iIdx]["thresholdPnt"]
-                    - spikeDict[iIdx - 1]["thresholdPnt"]
-                )
+            values["cycleLength_ms"] = float("nan")
+            if previous is not None:
+                isiPnts = values["thresholdPnt"] - previous.thresholdPnt
                 isi_ms = self.fileLoader.pnt2Ms_(isiPnts)
                 isi_hz = 1 / (isi_ms / 1000)
-                spikeDict[iIdx]["isi_pnts"] = isiPnts
-                spikeDict[iIdx]["isi_ms"] = self.fileLoader.pnt2Ms_(isiPnts)
-                spikeDict[iIdx]["spikeFreq_hz"] = 1 / (
-                    self.fileLoader.pnt2Ms_(isiPnts) / 1000
-                )
+                values["isi_pnts"] = isiPnts
+                values["isi_ms"] = self.fileLoader.pnt2Ms_(isiPnts)
+                values["spikeFreq_hz"] = 1 / (self.fileLoader.pnt2Ms_(isiPnts) / 1000)
 
                 # Cycle length was defined as the interval between MDPs in successive APs
-                prevPreMinPnt = spikeDict[iIdx - 1]["preMinPnt"]  # can be nan
-                thisPreMinPnt = spikeDict[iIdx]["preMinPnt"]
+                prevPreMinPnt = previous.preMinPnt
+                thisPreMinPnt = values["preMinPnt"]
                 if prevPreMinPnt is not None and thisPreMinPnt is not None:
                     cycleLength_pnts = thisPreMinPnt - prevPreMinPnt
-                    spikeDict[iIdx]["cycleLength_pnts"] = cycleLength_pnts
-                    spikeDict[iIdx]["cycleLength_ms"] = self.fileLoader.pnt2Ms_(
-                        cycleLength_pnts
-                    )
+                    values["cycleLength_pnts"] = cycleLength_pnts
+                    values["cycleLength_ms"] = self.fileLoader.pnt2Ms_(cycleLength_pnts)
                 else:
                     # error
-                    prevPreMinSec = self.fileLoader.pnt2Sec_(prevPreMinPnt)
-                    thisPreMinSec = self.fileLoader.pnt2Sec_(thisPreMinPnt)
-                    # errorStr = f'Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt: {thisPreMinPnt}'
                     errorType = "Cycle Length"
-                    errorStr = f"Previous spike preMinPnt (s) is {prevPreMinSec} and this preMinPnt: {thisPreMinSec}"
+                    errorStr = f"Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt is {thisPreMinPnt}"
                     eDict = self._getErrorDict(
                         i, spikeTimes[i], errorType, errorStr
                     )  # spikeTime is in pnts
-                    spikeDict[iIdx]["errors"].append(eDict)
+                    values["errors"].append(eDict)
                     if verbose:
                         print(f"  spike:{iIdx} error:{eDict}")
 
@@ -2006,7 +2013,7 @@ class bAnalysis:
             self._getHalfWidth(
                 filteredVm,
                 iIdx,
-                spikeDict,
+                values,
                 spikeTime,
                 peakPnt,
                 hwWindowPnts,
@@ -2015,16 +2022,14 @@ class bAnalysis:
                 verbose=verbose,
             )
 
+            completed = sanpy.bAnalysisResults.AnalysisResults.model_validate(values)
+            sweep_results.append(completed)
+
         #
         # look between threshold crossing to get minima
         # we will ignore the first and last spike
 
-        # SUPER important, previously our self.spikeDict was simple list of dict
-        # now it is a list of class xxx
-        # print('=== addind', len(spikeDict))
-        self.spikeDict.appendAnalysis(spikeDict)
-        # print('   now have', len(self.spikeDict))
-        # print(self.spikeDict)
+        self.spikeDict.extend_completed(sweep_results)
 
         # run all user analysis ... what if this fails ???
         # abb 20261023 removed. we are switching analysis results to pydantic
@@ -2196,7 +2201,7 @@ class bAnalysis:
 
     def getErrorReport(self):
         """Generate an error report, one row per error.
-        
+
         Spikes can have more than one error.
 
         Returns:
@@ -2213,11 +2218,11 @@ class bAnalysis:
         #  20230422 spikeDict is not working as an iterable
         # use it as a list instead
         numSpikes = len(self.spikeDict)
-        #for spike in self.spikeDict:
+        # for spike in self.spikeDict:
         for _spikeNumber in range(numSpikes):
             spike = self.spikeDict[_spikeNumber]
             # spike is sanpy.bAnalysisResults.analysisResult
-            #print('spike:', spike)
+            # print('spike:', spike)
             for error in spike["errors"]:
                 # spike["errors"] is a list of dict
                 # error is dict from _getErrorDict
@@ -2225,20 +2230,20 @@ class bAnalysis:
                     continue
 
                 # 20230422 add sweep and epoch to error dict
-                #_spikeNumber = error['Spike']
-                
-                #print('  _spikeNumber:', _spikeNumber, type(_spikeNumber))
-                
+                # _spikeNumber = error['Spike']
+
+                # print('  _spikeNumber:', _spikeNumber, type(_spikeNumber))
+
                 # _sweep = self.getSpikeStat([_spikeNumber], 'sweep')
                 # if len(_sweep)==0:
                 #     logger.error(f"_spikeNumber:{_spikeNumber} sweep:{_sweep}")
                 #     #print(self.getOneSpikeDict(_spikeNumber))
-                
+
                 # Detection stores the within-sweep spike index in 'Spike'.
                 error = dict(error)
-                error['Spike'] = _spikeNumber
-                error['Sweep'] = self.getSpikeStat([_spikeNumber], 'sweep')[0]
-                error['Epoch'] = self.getSpikeStat([_spikeNumber], 'epoch')[0]
+                error["Spike"] = _spikeNumber
+                error["Sweep"] = self.getSpikeStat([_spikeNumber], "sweep")[0]
+                error["Epoch"] = self.getSpikeStat([_spikeNumber], "epoch")[0]
 
                 dictList.append(error)
 
@@ -2253,10 +2258,10 @@ class bAnalysis:
 
         return dfError
 
-    def saveAnalysis_tocsv(self, path : str = None, verbose=False):
+    def saveAnalysis_tocsv(self, path: str = None, verbose=False):
         """Save analysis to csv.
-        
-        CSV starts with one 
+
+        CSV starts with one
         Parameters
         ----------
         path : str
@@ -2274,7 +2279,7 @@ class bAnalysis:
             path = saveBase + "-analysis.csv"
 
         if verbose:
-            logger.info(f'saving to: {path}')
+            logger.info(f"saving to: {path}")
 
         metaDataHeader = self.metaData.getHeader()
 
@@ -2455,7 +2460,7 @@ class bAnalysis:
         """Get stat for each spike
 
         Args:
-            stat (str): The name of the stat to get. Corresponds to key in self.spikeDict[i].
+            stat (str): The name of the stat to get. Corresponds to key in self.values.
 
         Returns:
             list: List of values for 'stat'. Ech value is for one spike.

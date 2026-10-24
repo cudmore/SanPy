@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 import sanpy
-from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bAnalysisResults import get_analysis_result_definitions
 from sanpy.bDetection import DetectionParameters
 from sanpy.fileloaders.fileMetadata import get_file_metadata_definitions
 from sanpy.trace_overlays import get_trace_overlay_definitions
@@ -29,9 +29,10 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         definitions, results, and derived signals.
     """
     loader = analysis.fileLoader
+    result_definitions = get_analysis_result_definitions()
     results = analysis.spikeDict.asDataFrame().copy(deep=True)
     if len(results.columns) == 0:
-        results = results.reindex(columns=analysisResultDict)
+        results = results.reindex(columns=result_definitions)
     return SanPySnapshot(
         recording_id=str(getattr(analysis, "uuid", None) or uuid.uuid4()),
         experimental_metadata=copy.deepcopy(dict(analysis.metaData)),
@@ -40,7 +41,7 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         file_metadata_definitions=get_file_metadata_definitions(),
         detection_parameters=_detection_parameters(analysis.getDetectionDict()),
         detection_definitions=DetectionParameters.model_json_schema(),
-        result_definitions=copy.deepcopy(analysisResultDict),
+        result_definitions=result_definitions,
         trace_overlay_definitions=get_trace_overlay_definitions(),
         analysis_results=results,
         filtered=_copy_array(loader._filteredY),

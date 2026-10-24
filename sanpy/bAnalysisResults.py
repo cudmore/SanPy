@@ -1,1091 +1,739 @@
-"""Define and store SanPy spike-analysis results and their runtime schema."""
+"""Define, validate, and store SanPy current-clamp spike results."""
 
-import json
-import os
-from typing import Any, Dict, List, Tuple
+from __future__ import annotations
 
-import numpy as np  # needed to convert np types to JSON types in save
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from copy import deepcopy
+from datetime import datetime
+from typing import Any, TypeAlias
+
 import pandas as pd
-import sanpy
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 
+from sanpy.bDetection import detectionTypes_
 from sanpy.sanpyLogger import get_logger
 from sanpy.schema import AnalysisResultCategory
 
 logger = get_logger(__name__)
+AnalysisResultValues: TypeAlias = dict[str, Any]
+"""Mutable values used while calculating one spike result."""
+_NAN = float("nan")
 
-defaultVal = float("nan")
 
+def _field(
+    default: Any = PydanticUndefined,
+    *,
+    title: str,
+    description: str,
+    category: AnalysisResultCategory,
+    show: bool = False,
+    categorical: bool = False,
+    units: str = "",
+    depends: str = "",
+    error: str = "",
+    factory: Callable[[], Any] | None = None,
+) -> Any:
+    """Create one result field with presentation metadata.
 
-# each key in analysisResultDict needs to have the same dict
-def getDefaultDict() -> dict[str, Any]:
-    """Create an empty analysis-result definition.
+    Args:
+        default: Default value, or Pydantic's sentinel for a required field.
+        title: Human-readable label.
+        description: Human-readable explanation.
+        category: Presentation category.
+        show: Whether statistic selectors show the result.
+        categorical: Whether plots treat the result as categorical.
+        units: Physical or logical units.
+        depends: Detection parameters affecting the result.
+        error: Documented error condition.
+        factory: Optional factory for a fresh mutable default.
 
     Returns:
-        A new dictionary containing every field required by an analysis-result
-        definition.
+        A configured Pydantic field.
     """
-    defaultDict = {
-        "category": AnalysisResultCategory.CUSTOM,
-        "axis_label": "",
-        "show_in_plot_menu": False,
-        "is_categorical": False,
-        "type": "",  # like: int, float, boolean, list
-        "default": "",  # default value, can be 0, None, NaN, ...
-        "units": "",  # real world units like point, mV, dvdt
-        "depends on detection": "",  # organize documentation and refer to bDetect keys
-        "error": "",  # if this analysis results can trigger an error
-        "description": "",  # long description for documentation
+    extra = {
+        "x-category": category.value,
+        "x-show-in-plot-menu": show,
+        "x-is-categorical": categorical,
+        "x-units": units,
+        "x-depends-on-detection": depends,
+        "x-error": error,
     }
-    return defaultDict.copy()
-
-
-analysisResultDict: dict[str, dict[str, Any]] = {}
-
-
-# def register_analysis_result(
-#     name: str,
-#     *,
-#     category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
-#     value_type: str = "unknown",
-#     default: Any = None,
-#     units: str = "",
-#     axis_label: str = "",
-#     show_in_plot_menu: bool,
-#     is_categorical: bool,
-#     description: str = "",
-#     depends_on_detection: str = "",
-#     error: str = "",
-# ) -> bool:
-#     """Register a user-defined result in the authoritative runtime schema.
-
-#     Identical repeated registration is accepted because SanPy may discover a
-#     user-analysis plugin more than once. Conflicting or invalid definitions
-#     fail immediately because they are programmer errors.
-
-#     Args:
-#         name: Internal analysis-result name used as the dataframe column.
-#         category: Presentation category for the result.
-#         value_type: Runtime value type name.
-#         default: Default value for newly created results.
-#         units: Physical or logical units.
-#         axis_label: Human-readable plot-axis label.
-#         show_in_plot_menu: Whether X/Y statistic selectors show the result.
-#         is_categorical: Whether plots interpret values as discrete groups.
-#         description: Human-readable explanation of the result.
-#         depends_on_detection: Detection parameter dependencies, if any.
-#         error: Error condition documented for the result, if any.
-
-#     Returns:
-#         ``True`` when the definition was added or already registered
-#         identically.
-
-#     Raises:
-#         TypeError: If ``category`` is not an ``AnalysisResultCategory``.
-#         ValueError: If ``name`` already has a different definition.
-#     """
-#     if not isinstance(category, AnalysisResultCategory):
-#         raise TypeError(
-#             f'Analysis-result category for "{name}" must be AnalysisResultCategory'
-#         )
-#     definition = getDefaultDict()
-#     definition.update(
-#         {
-#             "category": category,
-#             "type": value_type,
-#             "default": default,
-#             "units": units,
-#             "axis_label": axis_label or name,
-#             "show_in_plot_menu": show_in_plot_menu,
-#             "is_categorical": is_categorical,
-#             "depends on detection": depends_on_detection,
-#             "error": error,
-#             "description": description,
-#         }
-#     )
-#     existing = analysisResultDict.get(name)
-#     if existing is None:
-#         analysisResultDict[name] = definition
-#         return True
-#     if existing == definition:
-#         return True
-#     raise ValueError(f'Conflicting analysis-result definition for "{name}"')
-
-###############################################################################
-# ACQUISITION PROPERTIES
-###############################################################################
-key = "file"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.ACQUISITION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "File"
-analysisResultDict[key]["description"] = "Name of raw data file analyzed"
-
-key = "sweep"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.ACQUISITION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sweep"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "Sweep number of analyzed sweep. Zero based."
-
-key = "epoch"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.ACQUISITION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = np.nan  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Epoch"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key][
-    "description"
-] = "Stimulus epoch number the spike occured in. Zero based."
-
-key = "epochLevel"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.ACQUISITION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = np.nan  # not sure
-analysisResultDict[key]["units"] = "pA"
-analysisResultDict[key]["axis_label"] = "Epoch level (pA)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
-
-###############################################################################
-# DETECTION PROPERTIES
-###############################################################################
-key = "detectionType"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = ""
-analysisResultDict[key]["default"] = None
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Detection type"
-analysisResultDict[key][
-    "description"
-] = "Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes"
-
-key = "dvdtThreshold"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "dvdt"
-analysisResultDict[key]["axis_label"] = "dV/dt threshold (mV/ms)"
-analysisResultDict[key]["depends on detection"] = "dvdtThreshold"
-analysisResultDict[key]["description"] = "AP Threshold in derivative dv/dt"
-
-key = "mvThreshold"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"
-analysisResultDict[key]["axis_label"] = "Voltage threshold (mV)"
-analysisResultDict[key]["depends on detection"] = "mvThreshold"
-analysisResultDict[key]["description"] = "AP Threshold in primary recording mV"
-
-# todo: what about solay ...
-key = "medianFilter"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Median filter"
-analysisResultDict[key]["depends on detection"] = "medianFilter"
-analysisResultDict[key][
-    "description"
-] = "Median filter to generate filtered vm and dvdt. Value 0 indicates no filter."
-
-key = "halfHeights"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "list"
-analysisResultDict[key]["default"] = []
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Half-height levels"
-analysisResultDict[key]["depends on detection"] = "halfHeights"
-analysisResultDict[key][
-    "description"
-] = "List of int to specify half-heights like [10, 20, 50, 80, 90]."
-
-key = "analysisDate"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Analysis date"
-analysisResultDict[key]["description"] = "Date of analysis in yyyymmdd format."
-
-key = "analysisTime"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Analysis time"
-analysisResultDict[key]["description"] = "Time of analysis in hh:mm:ss 24 hours format."
-
-key = "modDate"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Modification date"
-analysisResultDict[key][
-    "description"
-] = "Modification date if AP is modified after detection."
-
-key = "modTime"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Modification time"
-analysisResultDict[key][
-    "description"
-] = "Modification time if AP is modified after detection."
-
-key = "sanpy_version"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sanpy Version"
-analysisResultDict[key][
-    "description"
-] = "SanPy version when analysis was run."
-
-key = "sanpy_git_commit"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sanpy Git Commit"
-analysisResultDict[key][
-    "description"
-] = "SanPy git commit hash when analysis was run."
-
-key = "sanpy_git_dirty"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.DETECTION
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sanpy Git Dirty"
-analysisResultDict[key][
-    "description"
-] = "SanPy git dirty flag when analysis was run."
-
-###############################################################################
-# METADATA PROPERTIES
-###############################################################################
-key = "spike_include"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = "yes"
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Spike included"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key][
-    "description"
-] = "Whether an individual spike is included (yes or no)."
-
-key = "file_number"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "File Number"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key]["description"] = "Number of the file - used in pooling"
-
-# abb i think we need to add other experimental metadata
-# like genotype, etc
-
-###############################################################################
-# SPIKE PROPERTIES
-###############################################################################
-key = "sweepCondition"  # abb 20260929
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sweep condition"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key][
-    "description"
-] = "User-assigned sweep condition."
-
-key = "spikeNumber"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = None  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Spike number"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Spike number across all sweeps. Zero based."
-
-key = "sweepSpikeNumber"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = None  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Sweep spike number"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Spike number within the sweep. Zero based."
-
-key = "userType"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "User type"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key][
-    "description"
-] = "User-assigned user type for an individual spike."
-
-key = "spike_condition"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "str"
-analysisResultDict[key]["default"] = ""
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Spike condition"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["is_categorical"] = True
-analysisResultDict[key][
-    "description"
-] = "User-assigned condition for an individual spike."
-
-key = "errors"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "list"
-analysisResultDict[key]["default"] = []
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Errors"
-analysisResultDict[key][
-    "description"
-] = "List of dictionary to hold detection errors for this spike"
-
-#
-# actual value coming out of detection !!!!
-key = "thresholdPnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Threshold point"
-analysisResultDict[key]["description"] = "AP threshold point"
-
-key = "thresholdSec"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "sec"
-analysisResultDict[key]["axis_label"] = "Threshold time (s)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "AP threshold seconds"
-
-key = "thresholdVal"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"  # TODO: will be pA for voltage-clamp
-analysisResultDict[key]["axis_label"] = "Threshold voltage (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of Vm at AP threshold point."
-
-key = "thresholdVal_dvdt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "dvdt"  # TODO: will be pA for voltage-clamp
-analysisResultDict[key]["axis_label"] = "Threshold dV/dt (mV/ms)"
-analysisResultDict[key]["description"] = "Value of dvdt at AP threshold point."
-
-key = "peakPnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Peak point"
-analysisResultDict[key]["depends on detection"] = "(onlyPeaksAbove_mV, peakWindow_ms)"
-analysisResultDict[key]["description"] = "AP peak point."
-
-key = "peakSec"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "sec"
-analysisResultDict[key]["axis_label"] = "Peak time (s)"
-analysisResultDict[key]["description"] = "AP peak seconds."
-
-key = "peakVal"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
-analysisResultDict[key]["axis_label"] = "Peak voltage (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of Vm at AP peak point."
-
-key = "peakHeight"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Spike height (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Difference between peakVal minus thresholdVal."
-
-key = "timeToPeak_ms"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "ms"  # voltage-clamp'
-analysisResultDict[key]["axis_label"] = "Time to peak (ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Time to peak (ms) after TOP."
-
-key = "fastAhpPnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Fast AHP point"
-analysisResultDict[key]["depends on detection"] = "fastAhpWindow_ms"
-analysisResultDict[key]["description"] = "fast AHP point."
-
-key = "fastAhpSec"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "sec"
-analysisResultDict[key]["axis_label"] = "Fast AHP time (s)"
-analysisResultDict[key]["description"] = "fast AHP seconds."
-
-key = "fastAhpValue"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
-analysisResultDict[key]["axis_label"] = "Fast AHP voltage (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of Vm at fast AHP point."
-
-key = "preMinPnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Pre-spike minimum point"
-analysisResultDict[key]["depends on detection"] = "mdp_ms"
-analysisResultDict[key][
-    "description"
-] = "Minimum before an AP taken from predefined window."
-
-key = "preMinVal"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Pre-spike minimum voltage (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Minimum before an AP taken from predefined window."
-
-key = "preLinearFitPnt0"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Early diastolic fit start point"
-analysisResultDict[key][
-    "description"
-] = "Point where pre linear fit starts. Used for EDD Rate"
-
-key = "preLinearFitPnt1"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Early diastolic fit end point"
-analysisResultDict[key][
-    "description"
-] = "Point where pre linear fit stops. Used for EDD Rate"
-
-key = "earlyDiastolicDuration_ms"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "ms"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Early diastolic duration (ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Time (ms) between start/stop of EDD."
-
-key = "preLinearFitVal0"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mv"  # voltage-clamp
-analysisResultDict[key]["axis_label"] = "Early diastolic fit start voltage (mV)"
-analysisResultDict[key]["description"] = ""
-
-key = "preLinearFitVal1"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mv"
-analysisResultDict[key]["axis_label"] = "Early diastolic fit end voltage (mV)"
-analysisResultDict[key]["description"] = ""
-
-key = "earlyDiastolicDurationRate"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mv/S"
-analysisResultDict[key]["axis_label"] = "Early diastolic rate (mV/s)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Early diastolic duration rate, the slope of the linear fit between start/stop of EDD."
-
-key = "lateDiastolicDuration"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Late diastolic duration"
-analysisResultDict[key]["description"] = "Depreciated"
-
-key = "preSpike_dvdt_max_pnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Pre-spike maximum dV/dt point"
-analysisResultDict[key][
-    "description"
-] = "Point corresponding to peak in dv/dt before an AP."
-
-key = "preSpike_dvdt_max_val"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"
-analysisResultDict[key]["axis_label"] = "Voltage at pre-spike maximum dV/dt (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of Vm at peak of dv/dt before an AP."
-
-key = "preSpike_dvdt_max_val2"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "dv/dt"
-analysisResultDict[key]["axis_label"] = "Pre-spike maximum dV/dt (mV/ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of dv/dt at peak of dv/dt before an AP."
-
-key = "postSpike_dvdt_min_pnt"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Post-spike minimum dV/dt point"
-analysisResultDict[key]["depends on detection"] = "dvdtPostWindow_ms"
-analysisResultDict[key][
-    "description"
-] = "Point corresponding to min in dv/dt after an AP."
-
-key = "postSpike_dvdt_min_val"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "mV"
-analysisResultDict[key]["axis_label"] = "Voltage at post-spike minimum dV/dt (mV)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "Value of Vm at minimum of dv/dt after an AP."
-
-key = "postSpike_dvdt_min_val2"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.PEAK_DETECTION
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "dvdt"
-analysisResultDict[key]["axis_label"] = "Post-spike minimum dV/dt (mV/ms)"
-analysisResultDict[key][
-    "description"
-] = "Value of dv/dt at minimum of dv/dt after an AP."
-
-key = "isi_pnts"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Interspike interval (points)"
-analysisResultDict[key]["depends on detection"] = "refractory_ms"
-analysisResultDict[key][
-    "description"
-] = "Inter-Spike-Interval (points) with respect to previous AP."
-
-key = "isi_ms"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "ms"
-analysisResultDict[key]["axis_label"] = "Interspike interval (ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Inter-Spike-Interval (ms) with respect to previous AP."
-
-key = "spikeFreq_hz"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "Hz"
-analysisResultDict[key]["axis_label"] = "Spike frequency (Hz)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key]["description"] = "AP frequency with respect to previous AP."
-
-key = "cycleLength_pnts"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Cycle length (points)"
-analysisResultDict[key][
-    "description"
-] = "Points between APs with respect to previous AP."
-
-key = "cycleLength_ms"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "point"
-analysisResultDict[key]["axis_label"] = "Cycle length (ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Time (ms) between APs with respect to previous AP."
-
-key = "diastolicDuration_ms"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.TIMING
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = defaultVal
-analysisResultDict[key]["units"] = "ms"
-analysisResultDict[key]["axis_label"] = "Diastolic duration (ms)"
-analysisResultDict[key]["show_in_plot_menu"] = True
-analysisResultDict[key][
-    "description"
-] = "Time (ms) between minimum before AP (preMinPnt) and AP time (thresholdPnt)."
-
-key = "widths"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.WIDTHS
-analysisResultDict[key]["type"] = "list"
-analysisResultDict[key]["default"] = []
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Spike widths"
-analysisResultDict[key][
-    "description"
-] = "A list of dict to hold half-height information for each half-height in detection halfHeights."
-
-# need to define keys width_<i> from halfHeights list [10, 20, 50, 80, 90]
-for i in [10, 20, 50, 80, 90]:
-    key = "widths_" + str(i)
-    analysisResultDict[key] = getDefaultDict()
-    analysisResultDict[key]["category"] = AnalysisResultCategory.WIDTHS
-    analysisResultDict[key]["type"] = "int"
-    analysisResultDict[key]["default"] = defaultVal
-    analysisResultDict[key]["units"] = "percent"
-    analysisResultDict[key]["axis_label"] = f"Spike width at {i}% (ms)"
-    analysisResultDict[key]["show_in_plot_menu"] = True
-    analysisResultDict[key]["depends on detection"] = "halfWidthWindow_ms"
-    analysisResultDict[key]["description"] = f"Width (ms) at half-height {i} %."
-
-_CORE_ANALYSIS_RESULT_NAMES = tuple(analysisResultDict)
+    kwargs = {"title": title, "description": description, "json_schema_extra": extra}
+    if factory is not None:
+        return Field(default_factory=factory, **kwargs)
+    return Field(default=default, **kwargs)
+
+
+A = AnalysisResultCategory.ACQUISITION
+D = AnalysisResultCategory.DETECTION
+M = AnalysisResultCategory.METADATA
+I = AnalysisResultCategory.IDENTITY
+P = AnalysisResultCategory.PEAK_DETECTION
+T = AnalysisResultCategory.TIMING
+W = AnalysisResultCategory.WIDTHS
+
+
+class AnalysisResults(BaseModel):
+    """Validated completed measurements and annotations for one action potential."""
+
+    model_config = ConfigDict(
+        extra="forbid", frozen=True, json_schema_extra={"additionalProperties": False}
+    )
+
+    file: str = _field(
+        "", title="File", description="Name of the analyzed raw-data file.", category=A
+    )
+    sweep: int = _field(
+        title="Sweep",
+        description="Zero-based analyzed sweep number.",
+        category=A,
+        show=True,
+        categorical=True,
+    )
+    epoch: int | None = _field(
+        None,
+        title="Epoch",
+        description="Zero-based stimulus epoch containing the spike.",
+        category=A,
+        show=True,
+        categorical=True,
+    )
+    epochLevel: float = _field(
+        _NAN,
+        title="Epoch level (pA)",
+        description="DAC stimulus level during the spike.",
+        category=A,
+        show=True,
+        categorical=True,
+        units="pA",
+    )
+    detectionType: detectionTypes_ = _field(
+        title="Detection type", description="Spike-detection algorithm.", category=D
+    )
+    dvdtThreshold: float = _field(
+        _NAN,
+        title="dV/dt threshold (mV/ms)",
+        description="Derivative threshold used for detection.",
+        category=D,
+        units="dvdt",
+        depends="dvdtThreshold",
+    )
+    mvThreshold: float = _field(
+        _NAN,
+        title="Voltage threshold (mV)",
+        description="Membrane-potential detection threshold.",
+        category=D,
+        units="mV",
+        depends="mvThreshold",
+    )
+    medianFilter: int | None = _field(
+        0,
+        title="Median filter",
+        description="Median-filter width in points.",
+        category=D,
+        depends="medianFilter",
+    )
+    halfHeights: list[int] = _field(
+        title="Half-height levels",
+        description="Percent levels used to measure widths.",
+        category=D,
+        depends="halfHeights",
+        factory=list,
+    )
+    analysisDate: str = _field(
+        "",
+        title="Analysis date",
+        description="Analysis date in YYYYMMDD format.",
+        category=D,
+    )
+    analysisTime: str = _field(
+        "",
+        title="Analysis time",
+        description="Analysis time in 24-hour HH:MM:SS format.",
+        category=D,
+    )
+    modDate: str = _field(
+        "",
+        title="Modification date",
+        description="Date of a post-detection edit.",
+        category=D,
+    )
+    modTime: str = _field(
+        "",
+        title="Modification time",
+        description="Time of a post-detection edit.",
+        category=D,
+    )
+    sanpy_version: str = _field(
+        "",
+        title="Sanpy Version",
+        description="SanPy version used for analysis.",
+        category=D,
+    )
+    sanpy_git_commit: str = _field(
+        "",
+        title="Sanpy Git Commit",
+        description="SanPy Git commit used for analysis.",
+        category=D,
+    )
+    sanpy_git_dirty: bool | str = _field(
+        "",
+        title="Sanpy Git Dirty",
+        description="Whether the checkout had changes.",
+        category=D,
+    )
+    spike_include: str = _field(
+        "yes",
+        title="Spike included",
+        description="Whether this spike is included.",
+        category=M,
+        show=True,
+        categorical=True,
+    )
+    file_number: int = _field(
+        0,
+        title="File Number",
+        description="File number used when pooling analyses.",
+        category=M,
+        show=True,
+        categorical=True,
+    )
+    sweepCondition: str = _field(
+        "",
+        title="Sweep condition",
+        description="User-assigned sweep condition.",
+        category=I,
+        show=True,
+        categorical=True,
+    )
+    spikeNumber: int = _field(
+        title="Spike number",
+        description="Zero-based spike number across all sweeps.",
+        category=I,
+        show=True,
+    )
+    sweepSpikeNumber: int = _field(
+        title="Sweep spike number",
+        description="Zero-based spike number within the sweep.",
+        category=I,
+        show=True,
+    )
+    userType: int = _field(
+        0,
+        title="User type",
+        description="User-assigned integer spike type.",
+        category=I,
+        show=True,
+        categorical=True,
+    )
+    spike_condition: str = _field(
+        "",
+        title="Spike condition",
+        description="User-assigned condition for this spike.",
+        category=I,
+        show=True,
+        categorical=True,
+    )
+    errors: list[dict[str, Any]] = _field(
+        title="Errors",
+        description="Detection errors for this spike.",
+        category=I,
+        factory=list,
+    )
+    thresholdPnt: int = _field(
+        title="Threshold point",
+        description="Action-potential threshold point.",
+        category=P,
+        units="point",
+    )
+    thresholdSec: float = _field(
+        _NAN,
+        title="Threshold time (s)",
+        description="Action-potential threshold time.",
+        category=P,
+        show=True,
+        units="sec",
+    )
+    thresholdVal: float = _field(
+        _NAN,
+        title="Threshold voltage (mV)",
+        description="Voltage at threshold.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    thresholdVal_dvdt: float = _field(
+        _NAN,
+        title="Threshold dV/dt (mV/ms)",
+        description="dV/dt at threshold.",
+        category=P,
+        units="dvdt",
+    )
+    peakPnt: int = _field(
+        title="Peak point",
+        description="Action-potential peak point.",
+        category=P,
+        units="point",
+        depends="(onlyPeaksAbove_mV, peakWindow_ms)",
+    )
+    peakSec: float = _field(
+        _NAN,
+        title="Peak time (s)",
+        description="Action-potential peak time.",
+        category=P,
+        units="sec",
+    )
+    peakVal: float = _field(
+        _NAN,
+        title="Peak voltage (mV)",
+        description="Voltage at the peak.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    peakHeight: float = _field(
+        _NAN,
+        title="Spike height (mV)",
+        description="Peak voltage minus threshold voltage.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    timeToPeak_ms: float = _field(
+        _NAN,
+        title="Time to peak (ms)",
+        description="Time from threshold to peak.",
+        category=P,
+        show=True,
+        units="ms",
+    )
+    fastAhpPnt: int | None = _field(
+        None,
+        title="Fast AHP point",
+        description="Fast afterhyperpolarization point.",
+        category=P,
+        units="point",
+        depends="fastAhpWindow_ms",
+    )
+    fastAhpSec: float = _field(
+        _NAN,
+        title="Fast AHP time (s)",
+        description="Fast AHP time.",
+        category=P,
+        units="sec",
+    )
+    fastAhpValue: float = _field(
+        _NAN,
+        title="Fast AHP voltage (mV)",
+        description="Voltage at the fast AHP.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    preMinPnt: int | None = _field(
+        None,
+        title="Pre-spike minimum point",
+        description="Minimum point before the spike.",
+        category=P,
+        units="point",
+        depends="mdp_ms",
+    )
+    preMinVal: float = _field(
+        _NAN,
+        title="Pre-spike minimum voltage (mV)",
+        description="Minimum voltage before the spike.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    preLinearFitPnt0: int = _field(
+        title="Early diastolic fit start point",
+        description="Start point for the early-diastolic fit.",
+        category=P,
+        units="point",
+    )
+    preLinearFitPnt1: int = _field(
+        title="Early diastolic fit end point",
+        description="End point for the early-diastolic fit.",
+        category=P,
+        units="point",
+    )
+    earlyDiastolicDuration_ms: float = _field(
+        _NAN,
+        title="Early diastolic duration (ms)",
+        description="Duration of the early-diastolic fit.",
+        category=P,
+        show=True,
+        units="ms",
+    )
+    preLinearFitVal0: float = _field(
+        _NAN,
+        title="Early diastolic fit start voltage (mV)",
+        description="Voltage at the fit start.",
+        category=P,
+        units="mV",
+    )
+    preLinearFitVal1: float = _field(
+        _NAN,
+        title="Early diastolic fit end voltage (mV)",
+        description="Voltage at the fit end.",
+        category=P,
+        units="mV",
+    )
+    earlyDiastolicDurationRate: float = _field(
+        _NAN,
+        title="Early diastolic rate (mV/s)",
+        description="Slope of the early-diastolic fit.",
+        category=P,
+        show=True,
+        units="mV/s",
+    )
+    lateDiastolicDuration: float = _field(
+        _NAN,
+        title="Late diastolic duration",
+        description="Deprecated late-diastolic duration.",
+        category=P,
+    )
+    preSpike_dvdt_max_pnt: int | None = _field(
+        None,
+        title="Pre-spike maximum dV/dt point",
+        description="Point of maximum dV/dt before the peak.",
+        category=P,
+        units="point",
+    )
+    preSpike_dvdt_max_val: float = _field(
+        _NAN,
+        title="Voltage at pre-spike maximum dV/dt (mV)",
+        description="Voltage at maximum pre-spike dV/dt.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    preSpike_dvdt_max_val2: float = _field(
+        _NAN,
+        title="Pre-spike maximum dV/dt (mV/ms)",
+        description="Maximum pre-spike dV/dt.",
+        category=P,
+        show=True,
+        units="dV/dt",
+    )
+    postSpike_dvdt_min_pnt: int = _field(
+        title="Post-spike minimum dV/dt point",
+        description="Point of minimum dV/dt after the peak.",
+        category=P,
+        units="point",
+        depends="dvdtPostWindow_ms",
+    )
+    postSpike_dvdt_min_val: float = _field(
+        _NAN,
+        title="Voltage at post-spike minimum dV/dt (mV)",
+        description="Voltage at minimum post-spike dV/dt.",
+        category=P,
+        show=True,
+        units="mV",
+    )
+    postSpike_dvdt_min_val2: float = _field(
+        _NAN,
+        title="Post-spike minimum dV/dt (mV/ms)",
+        description="Minimum post-spike dV/dt.",
+        category=P,
+        units="dV/dt",
+    )
+    isi_pnts: int | None = _field(
+        None,
+        title="Interspike interval (points)",
+        description="Points since the previous threshold.",
+        category=T,
+        units="point",
+        depends="refractory_ms",
+    )
+    isi_ms: float = _field(
+        _NAN,
+        title="Interspike interval (ms)",
+        description="Time since the previous threshold.",
+        category=T,
+        show=True,
+        units="ms",
+    )
+    spikeFreq_hz: float = _field(
+        _NAN,
+        title="Spike frequency (Hz)",
+        description="Instantaneous frequency from the previous spike.",
+        category=T,
+        show=True,
+        units="Hz",
+    )
+    cycleLength_pnts: int | None = _field(
+        None,
+        title="Cycle length (points)",
+        description="Points between successive pre-spike minima.",
+        category=T,
+        units="point",
+    )
+    cycleLength_ms: float = _field(
+        _NAN,
+        title="Cycle length (ms)",
+        description="Time between successive pre-spike minima.",
+        category=T,
+        show=True,
+        units="ms",
+    )
+    diastolicDuration_ms: float = _field(
+        _NAN,
+        title="Diastolic duration (ms)",
+        description="Time from pre-spike minimum to threshold.",
+        category=T,
+        show=True,
+        units="ms",
+    )
+    widths: list[dict[str, Any]] = _field(
+        title="Spike widths",
+        description="Detailed crossing data for requested widths.",
+        category=W,
+        factory=list,
+    )
+    widths_10: float = _field(
+        _NAN,
+        title="Spike width at 10% (ms)",
+        description="Width at 10 percent of spike height.",
+        category=W,
+        show=True,
+        units="ms",
+        depends="halfWidthWindow_ms",
+    )
+    widths_20: float = _field(
+        _NAN,
+        title="Spike width at 20% (ms)",
+        description="Width at 20 percent of spike height.",
+        category=W,
+        show=True,
+        units="ms",
+        depends="halfWidthWindow_ms",
+    )
+    widths_50: float = _field(
+        _NAN,
+        title="Spike width at 50% (ms)",
+        description="Width at 50 percent of spike height.",
+        category=W,
+        show=True,
+        units="ms",
+        depends="halfWidthWindow_ms",
+    )
+    widths_80: float = _field(
+        _NAN,
+        title="Spike width at 80% (ms)",
+        description="Width at 80 percent of spike height.",
+        category=W,
+        show=True,
+        units="ms",
+        depends="halfWidthWindow_ms",
+    )
+    widths_90: float = _field(
+        _NAN,
+        title="Spike width at 90% (ms)",
+        description="Width at 90 percent of spike height.",
+        category=W,
+        show=True,
+        units="ms",
+        depends="halfWidthWindow_ms",
+    )
+
+
+def new_result_values() -> AnalysisResultValues:
+    """Create independent defaults for an in-progress spike calculation.
+
+    Returns:
+        Defaults for every non-required result field.
+    """
+    return {
+        name: field.get_default(call_default_factory=True)
+        for name, field in AnalysisResults.model_fields.items()
+        if not field.is_required()
+    }
+
+
+def _definition(name: str, field: FieldInfo) -> dict[str, Any]:
+    """Convert one model field to the established metadata shape.
+
+    Args:
+        name: Internal result name.
+        field: Pydantic field metadata.
+
+    Returns:
+        A detached compatibility definition.
+    """
+    extra = field.json_schema_extra or {}
+    default = (
+        None if field.is_required() else field.get_default(call_default_factory=True)
+    )
+    annotation = field.annotation
+    return {
+        "category": AnalysisResultCategory(extra["x-category"]),
+        "axis_label": field.title or name,
+        "show_in_plot_menu": extra["x-show-in-plot-menu"],
+        "is_categorical": extra["x-is-categorical"],
+        "type": getattr(annotation, "__name__", str(annotation)),
+        "default": deepcopy(default),
+        "units": extra["x-units"],
+        "depends on detection": extra["x-depends-on-detection"],
+        "error": extra["x-error"],
+        "description": field.description or "",
+    }
+
+
+def get_analysis_result_definitions() -> dict[str, dict[str, Any]]:
+    """Return ordered result metadata derived from the model.
+
+    Returns:
+        Detached result definitions keyed by storage name.
+    """
+    return {
+        name: _definition(name, field)
+        for name, field in AnalysisResults.model_fields.items()
+    }
 
 
 def get_plot_result_definitions() -> dict[str, dict[str, Any]]:
-    """Return result definitions shown in X/Y statistic selectors.
-
-    Registry declaration order defines presentation order. Each definition is
-    copied so interface code cannot mutate the authoritative registry.
+    """Return result definitions shown in statistic selectors.
 
     Returns:
-        Plottable definitions keyed by their internal analysis-result names.
+        Ordered plottable definitions keyed by storage name.
     """
     return {
-        name: definition.copy()
-        for name, definition in analysisResultDict.items()
-        if definition["show_in_plot_menu"]
+        name: value
+        for name, value in get_analysis_result_definitions().items()
+        if value["show_in_plot_menu"]
     }
 
-# now we have (AP threshold, AP peak), derive stats about each AP
 
+def printDocs() -> None:
+    """Print the result schema as an HTML table."""
+    rows = [
+        {"Name": name, **value}
+        for name, value in get_analysis_result_definitions().items()
+    ]
+    from sanpy.sanpy_version import getSanPyProvenance
 
-def printDocs():
-    """Print out human readable detection parameters and convert to markdown table.
-
-    Requires:
-        pip install tabulate
-
-    See: bDetection.printDocs()
-    """
-    import pandas as pd
-    from datetime import datetime
-
-    logger.info("Ensure there are no errors")
-
-    dictList = []
-    for k, v in analysisResultDict.items():
-        # iterating on getDefaultDict() to ensure all code above has valid k/v pairs
-        # lineStr = k + '\t'
-        oneDict = {
-            "Name": k,
-        }
-        for k2 in getDefaultDict().keys():
-            # print(f'  {k}: {k2}: {v[k2]}')
-            # lineStr += f'{v[k2]}' + '\t'
-            oneDict[k2] = v[k2]
-        #
-        # print(lineStr)
-
-        dictList.append(oneDict)
-
-        # check that k is in headerDefaultDict
-        for k3 in v:
-            if not k3 in getDefaultDict().keys():
-                logger.error(f'Found extra key "{k}" in "analysisResultDict"')
-
-    #
-    df = pd.DataFrame(dictList)
-
-    if 1:
-        # to markdown for mkdocs md file
-        # str = df.to_markdown()
-        str = df.to_html()
-        myDate = datetime.today().strftime("%Y-%m-%d")
-
-        from sanpy.sanpy_version import getSanPyProvenance
-        sanpyProvenance = getSanPyProvenance()
-
-        print(f"Generated {myDate} with SanPy version {sanpyProvenance.version}")
-        print(str)
-
-    if 0:
-        path = "/Users/cudmore/Desktop/sanpy-analysis-results.csv"
-        print("saving:", path)
-        df.to_csv(path, index=False)
-
-
-class NumpyEncoder(json.JSONEncoder):
-    """Special json encoder for numpy types"""
-
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
+    provenance = getSanPyProvenance()
+    date = datetime.today().strftime("%Y-%m-%d")
+    print(f"Generated {date} with SanPy version {provenance.version}")
+    print(pd.DataFrame(rows).to_html())
 
 
 class analysisResultList:
-    """Class encapsulating a list of analysis results.
-    
-    Each row is an analysisResultDict for one spike.
+    """Store dictionary-compatible spike results in detection order."""
 
-    These are keys in bAnalysis_ spike dict and columns in output reports
-    """
+    def __init__(self) -> None:
+        """Create an empty collection."""
+        self._myList: list[AnalysisResultValues] = []
 
-    def __init__(self):
-        # one copy for entire list
+    def setFromListDict(self, listOfDict: list[dict[str, Any]]) -> None:
+        """Load saved rows while logging and skipping unknown fields.
 
-        # TODO: put analysisResultDict in a function getAnalysisResultDict()
-        self._dDict = analysisResultDict
-
-        # list of analysisResultDict
+        Args:
+            listOfDict: Persisted spike-result dictionaries.
+        """
         self._myList = []
+        for saved in listOfDict:
+            values = new_result_values()
+            for name, value in saved.items():
+                if name not in AnalysisResults.model_fields:
+                    logger.error(f'Ignoring unknown saved analysis-result key "{name}"')
+                    continue
+                values[name] = value
+            self._myList.append(values)
 
-        self._iterIdx = -1
+    def extend_completed(self, results: Iterable[AnalysisResults]) -> None:
+        """Append validated completed results.
 
-    def setFromListDict(self, listOfDict: List[dict]):
-        """Set analysis results from a list of dict.
-
-        Used when loading sanpy.bAnalysis from h5 file.
-
-        When we create self (during spike detect) we have a list of class analysisResult.
-        When we save/load we have a list of dict.
-
-        This is assuming we re-create self every time we do spike detection
+        Args:
+            results: Completed spike models to serialize and append.
         """
+        self._myList.extend(result.model_dump(mode="python") for result in results)
 
-        # do not do this, we are an analysisResultList as a list of analysisResult
-        # self._myList = listOfDict
+    def append_result(self, values: Mapping[str, Any]) -> None:
+        """Append a partial compatibility row, logging unknown fields.
 
-        self._myList = []
-        for oneDict in listOfDict:
-            oneAnalysisResult = analysisResult(theDict=oneDict)
-            self._myList.append(oneAnalysisResult)
-
-    def analysisDate(self):
-        if len(self) > 0:
-            return self._myList[0]["analysisDate"]
-        else:
-            return None
-
-    def analysisTime(self):
-        if len(self) > 0:
-            return self._myList[0]["analysisTime"]
-        else:
-            return None
-
-    def _old_save(self, saveBase):
-        savePath = saveBase + "-analysis.json"
-
-        analysisList = self.asList()
-
-        # print(analysisList[0].print())
-        print(self._myList[0])
-
-        with open(savePath, "w") as f:
-            json.dump(analysisList, f, cls=NumpyEncoder, indent=4)
-
-    def _old_load(self, loadBase):
-        loadPath = loadBase + "-analysis.json"
-
-        if not os.path.isfile(loadPath):
-            logger.error(f"Did not find file: {loadPath}")
-            return
-
-        with open(loadPath, "r") as f:
-            self._myList = json.load(f)
-
-    def appendDefault(self):
-        """Append a spike to analysis.
-
-        Used in bAnalysis spike detection.
+        Args:
+            values: Partial or complete result values.
         """
-        oneResult = analysisResult()
-        self._myList.append(oneResult)
+        result = new_result_values()
+        for name, value in values.items():
+            if name not in AnalysisResults.model_fields:
+                logger.error(f'Ignoring unknown analysis-result key "{name}"')
+                continue
+            result[name] = value
+        self._myList.append(result)
 
-    def appendAnalysis(self, analysisResultList):
-        for analysisResult in analysisResultList:
-            # analysisResult is for one spike
-            self._myList.append(analysisResult)
+    def analysisDate(self) -> str | None:
+        """Return the first analysis date, if present.
 
-    # def addAnalysisResult(self, theKey, theDefault=None):
-    #     # go through list and add to each [i] dict
-    #     for spike in self:
-    #         spike.addNewKey(theKey, theDefault=theDefault)
+        Returns:
+            First analysis date or ``None``.
+        """
+        return self._myList[0]["analysisDate"] if self._myList else None
 
-    def asList(self):
-        """
-        Return underlying list.
-        """
-        # return [spike.asDict() for spike in self._myList]
-        return [x.asDict() for x in self._myList]
+    def analysisTime(self) -> str | None:
+        """Return the first analysis time, if present.
 
-    def asDataFrame(self):
+        Returns:
+            First analysis time or ``None``.
         """
-        Note: underlying _myList is a list of analysisResult
-        """
-        return pd.DataFrame(self.asList())
+        return self._myList[0]["analysisTime"] if self._myList else None
 
-    def __getitem__(self, key):
-        """
-        Allow [] indexing with self[int].
-        """
-        try:
-            # return self._dDict[key]['currentValue']
-            return self._myList[key]
-        except IndexError as e:
-            logger.error(f"{e}")
-            # logger.error(f'possible keys are: {self._myList.keys()}')
+    def asList(self) -> list[AnalysisResultValues]:
+        """Return independent result dictionaries.
 
-    def __len__(self):
-        """Allow len() with len(this)"""
+        Returns:
+            A deep copy of stored rows.
+        """
+        return deepcopy(self._myList)
+
+    def asDataFrame(self) -> pd.DataFrame:
+        """Return one DataFrame row per spike.
+
+        Returns:
+            Result DataFrame in model-field order.
+        """
+        return pd.DataFrame(self.asList(), columns=AnalysisResults.model_fields)
+
+    def __getitem__(self, key: int) -> AnalysisResultValues:
+        """Return one mutable stored result.
+
+        Args:
+            key: Zero-based row index.
+
+        Returns:
+            Stored result dictionary.
+        """
+        return self._myList[key]
+
+    def __delitem__(self, key: int) -> None:
+        """Delete one stored result.
+
+        Args:
+            key: Zero-based row index.
+        """
+        del self._myList[key]
+
+    def __len__(self) -> int:
+        """Return the number of rows.
+
+        Returns:
+            Number of stored results.
+        """
         return len(self._myList)
 
-    def __iter__(self):
-        """Allow iteration with "for item in self"
+    def __iter__(self) -> Iterator[AnalysisResultValues]:
+        """Iterate over mutable result dictionaries.
+
+        Returns:
+            Iterator over stored rows.
         """
-        _iterIdx = -1
-        return self
+        return iter(self._myList)
 
-    def __next__(self):
-        """Allow iteration with "for item in self"
-        """
-        self._iterIdx += 1
-        if self._iterIdx >= len(self._myList):
-            self._iterIdx = -1  # reset to initial value
-            raise StopIteration
-        else:
-            return self._myList[self._iterIdx]
-
-
-class analysisResult:
-    def __init__(self, theDict=None):
-        """Create an anlysis item (for one spike)
-
-        Args:
-            theDict: Pre-existing dict when we load form h5 file
-        """
-        defaultDict = analysisResultDict
-        # this is simple key/value pairs as we will in detection
-        self._rDict = {}
-        for k in _CORE_ANALYSIS_RESULT_NAMES:
-            v = defaultDict[k]
-            default = v["default"]
-            self._rDict[k] = default
-
-        if theDict is not None:
-            for k, v in theDict.items():
-                if k not in defaultDict:
-                    logger.warning(f'  did not find key "{k}" in defaultDict keys: {defaultDict.keys()}')
-                    continue
-                self[k] = v  # calls __setitem__()
-
-    def print(self):
-        printList = []
-        for k, v in self._rDict.items():
-            if isinstance(v, list):
-                for item in v:
-                    for k2, v2 in item.items():
-                        printList.append(f"  {k2} : {v2} {type(v2)}")
-            else:
-                printList.append(f"{k} : {v} {type(v)}")
-        return "\n".join(printList)
-
-    # def addNewKey(self, theKey, theDefault=None):
-    #     """
-    #     Add a new key to this spike.
-
-    #     Returns: (bool) True if new key added, false if key already exists.
-    #     """
-    #     if theDefault is None:
-    #         # theType = 'float'
-    #         theDefault = float("nan")
-
-    #     # check if key exists
-    #     keyExists = theKey in self._rDict.keys()
-    #     addedKey = False
-    #     if keyExists:
-    #         # key exists, don't modify
-    #         # logger.warning(f'The key "{theKey}" already exists and has value "{self._rDict[theKey]}"')
-    #         pass
-    #     else:
-    #         self._rDict[theKey] = theDefault
-    #         addedKey = True
-
-    #     #
-    #     return addedKey
-
-    def asDict(self):
-        """
-        Returns underlying dictionary
-        """
-        return self._rDict
-
-    def __getitem__(self, key):
-        # to mimic a dictionary
-        ret = None
-        try:
-            # return self._dDict[key]['currentValue']
-            ret = self._rDict[key]
-        except KeyError as e:
-            logger.error(f'Error getting key "{key}"')
-            logger.error(f'possible keys are: {self._rDict.keys()}')
-            raise
-        #
-        return ret
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        """Assign a value for an existing analysis-result key.
-
-        Args:
-            key: Name already present on this result.
-            value: Value to store for ``key``.
-
-        Raises:
-            KeyError: If ``key`` is not already a result name.
-        """
-        if key not in self._rDict:
-            logger.error(f'Error setting key "{key}"')
-            logger.error(f"possible keys are: {list(self._rDict)}")
-            raise KeyError(key)
-        self._rDict[key] = value
-
-    def items(self):
-        # to mimic a dictionary
-        return self._rDict.items()
-
-    def keys(self):
-        # to mimic a dictionary
-        return self._rDict.keys()
 
 if __name__ == "__main__":
     printDocs()

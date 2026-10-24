@@ -17,7 +17,7 @@ zarr = pytest.importorskip(
 )
 
 import sanpy
-from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bAnalysisResults import get_analysis_result_definitions
 from sanpy.bDetection import DetectionParameters
 from sanpy.io.zarr_export.exporter import _write_json, export_collection
 from sanpy.io.zarr_export.json_codec import canonical_json, json_value
@@ -89,13 +89,13 @@ def test_write_json_preserves_mapping_insertion_order(tmp_path: Path) -> None:
     _write_json(path, value)
 
     assert path.read_text(encoding="utf-8") == (
-        '{\n'
+        "{\n"
         '  "second": {\n'
         '    "nested_second": 2,\n'
         '    "nested_first": 1\n'
-        '  },\n'
+        "  },\n"
         '  "first": 0\n'
-        '}\n'
+        "}\n"
     )
 
 
@@ -135,9 +135,7 @@ def test_export_is_zarr3_and_preserves_runtime_state(
     validate_collection(destination)
 
 
-def test_export_writes_valid_file_metadata(
-    tmp_path: Path, small_abf: Path
-) -> None:
+def test_export_writes_valid_file_metadata(tmp_path: Path, small_abf: Path) -> None:
     """Export immutable file metadata as an additive recording resource.
 
     Args:
@@ -185,7 +183,10 @@ def test_export_writes_experimental_metadata_and_definitions(
         (root / "metadata" / "experimental_metadata_definitions.json").read_text()
     )
 
-    assert manifest["resources"]["experimental_metadata"] == "metadata/experimental_metadata.json"
+    assert (
+        manifest["resources"]["experimental_metadata"]
+        == "metadata/experimental_metadata.json"
+    )
     assert values["animal_id"] == "mouse-1"
     assert list(values) == list(definitions)
     assert definitions["sex"]["choices"][-1] == "not_applicable"
@@ -279,7 +280,9 @@ def test_export_normalizes_only_epoch_levels_in_both_table_formats(
     pd.testing.assert_frame_equal(analysis.spikeDict.asDataFrame(), original_results)
 
 
-@pytest.mark.parametrize("table_format,extension", [("csv", ".csv"), ("parquet", ".parquet")])
+@pytest.mark.parametrize(
+    "table_format,extension", [("csv", ".csv"), ("parquet", ".parquet")]
+)
 def test_table_format_selects_one_representation(
     tmp_path: Path,
     small_abf: Path,
@@ -319,7 +322,9 @@ def test_export_remains_readable_after_source_is_removed(
 
     validate_collection(destination)
     root = _recording_root(destination)
-    assert np.asarray(zarr.open_group(str(root / "data.zarr"), mode="r")["raw"]).size > 0
+    assert (
+        np.asarray(zarr.open_group(str(root / "data.zarr"), mode="r")["raw"]).size > 0
+    )
     assert not pd.read_csv(root / "tables" / "epochs.csv").empty
 
 
@@ -339,9 +344,7 @@ def test_existing_destination_requires_overwrite(
         export_collection([_analysis(small_abf)], destination, table_format="csv")
 
 
-def test_overwrite_replaces_an_existing_export(
-    tmp_path: Path, small_abf: Path
-) -> None:
+def test_overwrite_replaces_an_existing_export(tmp_path: Path, small_abf: Path) -> None:
     """Atomically replace an existing collection when requested.
 
     Args:
@@ -349,7 +352,9 @@ def test_overwrite_replaces_an_existing_export(
         small_abf: Source ABF fixture.
     """
     destination = tmp_path / "replace.sanpy.zarr"
-    export_collection([_analysis(small_abf)], destination, name="first", table_format="csv")
+    export_collection(
+        [_analysis(small_abf)], destination, name="first", table_format="csv"
+    )
 
     export_collection(
         [_analysis(small_abf)],
@@ -410,9 +415,7 @@ def test_csv_export_writes_no_parquet_resources(
     assert not list((_recording_root(destination) / "tables").glob("*.parquet"))
 
 
-def test_raw_data_matches_direct_pyabf_read(
-    tmp_path: Path, small_abf: Path
-) -> None:
+def test_raw_data_matches_direct_pyabf_read(tmp_path: Path, small_abf: Path) -> None:
     """Preserve direct PyABF signal values exactly.
 
     Args:
@@ -421,7 +424,9 @@ def test_raw_data_matches_direct_pyabf_read(
     """
     destination = tmp_path / "values.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, table_format="csv")
-    raw = zarr.open_group(str(_recording_root(destination) / "data.zarr"), mode="r")["raw"]
+    raw = zarr.open_group(str(_recording_root(destination) / "data.zarr"), mode="r")[
+        "raw"
+    ]
     source = pyabf.ABF(str(small_abf))
     source.setSweep(7, 1)
 
@@ -445,10 +450,18 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     export_collection([analysis], destination, table_format="both")
 
     root = _recording_root(destination)
-    actual_parameters = json.loads((root / "metadata" / "detection_parameters.json").read_text())
-    parameter_definitions = json.loads((root / "metadata" / "detection_parameter_definitions.json").read_text())
-    result_definitions = json.loads((root / "metadata" / "analysis_result_definitions.json").read_text())
-    overlay_definitions = json.loads((root / "metadata" / "trace_overlays.json").read_text())
+    actual_parameters = json.loads(
+        (root / "metadata" / "detection_parameters.json").read_text()
+    )
+    parameter_definitions = json.loads(
+        (root / "metadata" / "detection_parameter_definitions.json").read_text()
+    )
+    result_definitions = json.loads(
+        (root / "metadata" / "analysis_result_definitions.json").read_text()
+    )
+    overlay_definitions = json.loads(
+        (root / "metadata" / "trace_overlays.json").read_text()
+    )
     results = pd.read_csv(root / "tables" / "analysis_results.csv")
     assert actual_parameters["detectionName"] == detection["detectionName"]
     assert isinstance(actual_parameters["detectionName"], str)
@@ -460,7 +473,7 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     # assert result_definitions["thresholdPnt"]["category"] == "waveform"
     assert "depends on detection" in result_definitions["thresholdPnt"]
     assert parameter_definitions == DetectionParameters.model_json_schema()
-    assert result_definitions == json_value(analysisResultDict)
+    assert result_definitions == json_value(get_analysis_result_definitions())
     assert overlay_definitions == {
         "overlays": json_value(get_trace_overlay_definitions())
     }
@@ -485,7 +498,9 @@ def test_detection_parameter_validation_rejects_bad_value(
     values["dvdtThreshold"] = "invalid"
     _write_json(path, values)
 
-    with pytest.raises(SanPyZarrValidationError, match="Detection parameter validation"):
+    with pytest.raises(
+        SanPyZarrValidationError, match="Detection parameter validation"
+    ):
         validate_collection(destination)
 
 

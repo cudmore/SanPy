@@ -7,7 +7,10 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
-from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
+from sanpy.bAnalysisResults import (
+    get_analysis_result_definitions,
+    get_plot_result_definitions,
+)
 from sanpy.bDetection import DetectionParameters
 
 
@@ -52,15 +55,13 @@ def test_analysis_tables_use_full_and_plot_registries() -> None:
     full_table = module.render_analysis_results_table(generated_on)
 
     plot_names = [
-        line.strip("|").strip().split(" | ")[0]
-        for line in plot_table.splitlines()[4:]
+        line.strip("|").strip().split(" | ")[0] for line in plot_table.splitlines()[4:]
     ]
     full_names = [
-        line.strip("|").strip().split(" | ")[0]
-        for line in full_table.splitlines()[4:]
+        line.strip("|").strip().split(" | ")[0] for line in full_table.splitlines()[4:]
     ]
     assert plot_names == list(get_plot_result_definitions())
-    assert full_names == list(analysisResultDict)
+    assert full_names == list(get_analysis_result_definitions())
 
 
 def test_table_values_are_markdown_safe() -> None:

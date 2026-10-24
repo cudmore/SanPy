@@ -8,7 +8,7 @@ import pandas as pd
 
 import sanpy
 
-from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bAnalysisResults import get_analysis_result_definitions
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
@@ -33,13 +33,15 @@ class bExport:
         self.ba = ba
         self.sweepNumber = 0
 
-    def report3(self, sweep='All',
-                epoch='All',
-                theMin : Optional[float] = None,
-                theMax : Optional[float] = None,
-                ) -> pd.DataFrame:
+    def report3(
+        self,
+        sweep="All",
+        epoch="All",
+        theMin: Optional[float] = None,
+        theMax: Optional[float] = None,
+    ) -> pd.DataFrame:
         """Generate a full report of all spike columns.
-        
+
         Like what is save in csv but limited by sweep, epoch, etc
         """
 
@@ -49,16 +51,16 @@ class bExport:
 
         df = self.ba.asDataFrame()  # full df with all spikes
 
-        spikeList = self.ba.getStat('spikeNumber', sweepNumber=sweep, epochNumber=epoch)
+        spikeList = self.ba.getStat("spikeNumber", sweepNumber=sweep, epochNumber=epoch)
 
         # reduce to spikes in list
-        df = df.loc[df['spikeNumber'].isin(spikeList)]
+        df = df.loc[df["spikeNumber"].isin(spikeList)]
 
         if theMin is not None and theMax is not None:
-            df = df[ (df['thresholdSec']>=theMin) & (df['thresholdSec']<theMax)]
-        
+            df = df[(df["thresholdSec"] >= theMin) & (df["thresholdSec"] < theMax)]
+
         return df
-    
+
     def report2(
         self,
         sweep: Union[str, int] = "All",
@@ -109,21 +111,20 @@ class bExport:
             column for column in df.columns if str(column).startswith("widths_")
         )
         columns.extend(["file", "errors"])
+        definitions = get_analysis_result_definitions()
         return df.loc[:, columns].rename(
-            columns={
-                column: analysisResultDict[column]["axis_label"]
-                for column in columns
-            }
+            columns={column: definitions[column]["axis_label"] for column in columns}
         )
 
-    def getSummary(self,
-                   sweep='All',
-                    epoch='All',
-                    theMin: Optional[float] = None, 
-                    theMax: Optional[float] = None
-                    ) -> pd.DataFrame:
+    def getSummary(
+        self,
+        sweep="All",
+        epoch="All",
+        theMin: Optional[float] = None,
+        theMax: Optional[float] = None,
+    ) -> pd.DataFrame:
         """Get analysis summary as df.
-        
+
         This adds some header information to spike report bExport.report2().
         """
 
@@ -138,10 +139,9 @@ class bExport:
         #
         # cardiac style analysis to sheet 'cardiac'
         # human readable columns
-        cardiac_df = self.report2(sweep=sweep,
-                                  epoch=epoch,
-                                  theMin=theMin,
-                                  theMax=theMax)
+        cardiac_df = self.report2(
+            sweep=sweep, epoch=epoch, theMin=theMin, theMax=theMax
+        )
 
         dDict = self.ba.getDetectionDict()
 
@@ -200,7 +200,7 @@ class bExport:
         # print(theMean)
 
         theMean["Errors"] = ""
-                
+
         # sd
         theSD = cardiac_df.std(numeric_only=True)  # skipna default is True
         theSD["Errors"] = ""

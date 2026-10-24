@@ -14,7 +14,10 @@ if TYPE_CHECKING:
     from mkdocs.structure.pages import Page
 
 import sanpy
-from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
+from sanpy.bAnalysisResults import (
+    get_analysis_result_definitions,
+    get_plot_result_definitions,
+)
 from sanpy.bDetection import DetectionParameters, detectionTypes_
 
 
@@ -55,9 +58,7 @@ def _render_table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
     """
     header = f"| {' | '.join(headers)} |"
     separator = f"| {' | '.join('---' for _ in headers)} |"
-    body = [
-        f"| {' | '.join(_format_value(value) for value in row)} |" for row in rows
-    ]
+    body = [f"| {' | '.join(_format_value(value) for value in row)} |" for row in rows]
     return "\n".join([header, separator, *body])
 
 
@@ -89,9 +90,17 @@ def render_detection_parameters_table(generated_on: date | None = None) -> str:
     rows = []
     for name, field in DetectionParameters.model_fields.items():
         metadata = field.json_schema_extra or {}
-        rows.append((name, metadata["x-category"], field.default,
-                     _detection_type_label(field.annotation), metadata["x-units"],
-                     field.title, field.description))
+        rows.append(
+            (
+                name,
+                metadata["x-category"],
+                field.default,
+                _detection_type_label(field.annotation),
+                metadata["x-units"],
+                field.title,
+                field.description,
+            )
+        )
     table = _render_table(
         (
             "Parameter",
@@ -197,7 +206,7 @@ def render_analysis_results_table(generated_on: date | None = None) -> str:
     Returns:
         A Markdown table for all analysis results.
     """
-    return _render_analysis_table(analysisResultDict, generated_on)
+    return _render_analysis_table(get_analysis_result_definitions(), generated_on)
 
 
 def on_page_markdown(
