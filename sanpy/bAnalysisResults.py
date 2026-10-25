@@ -5,10 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
+from enum import StrEnum
+import math
+from numbers import Real
 from typing import Any, TypeAlias
 
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 
@@ -19,7 +22,33 @@ from sanpy.schema import AnalysisResultCategory
 logger = get_logger(__name__)
 AnalysisResultValues: TypeAlias = dict[str, Any]
 """Mutable values used while calculating one spike result."""
-_NAN = float("nan")
+HALF_HEIGHTS: tuple[int, int, int, int, int] = (10, 20, 50, 80, 90)
+"""Fixed percentages used for action-potential width measurements."""
+
+
+class AnalysisErrorCode(StrEnum):
+    """Identify one stable category of spike-analysis diagnostic."""
+
+    SPIKE_WIDTH = "spike_width"
+    DVDT_PERCENT = "dvdt_percent"
+    FAST_AHP_WINDOW = "fast_ahp_window"
+    PRE_SPIKE_MIN_UNDERRUN = "pre_spike_min_underrun"
+    PRE_SPIKE_MIN_ZERO = "pre_spike_min_zero"
+    PRE_SPIKE_MIN = "pre_spike_min"
+    EARLY_DIASTOLIC_FIT = "early_diastolic_fit"
+    PRE_SPIKE_DVDT = "pre_spike_dvdt"
+    CYCLE_LENGTH = "cycle_length"
+
+
+class AnalysisError(BaseModel):
+    """Describe one diagnostic attached to a completed spike result."""
+
+    model_config = ConfigDict(
+        extra="forbid", frozen=True, json_schema_extra={"additionalProperties": False}
+    )
+
+    code: AnalysisErrorCode
+    message: str
 
 
 def _field(
@@ -82,6 +111,22 @@ class AnalysisResults(BaseModel):
         extra="forbid", frozen=True, json_schema_extra={"additionalProperties": False}
     )
 
+    @field_validator("*", mode="before")
+    @classmethod
+    def _normalize_nonfinite_measurement(cls, value: Any) -> Any:
+        """Convert nonfinite numeric measurements to missing values.
+
+        Args:
+            value: Candidate field value supplied by analysis calculations or
+                persistence.
+
+        Returns:
+            ``None`` for nonfinite real numbers, otherwise the original value.
+        """
+        if isinstance(value, Real) and not isinstance(value, bool):
+            return value if math.isfinite(float(value)) else None
+        return value
+
     file: str = _field(
         "", title="File", description="Name of the analyzed raw-data file.", category=A
     )
@@ -100,8 +145,8 @@ class AnalysisResults(BaseModel):
         show=True,
         categorical=True,
     )
-    epochLevel: float = _field(
-        _NAN,
+    epochLevel: float | None = _field(
+        None,
         title="Epoch level (pA)",
         description="DAC stimulus level during the spike.",
         category=A,
@@ -112,16 +157,16 @@ class AnalysisResults(BaseModel):
     detectionType: detectionTypes_ = _field(
         title="Detection type", description="Spike-detection algorithm.", category=D
     )
-    dvdtThreshold: float = _field(
-        _NAN,
+    dvdtThreshold: float | None = _field(
+        None,
         title="dV/dt threshold (mV/ms)",
         description="Derivative threshold used for detection.",
         category=D,
         units="dvdt",
         depends="dvdtThreshold",
     )
-    mvThreshold: float = _field(
-        _NAN,
+    mvThreshold: float | None = _field(
+        None,
         title="Voltage threshold (mV)",
         description="Membrane-potential detection threshold.",
         category=D,
@@ -134,13 +179,6 @@ class AnalysisResults(BaseModel):
         description="Median-filter width in points.",
         category=D,
         depends="medianFilter",
-    )
-    halfHeights: list[int] = _field(
-        title="Half-height levels",
-        description="Percent levels used to measure widths.",
-        category=D,
-        depends="halfHeights",
-        factory=list,
     )
     analysisDate: str = _field(
         "",
@@ -236,7 +274,7 @@ class AnalysisResults(BaseModel):
         show=True,
         categorical=True,
     )
-    errors: list[dict[str, Any]] = _field(
+    errors: list[AnalysisError] = _field(
         title="Errors",
         description="Detection errors for this spike.",
         category=I,
@@ -248,24 +286,24 @@ class AnalysisResults(BaseModel):
         category=P,
         units="point",
     )
-    thresholdSec: float = _field(
-        _NAN,
+    thresholdSec: float | None = _field(
+        None,
         title="Threshold time (s)",
         description="Action-potential threshold time.",
         category=P,
         show=True,
         units="sec",
     )
-    thresholdVal: float = _field(
-        _NAN,
+    thresholdVal: float | None = _field(
+        None,
         title="Threshold voltage (mV)",
         description="Voltage at threshold.",
         category=P,
         show=True,
         units="mV",
     )
-    thresholdVal_dvdt: float = _field(
-        _NAN,
+    thresholdVal_dvdt: float | None = _field(
+        None,
         title="Threshold dV/dt (mV/ms)",
         description="dV/dt at threshold.",
         category=P,
@@ -278,31 +316,31 @@ class AnalysisResults(BaseModel):
         units="point",
         depends="(onlyPeaksAbove_mV, peakWindow_ms)",
     )
-    peakSec: float = _field(
-        _NAN,
+    peakSec: float | None = _field(
+        None,
         title="Peak time (s)",
         description="Action-potential peak time.",
         category=P,
         units="sec",
     )
-    peakVal: float = _field(
-        _NAN,
+    peakVal: float | None = _field(
+        None,
         title="Peak voltage (mV)",
         description="Voltage at the peak.",
         category=P,
         show=True,
         units="mV",
     )
-    peakHeight: float = _field(
-        _NAN,
+    peakHeight: float | None = _field(
+        None,
         title="Spike height (mV)",
         description="Peak voltage minus threshold voltage.",
         category=P,
         show=True,
         units="mV",
     )
-    timeToPeak_ms: float = _field(
-        _NAN,
+    timeToPeak_ms: float | None = _field(
+        None,
         title="Time to peak (ms)",
         description="Time from threshold to peak.",
         category=P,
@@ -317,15 +355,15 @@ class AnalysisResults(BaseModel):
         units="point",
         depends="fastAhpWindow_ms",
     )
-    fastAhpSec: float = _field(
-        _NAN,
+    fastAhpSec: float | None = _field(
+        None,
         title="Fast AHP time (s)",
         description="Fast AHP time.",
         category=P,
         units="sec",
     )
-    fastAhpValue: float = _field(
-        _NAN,
+    fastAhpValue: float | None = _field(
+        None,
         title="Fast AHP voltage (mV)",
         description="Voltage at the fast AHP.",
         category=P,
@@ -340,8 +378,8 @@ class AnalysisResults(BaseModel):
         units="point",
         depends="mdp_ms",
     )
-    preMinVal: float = _field(
-        _NAN,
+    preMinVal: float | None = _field(
+        None,
         title="Pre-spike minimum voltage (mV)",
         description="Minimum voltage before the spike.",
         category=P,
@@ -360,38 +398,38 @@ class AnalysisResults(BaseModel):
         category=P,
         units="point",
     )
-    earlyDiastolicDuration_ms: float = _field(
-        _NAN,
+    earlyDiastolicDuration_ms: float | None = _field(
+        None,
         title="Early diastolic duration (ms)",
         description="Duration of the early-diastolic fit.",
         category=P,
         show=True,
         units="ms",
     )
-    preLinearFitVal0: float = _field(
-        _NAN,
+    preLinearFitVal0: float | None = _field(
+        None,
         title="Early diastolic fit start voltage (mV)",
         description="Voltage at the fit start.",
         category=P,
         units="mV",
     )
-    preLinearFitVal1: float = _field(
-        _NAN,
+    preLinearFitVal1: float | None = _field(
+        None,
         title="Early diastolic fit end voltage (mV)",
         description="Voltage at the fit end.",
         category=P,
         units="mV",
     )
-    earlyDiastolicDurationRate: float = _field(
-        _NAN,
+    earlyDiastolicDurationRate: float | None = _field(
+        None,
         title="Early diastolic rate (mV/s)",
         description="Slope of the early-diastolic fit.",
         category=P,
         show=True,
         units="mV/s",
     )
-    lateDiastolicDuration: float = _field(
-        _NAN,
+    lateDiastolicDuration: float | None = _field(
+        None,
         title="Late diastolic duration",
         description="Deprecated late-diastolic duration.",
         category=P,
@@ -403,16 +441,16 @@ class AnalysisResults(BaseModel):
         category=P,
         units="point",
     )
-    preSpike_dvdt_max_val: float = _field(
-        _NAN,
+    preSpike_dvdt_max_val: float | None = _field(
+        None,
         title="Voltage at pre-spike maximum dV/dt (mV)",
         description="Voltage at maximum pre-spike dV/dt.",
         category=P,
         show=True,
         units="mV",
     )
-    preSpike_dvdt_max_val2: float = _field(
-        _NAN,
+    preSpike_dvdt_max_val2: float | None = _field(
+        None,
         title="Pre-spike maximum dV/dt (mV/ms)",
         description="Maximum pre-spike dV/dt.",
         category=P,
@@ -426,16 +464,16 @@ class AnalysisResults(BaseModel):
         units="point",
         depends="dvdtPostWindow_ms",
     )
-    postSpike_dvdt_min_val: float = _field(
-        _NAN,
+    postSpike_dvdt_min_val: float | None = _field(
+        None,
         title="Voltage at post-spike minimum dV/dt (mV)",
         description="Voltage at minimum post-spike dV/dt.",
         category=P,
         show=True,
         units="mV",
     )
-    postSpike_dvdt_min_val2: float = _field(
-        _NAN,
+    postSpike_dvdt_min_val2: float | None = _field(
+        None,
         title="Post-spike minimum dV/dt (mV/ms)",
         description="Minimum post-spike dV/dt.",
         category=P,
@@ -449,16 +487,16 @@ class AnalysisResults(BaseModel):
         units="point",
         depends="refractory_ms",
     )
-    isi_ms: float = _field(
-        _NAN,
+    isi_ms: float | None = _field(
+        None,
         title="Interspike interval (ms)",
         description="Time since the previous threshold.",
         category=T,
         show=True,
         units="ms",
     )
-    spikeFreq_hz: float = _field(
-        _NAN,
+    spikeFreq_hz: float | None = _field(
+        None,
         title="Spike frequency (Hz)",
         description="Instantaneous frequency from the previous spike.",
         category=T,
@@ -472,30 +510,24 @@ class AnalysisResults(BaseModel):
         category=T,
         units="point",
     )
-    cycleLength_ms: float = _field(
-        _NAN,
+    cycleLength_ms: float | None = _field(
+        None,
         title="Cycle length (ms)",
         description="Time between successive pre-spike minima.",
         category=T,
         show=True,
         units="ms",
     )
-    diastolicDuration_ms: float = _field(
-        _NAN,
+    diastolicDuration_ms: float | None = _field(
+        None,
         title="Diastolic duration (ms)",
         description="Time from pre-spike minimum to threshold.",
         category=T,
         show=True,
         units="ms",
     )
-    widths: list[dict[str, Any]] = _field(
-        title="Spike widths",
-        description="Detailed crossing data for requested widths.",
-        category=W,
-        factory=list,
-    )
-    widths_10: float = _field(
-        _NAN,
+    width_10_ms: float | None = _field(
+        None,
         title="Spike width at 10% (ms)",
         description="Width at 10 percent of spike height.",
         category=W,
@@ -503,8 +535,24 @@ class AnalysisResults(BaseModel):
         units="ms",
         depends="halfWidthWindow_ms",
     )
-    widths_20: float = _field(
-        _NAN,
+    width_10_rising_pnt: int | None = _field(
+        None,
+        title="Spike width 10% rising point",
+        description="Rising-phase crossing point at 10 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_10_falling_pnt: int | None = _field(
+        None,
+        title="Spike width 10% falling point",
+        description="Falling-phase crossing point at 10 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_20_ms: float | None = _field(
+        None,
         title="Spike width at 20% (ms)",
         description="Width at 20 percent of spike height.",
         category=W,
@@ -512,8 +560,24 @@ class AnalysisResults(BaseModel):
         units="ms",
         depends="halfWidthWindow_ms",
     )
-    widths_50: float = _field(
-        _NAN,
+    width_20_rising_pnt: int | None = _field(
+        None,
+        title="Spike width 20% rising point",
+        description="Rising-phase crossing point at 20 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_20_falling_pnt: int | None = _field(
+        None,
+        title="Spike width 20% falling point",
+        description="Falling-phase crossing point at 20 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_50_ms: float | None = _field(
+        None,
         title="Spike width at 50% (ms)",
         description="Width at 50 percent of spike height.",
         category=W,
@@ -521,8 +585,24 @@ class AnalysisResults(BaseModel):
         units="ms",
         depends="halfWidthWindow_ms",
     )
-    widths_80: float = _field(
-        _NAN,
+    width_50_rising_pnt: int | None = _field(
+        None,
+        title="Spike width 50% rising point",
+        description="Rising-phase crossing point at 50 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_50_falling_pnt: int | None = _field(
+        None,
+        title="Spike width 50% falling point",
+        description="Falling-phase crossing point at 50 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_80_ms: float | None = _field(
+        None,
         title="Spike width at 80% (ms)",
         description="Width at 80 percent of spike height.",
         category=W,
@@ -530,13 +610,45 @@ class AnalysisResults(BaseModel):
         units="ms",
         depends="halfWidthWindow_ms",
     )
-    widths_90: float = _field(
-        _NAN,
+    width_80_rising_pnt: int | None = _field(
+        None,
+        title="Spike width 80% rising point",
+        description="Rising-phase crossing point at 80 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_80_falling_pnt: int | None = _field(
+        None,
+        title="Spike width 80% falling point",
+        description="Falling-phase crossing point at 80 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_90_ms: float | None = _field(
+        None,
         title="Spike width at 90% (ms)",
         description="Width at 90 percent of spike height.",
         category=W,
         show=True,
         units="ms",
+        depends="halfWidthWindow_ms",
+    )
+    width_90_rising_pnt: int | None = _field(
+        None,
+        title="Spike width 90% rising point",
+        description="Rising-phase crossing point at 90 percent of spike height.",
+        category=W,
+        units="point",
+        depends="halfWidthWindow_ms",
+    )
+    width_90_falling_pnt: int | None = _field(
+        None,
+        title="Spike width 90% falling point",
+        description="Falling-phase crossing point at 90 percent of spike height.",
+        category=W,
+        units="point",
         depends="halfWidthWindow_ms",
     )
 

@@ -64,7 +64,7 @@ class DetectionParameters(BaseModel):
     """Validated spike-detection parameter values."""
 
     model_config = ConfigDict(
-        extra="ignore", frozen=True, json_schema_extra={"additionalProperties": False}
+        extra="forbid", frozen=True, json_schema_extra={"additionalProperties": False}
     )
 
     detectionName: str = _field(
@@ -191,13 +191,6 @@ class DetectionParameters(BaseModel):
         description="Generate warning when EED slope is lower than this value.",
         category=DetectionParameterCategory.ADVANCED,
         units="EDD slope",
-    )
-    halfHeights: list[int] = _field(
-        [10, 20, 50, 80, 90],
-        title="AP Widths",
-        description="AP Widths - hard coded as [10, 20, 50, 80, 90] percent of AP height (AP Peak (mV) - TOP (mV))",
-        category=DetectionParameterCategory.WAVEFORM,
-        show_in_editor=False,
     )
     halfWidthWindow_ms: float = _field(
         200,

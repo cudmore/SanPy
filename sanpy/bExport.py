@@ -108,7 +108,9 @@ class bExport:
             "postSpike_dvdt_min_val",
         ]
         columns.extend(
-            column for column in df.columns if str(column).startswith("widths_")
+            column
+            for column in df.columns
+            if str(column).startswith("width_") and str(column).endswith("_ms")
         )
         columns.extend(["file", "errors"])
         definitions = get_analysis_result_definitions()

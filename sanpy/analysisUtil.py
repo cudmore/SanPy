@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from sanpy.bAnalysisResults import HALF_HEIGHTS
+
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
@@ -121,25 +123,14 @@ def getHalfWidthLines(t, v, spikeDictList):
     for idx, spike in enumerate(spikeDictList):
         sweep = spike["sweep"]
         if idx == 0:
-            # make x/y from first spike using halfHeights = [20,50,80,...]
-            halfHeights = spike[
-                "halfHeights"
-            ]  # will be same for all spike, like [20, 50, 80]
-            numHalfHeights = len(halfHeights)
+            numHalfHeights = len(HALF_HEIGHTS)
             # *numHalfHeights to account for rise/fall + padding nan
             x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
             y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-            # print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
 
-        if "widths" not in spike.keys():
-            logger.error(f'=== Did not find "widths" key in spike {idx}')
-
-        for idx2, width in enumerate(spike["widths"]):
-            # halfHeight = width['halfHeight'] # [20,50,80]
-            risingPnt = width["risingPnt"]
-            # risingVal = width['risingVal']
-            fallingPnt = width["fallingPnt"]
-            # fallingVal = width['fallingVal']
+        for half_height in HALF_HEIGHTS:
+            risingPnt = spike[f"width_{half_height}_rising_pnt"]
+            fallingPnt = spike[f"width_{half_height}_falling_pnt"]
 
             if risingPnt is None or fallingPnt is None:
                 # half-height was not detected
@@ -187,4 +178,3 @@ def getHalfWidthLines(t, v, spikeDictList):
     """
     #
     return x, y
-

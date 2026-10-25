@@ -1,11 +1,8 @@
-"""Load single-electrode current-clamp NWB recordings.
-
-Requires the optional ``pynwb`` dependency, installed with the ``nwb`` extra.
-"""
+"""Load regularly sampled single-electrode intracellular NWB recordings."""
 
 from __future__ import annotations
 
-import json
+from contextlib import nullcontext
 from typing import Optional
 
 import numpy as np
@@ -16,23 +13,49 @@ from pynwb.icephys import (
     CurrentClampStimulusSeries,
     IZeroClampSeries,
     PatchClampSeries,
+    VoltageClampSeries,
+    VoltageClampStimulusSeries,
 )
 
-from sanpy.fileloaders.epochTable import epochTable
+from sanpy.fileloaders.epochTable import EpochLevelUnit, epochTable
 from sanpy.fileloaders.fileLoader_base import fileLoader_base, recordingModes
+from sanpy.io.nwb.payload import SANPY_PAYLOAD_NAME, SanpyNwbPayload
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
 _RTOL = 1e-9
 _ATOL = 1e-12
-_SANPY_METADATA_NAME = "sanpy_metadata_json"
 
 
 class fileLoader_nwb(fileLoader_base):
-    """Load a regularly sampled, single-electrode current-clamp NWB file."""
+    """Load a regularly sampled current- or voltage-clamp NWB file."""
 
     loadFileType = ".nwb"
+
+    @classmethod
+    def from_nwbfile(
+        cls,
+        nwbfile: NWBFile,
+        source_identity: str,
+        load_data: bool = True,
+    ) -> fileLoader_nwb:
+        """Load a materialized NWB object without requiring a local path.
+
+        Args:
+            nwbfile: Open NWB object whose backing handle remains valid during
+                this call.
+            source_identity: Human-readable source name ending in ``.nwb``.
+            load_data: Whether to materialize raw arrays.
+
+        Returns:
+            Fully loaded SanPy NWB file loader.
+        """
+        loader = cls.__new__(cls)
+        loader._provided_nwbfile = nwbfile
+        fileLoader_base.__init__(loader, filepath=source_identity, loadData=load_data)
+        del loader._provided_nwbfile
+        return loader
 
     def loadFile(self) -> None:
         """Load NWB metadata and optionally materialize raw sweep arrays.
@@ -53,8 +76,16 @@ class fileLoader_nwb(fileLoader_base):
             ValueError: If the NWB data cannot be represented faithfully by the
                 current SanPy single-channel, regularly sampled data model.
         """
-        with NWBHDF5IO(path=self.filepath, mode="r") as io:
-            nwbfile = io.read()
+        provided = getattr(self, "_provided_nwbfile", None)
+        source = (
+            NWBHDF5IO(path=self.filepath, mode="r")
+            if provided is None
+            else nullcontext(provided)
+        )
+        with source as io_or_nwbfile:
+            nwbfile = (
+                io_or_nwbfile.read() if provided is None else io_or_nwbfile
+            )
             recording_references = self._collect_sweep_references(nwbfile)
 
             sweep_times: list[np.ndarray] = []
@@ -66,23 +97,33 @@ class fileLoader_nwb(fileLoader_base):
             common_sample_interval: Optional[float] = None
             expected_length: Optional[int] = None
             expected_duration: Optional[float] = None
+            recording_mode: recordingModes | None = None
 
             for sweep, (
                 response_reference,
                 stimulus_reference,
             ) in enumerate(recording_references):
                 response_series = response_reference.timeseries
-                if not isinstance(
-                    response_series,
-                    (CurrentClampSeries, IZeroClampSeries),
-                ):
+                if isinstance(response_series, (CurrentClampSeries, IZeroClampSeries)):
+                    sweep_mode = recordingModes.iclamp
+                    response_unit = "volts"
+                    response_scale = 1e3
+                elif isinstance(response_series, VoltageClampSeries):
+                    sweep_mode = recordingModes.vclamp
+                    response_unit = "amperes"
+                    response_scale = 1e9
+                else:
                     raise ValueError(
-                        f"Sweep {sweep} response must be CurrentClampSeries or "
-                        f"IZeroClampSeries; got {type(response_series).__name__}"
+                        f"Sweep {sweep} response must be a supported intracellular "
+                        f"series; got {type(response_series).__name__}"
                     )
-                if response_series.unit != "volts":
+                if recording_mode is None:
+                    recording_mode = sweep_mode
+                elif recording_mode is not sweep_mode:
+                    raise ValueError("NWB file mixes current- and voltage-clamp sweeps")
+                if response_series.unit != response_unit:
                     raise ValueError(
-                        f"Sweep {sweep} response unit must be 'volts'; got "
+                        f"Sweep {sweep} response unit must be {response_unit!r}; got "
                         f"{response_series.unit!r}"
                     )
 
@@ -132,7 +173,7 @@ class fileLoader_nwb(fileLoader_base):
                         f"expected {expected_length}"
                     )
 
-                response_mv: Optional[np.ndarray] = None
+                response_runtime: Optional[np.ndarray] = None
                 local_time: Optional[np.ndarray] = None
                 if self._loadData:
                     response_time = self._reference_timestamps(
@@ -143,30 +184,43 @@ class fileLoader_nwb(fileLoader_base):
                         response_reference,
                         label=f"response for sweep {sweep}",
                     )
-                    response_mv = (
+                    response_runtime = (
                         response_values * float(response_series.conversion)
                         + float(response_series.offset)
-                    ) * 1e3
+                    ) * response_scale
                     local_time = response_time - float(response_time[0])
                     self._validate_regular_time(
                         local_time,
                         label=f"response for sweep {sweep}",
                     )
 
-                command_na: Optional[np.ndarray] = None
+                command_runtime: Optional[np.ndarray] = None
                 if stimulus_reference is None:
                     missing_stimulus_sweeps.append(sweep)
                 else:
                     stimulus_series = stimulus_reference.timeseries
-                    if not isinstance(stimulus_series, CurrentClampStimulusSeries):
+                    expected_stimulus_type = (
+                        CurrentClampStimulusSeries
+                        if sweep_mode is recordingModes.iclamp
+                        else VoltageClampStimulusSeries
+                    )
+                    stimulus_unit = (
+                        "amperes"
+                        if sweep_mode is recordingModes.iclamp
+                        else "volts"
+                    )
+                    stimulus_scale = (
+                        1e12 if sweep_mode is recordingModes.iclamp else 1e3
+                    )
+                    if not isinstance(stimulus_series, expected_stimulus_type):
                         raise ValueError(
                             f"Sweep {sweep} stimulus must be "
-                            "CurrentClampStimulusSeries; got "
+                            f"{expected_stimulus_type.__name__}; got "
                             f"{type(stimulus_series).__name__}"
                         )
-                    if stimulus_series.unit != "amperes":
+                    if stimulus_series.unit != stimulus_unit:
                         raise ValueError(
-                            f"Sweep {sweep} stimulus unit must be 'amperes'; got "
+                            f"Sweep {sweep} stimulus unit must be {stimulus_unit!r}; got "
                             f"{stimulus_series.unit!r}"
                         )
                     stimulus_electrode_id = getattr(
@@ -237,24 +291,24 @@ class fileLoader_nwb(fileLoader_base):
                                 f"Sweep {sweep} stimulus and response sample times "
                                 "do not align"
                             )
-                        command_na = (
+                        command_runtime = (
                             stimulus_values * float(stimulus_series.conversion)
                             + float(stimulus_series.offset)
-                        ) * 1e9
+                        ) * stimulus_scale
 
                 if self._loadData:
-                    if local_time is None or response_mv is None:
+                    if local_time is None or response_runtime is None:
                         raise RuntimeError(
                             f"Sweep {sweep} raw response data was not materialized"
                         )
                     sweep_times.append(local_time.astype(np.float64, copy=False))
                     sweep_responses.append(
-                        response_mv.astype(np.float64, copy=False)
+                        response_runtime.astype(np.float64, copy=False)
                     )
                     sweep_commands.append(
                         None
-                        if command_na is None
-                        else command_na.astype(np.float64, copy=False)
+                        if command_runtime is None
+                        else command_runtime.astype(np.float64, copy=False)
                     )
 
             if len(electrode_ids) != 1:
@@ -279,9 +333,13 @@ class fileLoader_nwb(fileLoader_base):
             self._sweepList = list(range(self._numSweeps))
             self._sweepLengthSec = expected_duration
             self._dataPointsPerMs = 1.0 / (common_sample_interval * 1000.0)
-            self._recordingMode = recordingModes.iclamp
+            if recording_mode is None:
+                raise ValueError("NWB file contains no supported clamp mode")
+            self._recordingMode = recording_mode
             self._sweepLabelX = "seconds"
-            self._sweepLabelY = "mv"
+            self._sweepLabelY = (
+                "mv" if recording_mode is recordingModes.iclamp else "nA"
+            )
 
             if any(
                 not np.isclose(value, 0.0, rtol=0.0, atol=_ATOL)
@@ -301,7 +359,7 @@ class fileLoader_nwb(fileLoader_base):
                 if len(missing_stimulus_sweeps) == len(sweep_commands):
                     sweep_c = None
                     logger.warning(
-                        "NWB file contains no usable current-clamp stimulus for "
+                        "NWB file contains no usable clamp stimulus for "
                         "any sweep; SanPy will provide zero commands through its "
                         "public API"
                     )
@@ -324,22 +382,25 @@ class fileLoader_nwb(fileLoader_base):
                     sweepX=sweep_x,
                     sweepY=sweep_y,
                     sweepC=sweep_c,
-                    recordingMode=recordingModes.iclamp,
+                    recordingMode=recording_mode,
                     xLabel="seconds",
-                    yLabel="mv",
+                    yLabel=self._sweepLabelY,
                 )
                 if sweep_c is not None:
                     self._epochTableList = self._build_epoch_tables(
-                        sweep_commands, self._dataPointsPerMs
+                        sweep_commands,
+                        self._dataPointsPerMs,
+                        "pA" if recording_mode is recordingModes.iclamp else "mV",
                     )
-                self._restore_optional_sanpy_metadata(nwbfile)
+                self._load_optional_sanpy_payload(nwbfile)
 
     @staticmethod
     def _build_epoch_tables(
         sweep_commands: list[Optional[np.ndarray]],
         data_points_per_ms: float,
+        level_unit: EpochLevelUnit,
     ) -> list[Optional[epochTable]]:
-        """Build one epoch table per sweep from its current command.
+        """Build one epoch table per sweep from its clamp command.
 
         Assumes every command is a piecewise-constant DC step waveform. A new
         epoch starts wherever the stored command value changes, and every
@@ -347,7 +408,7 @@ class fileLoader_nwb(fileLoader_base):
 
         Assumes every sweep shares the same epoch timing and only the step
         levels differ, as in ABF protocols. A step level can equal its
-        neighbor in some sweeps (for example a 0 nA step), which hides that
+        neighbor in some sweeps (for example a zero-valued step), which hides that
         change point in those sweeps. The boundaries are therefore the union
         of change points across all sweeps, and every sweep with a command
         gets the same boundaries, so all sweeps share one epoch count. Each
@@ -355,10 +416,11 @@ class fileLoader_nwb(fileLoader_base):
         different epoch timing are not handled here.
 
         Args:
-            sweep_commands: Command in nanoamps for each sweep, or ``None``
+            sweep_commands: Command in the supplied ``level_unit`` for each sweep, or ``None``
                 for a sweep whose NWB stimulus is missing. All commands have
                 the same length.
             data_points_per_ms: Sampling rate in points per millisecond.
+            level_unit: Command unit shared by generated epoch tables.
 
         Returns:
             One epoch table per sweep, with ``None`` for sweeps without a
@@ -381,7 +443,7 @@ class fileLoader_nwb(fileLoader_base):
             if command is None:
                 tables.append(None)
                 continue
-            table = epochTable()
+            table = epochTable(level_unit=level_unit)
             for start_point, stop_point in zip(boundaries[:-1], boundaries[1:]):
                 table.addEpoch(
                     sweepNumber=sweep,
@@ -418,8 +480,6 @@ class fileLoader_nwb(fileLoader_base):
             recording_frame = recordings.to_dataframe(
                 ignore_category_ids=True,
             )
-
-            print(f'abb recording_frame:{recording_frame}')
 
             response_column = ("responses", "response")
             stimulus_column = ("stimuli", "stimulus")
@@ -462,9 +522,13 @@ class fileLoader_nwb(fileLoader_base):
                 )
             return references
 
-        responses: dict[int, CurrentClampSeries | IZeroClampSeries] = {}
+        responses: dict[
+            int, CurrentClampSeries | IZeroClampSeries | VoltageClampSeries
+        ] = {}
         for series in nwbfile.acquisition.values():
-            if not isinstance(series, (CurrentClampSeries, IZeroClampSeries)):
+            if not isinstance(
+                series, (CurrentClampSeries, IZeroClampSeries, VoltageClampSeries)
+            ):
                 continue
             sweep_number = fileLoader_nwb._require_sweep_number(series)
             if sweep_number in responses:
@@ -477,12 +541,16 @@ class fileLoader_nwb(fileLoader_base):
         if not responses:
             raise ValueError(
                 "NWB file has neither IntracellularRecordingsTable rows nor "
-                "supported current-clamp acquisition series"
+                "supported intracellular acquisition series"
             )
 
-        stimuli: dict[int, CurrentClampStimulusSeries] = {}
+        stimuli: dict[
+            int, CurrentClampStimulusSeries | VoltageClampStimulusSeries
+        ] = {}
         for series in nwbfile.stimulus.values():
-            if not isinstance(series, CurrentClampStimulusSeries):
+            if not isinstance(
+                series, (CurrentClampStimulusSeries, VoltageClampStimulusSeries)
+            ):
                 continue
             sweep_number = fileLoader_nwb._require_sweep_number(series)
             if sweep_number in stimuli:
@@ -558,30 +626,26 @@ class fileLoader_nwb(fileLoader_base):
             )
         return int(numeric_value)
 
-    def _restore_optional_sanpy_metadata(self, nwbfile: NWBFile) -> None:
-        """Restore optional SanPy JSON metadata without blocking raw-data import.
+    def _load_optional_sanpy_payload(self, nwbfile: NWBFile) -> None:
+        """Parse optional SanPy state without blocking raw-data import.
 
         Args:
-            nwbfile: Open NWB file whose scratch space may hold SanPy metadata.
+            nwbfile: Open NWB file whose scratch space may hold a SanPy payload.
         """
+        self.sanpy_payload: SanpyNwbPayload | None = None
+        self.sanpy_payload_error: str | None = None
         scratch = nwbfile.scratch
-        if _SANPY_METADATA_NAME not in scratch:
-            # logger.warning(
-            #     f"NWB file has no optional {_SANPY_METADATA_NAME} scratch entry; "
-            #     "using default SanPy metadata"
-            # )
+        if SANPY_PAYLOAD_NAME not in scratch:
             return
 
         try:
-            metadata_text = self._read_scalar_text(scratch[_SANPY_METADATA_NAME].data)
-            metadata = json.loads(metadata_text)
-            if not isinstance(metadata, dict):
-                raise ValueError("decoded metadata is not a JSON object")
-            self.metadata.update(metadata)
+            payload_text = self._read_scalar_text(scratch[SANPY_PAYLOAD_NAME].data)
+            self.sanpy_payload = SanpyNwbPayload.model_validate_json(payload_text)
         except Exception as error:
+            self.sanpy_payload_error = str(error)
             logger.warning(
-                f"Could not restore optional SanPy metadata from "
-                f"{_SANPY_METADATA_NAME}: {error}; using default metadata"
+                f"Could not validate optional SanPy payload from "
+                f"{SANPY_PAYLOAD_NAME}: {error}; loading raw NWB data only"
             )
 
     @staticmethod

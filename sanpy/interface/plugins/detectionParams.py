@@ -499,7 +499,7 @@ class detectionParams(sanpyPlugin):
         parameters = self._detection_parameters
         for name, field in DetectionParameters.model_fields.items():
             metadata = field.json_schema_extra or {}
-            if not metadata["x-show-in-editor"] and name != "halfHeights":
+            if not metadata["x-show-in-editor"]:
                 parameters = parameters.with_value(name, None)
         return parameters
 

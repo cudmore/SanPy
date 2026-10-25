@@ -1,12 +1,57 @@
-from typing import Union, Optional
+"""Represent stimulus epochs for one recording sweep."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, Optional
 from pprint import pprint
 
 import pandas as pd
 
 import pyabf
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+EpochLevelUnit = Literal["pA", "mV"]
+"""Supported SanPy command units for epoch levels."""
+
+
+class Epoch(BaseModel):
+    """Store one canonical stimulus epoch using sample-point boundaries."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sweep_number: int
+    index: int
+    type: str
+    start_point: int
+    stop_point: int
+    level: float
+    pulse_width: float | None = None
+    pulse_period: float | None = None
+    digital_state: tuple[int, ...] | None = None
+
+    @field_validator("stop_point")
+    @classmethod
+    def _validate_stop_point(cls, value: int, info: Any) -> int:
+        """Require the stop point to follow the start point.
+
+        Args:
+            value: Candidate exclusive stop point.
+            info: Pydantic validation context containing earlier fields.
+
+        Returns:
+            Validated stop point.
+
+        Raises:
+            ValueError: If the stop point does not follow the start point.
+        """
+        start_point = info.data.get("start_point")
+        if start_point is not None and value <= start_point:
+            raise ValueError("Epoch stop_point must be greater than start_point")
+        return value
 
 class epochTable():
     """Load epoch/stimulation from abf file using 'sweepEpochs'.
@@ -22,11 +67,74 @@ class epochTable():
 
     """
 
-    def __init__(self, abf: pyabf.ABF = None):
+    def __init__(
+        self,
+        abf: pyabf.ABF | None = None,
+        level_unit: EpochLevelUnit | None = None,
+    ) -> None:
+        """Initialize an optional ABF-backed epoch table.
+
+        Args:
+            abf: Optional pyABF recording positioned at one sweep.
+            level_unit: Unit shared by every epoch level in this table.
+        """
         self._epochList = []
+        self._level_unit = level_unit
 
         if abf is not None:
             self._builFromAbf(abf)
+
+    @property
+    def level_unit(self) -> EpochLevelUnit | None:
+        """Return the command unit shared by every epoch in the table."""
+        return self._level_unit
+
+    def set_level_unit(self, level_unit: EpochLevelUnit) -> None:
+        """Set the command unit shared by every epoch.
+
+        Args:
+            level_unit: Current-clamp ``pA`` or voltage-clamp ``mV``.
+        """
+        self._level_unit = level_unit
+
+    @classmethod
+    def from_epochs(
+        cls,
+        epochs: Sequence[Epoch],
+        data_points_per_ms: float,
+        level_unit: EpochLevelUnit,
+    ) -> epochTable:
+        """Construct a complete table from validated canonical epochs.
+
+        Args:
+            epochs: Ordered epochs belonging to one sweep.
+            data_points_per_ms: Recording sampling rate in points per millisecond.
+            level_unit: Unit shared by every epoch level.
+
+        Returns:
+            New epoch table with derived second values.
+
+        Raises:
+            ValueError: If sampling is invalid or indices are not contiguous.
+        """
+        if data_points_per_ms <= 0:
+            raise ValueError("data_points_per_ms must be positive")
+        if [epoch.index for epoch in epochs] != list(range(len(epochs))):
+            raise ValueError("Epoch indices must be contiguous and start at zero")
+        table = cls(level_unit=level_unit)
+        for epoch in epochs:
+            table.addEpoch(
+                sweepNumber=epoch.sweep_number,
+                startPoint=epoch.start_point,
+                stopPoint=epoch.stop_point,
+                dataPointsPerMs=data_points_per_ms,
+                level=epoch.level,
+                type=epoch.type,
+                pulseWidth=epoch.pulse_width,
+                pulsePeriod=epoch.pulse_period,
+                digitalState=epoch.digital_state,
+            )
+        return table
     
     def __str__(self):
         return self.getEpochList(asDataFrame=True).to_string()
@@ -39,6 +147,9 @@ class epochTable():
         dataPointsPerMs: float,
         level: float,
         type: str = "Step",
+        pulseWidth: float | None = None,
+        pulsePeriod: float | None = None,
+        digitalState: tuple[int, ...] | None = None,
     ) -> None:
         """Append one epoch defined by sample points.
 
@@ -52,6 +163,9 @@ class epochTable():
             dataPointsPerMs: Sampling rate in points per millisecond.
             level: Command level of the epoch.
             type: Epoch type label.
+            pulseWidth: Optional pulse width from the source protocol.
+            pulsePeriod: Optional pulse period from the source protocol.
+            digitalState: Optional digital output state.
         """
         newEpochIdx = self.numEpochs()
 
@@ -70,9 +184,9 @@ class epochTable():
             "stopSec": stopSec,
             "durSec": stopSec - startSec,
             "level": level,
-            # "pulseWidth": pulseWidth,
-            # "pulsePeriod": pulsePeriod,
-            # "digitalState": digitalState,  # list of 0/1 for 8x digital states
+            "pulseWidth": pulseWidth,
+            "pulsePeriod": pulsePeriod,
+            "digitalState": digitalState,
         }
         self._epochList.append(epochDict)
 

@@ -16,13 +16,6 @@
     "mdp_ms": 250,
     "avgWindow_ms": 5,
     "lowEddRate_warning": 8,
-    "halfHeights": [
-        10,
-        20,
-        50,
-        80,
-        90
-    ],
     "halfWidthWindow_ms": 200,
     "preSpikeClipWidth_ms": 500,
     "postSpikeClipWidth_ms": 500,

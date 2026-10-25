@@ -102,9 +102,9 @@ def _epoch_row(epoch: dict[str, Any], sweep: int) -> dict[str, object]:
         "stopSec": float(epoch["stopSec"]),
         "level": float(epoch["level"]),
         "type": str(epoch["type"]),
-        "pulseWidth": int(epoch.get("pulseWidth", 0)),
-        "pulsePeriod": int(epoch.get("pulsePeriod", 0)),
+        "pulseWidth": int(epoch.get("pulseWidth") or 0),
+        "pulsePeriod": int(epoch.get("pulsePeriod") or 0),
         "digitalStates": list(
-            epoch.get("digitalStates", epoch.get("digitalState", []))
+            epoch.get("digitalStates", epoch.get("digitalState")) or []
         ),
     }

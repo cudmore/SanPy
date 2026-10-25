@@ -87,10 +87,17 @@ class fileLoader_abf(fileLoader_base):
         self._sweepLabelY = adc_units
         if adc_units in ["A", "pA", "nA", "uA"]:
             self._recordingMode = recordingModes.vclamp
+            epoch_level_unit = "mV"
         elif adc_units in ["mV", "uv", "V"]:
             self._recordingMode = recordingModes.iclamp
+            epoch_level_unit = "pA"
         else:
             logger.warning(f'did not understand adcUnit "{adc_units}"')
+            epoch_level_unit = None
+
+        if self._epochTableList is not None and epoch_level_unit is not None:
+            for table in self._epochTableList:
+                table.set_level_unit(epoch_level_unit)
 
         self._userList = self._abf.userList
         if loadData:

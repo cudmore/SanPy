@@ -313,7 +313,8 @@ class bAnalysisPlot:
             else:
                 statX.append(spike["peakSec"])
                 if stat == "halfWidth":
-                    statVal.append(spike["widths"][halfWidthIdx]["widthMs"])
+                    half_height = sanpy.bAnalysisResults.HALF_HEIGHTS[halfWidthIdx]
+                    statVal.append(spike[f"width_{half_height}_ms"])
                 else:
                     statVal.append(spike[yStatName])
 

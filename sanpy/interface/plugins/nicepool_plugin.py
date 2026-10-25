@@ -134,10 +134,15 @@ def _nicepool_column_type(definition: Mapping[str, Any]) -> str:
         definition: SanPy analysis-result definition.
 
     Returns:
-        NicePool schema type for the result.
+        ``"number"`` when the definition type is ``float`` or ``int``,
+        including a union with ``None``. ``"boolean"`` for a boolean type.
+        ``"string"`` for every other type.
     """
     value_type = definition.get("type")
-    if value_type in {"float", "int"}:
+    type_name = value_type if isinstance(value_type, str) else ""
+    parts = {part.strip() for part in type_name.split("|")} - {""}
+    numeric_parts = parts - {"None"}
+    if numeric_parts and numeric_parts <= {"float", "int"}:
         return "number"
     if value_type in {"bool", "boolean"}:
         return "boolean"
