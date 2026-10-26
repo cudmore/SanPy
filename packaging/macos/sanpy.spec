@@ -30,13 +30,14 @@ datas = [
 # hdmf and pynwb load schema YAML with os.path.exists at import time.
 datas += collect_data_files('hdmf', includes=['**/*.yaml', '**/*.json'])
 datas += collect_data_files('pynwb', includes=['**/*.yaml', '**/*.json'])
+datas += collect_data_files('nicepool_pyqt5')
 
 a = Analysis(
     ['../../sanpy/interface/sanpy_app.py'],
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=['numpy.core.multiarray'],
+    hiddenimports=['numpy.core.multiarray', 'nicepool_pyqt5'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

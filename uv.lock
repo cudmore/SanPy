@@ -2,12 +2,16 @@ version = 1
 revision = 3
 requires-python = "==3.13.*"
 resolution-markers = [
-    "sys_platform == 'win32'",
-    "sys_platform != 'win32'",
+    "sys_platform == 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export') or (sys_platform != 'darwin' and sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')",
+    "platform_machine == 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform == 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform == 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
 ]
 required-markers = [
     "platform_machine == 'arm64' and sys_platform == 'darwin'",
-    "platform_machine == 'x86_64' and sys_platform == 'darwin'",
     "platform_machine == 'AMD64' and sys_platform == 'win32'",
 ]
 conflicts = [[
@@ -16,7 +20,10 @@ conflicts = [[
 ]]
 
 [manifest]
-constraints = [{ name = "pyqt5-qt5", marker = "sys_platform == 'win32'", specifier = "==5.15.2" }]
+constraints = [
+    { name = "pyqt5-qt5", marker = "sys_platform == 'win32'", specifier = "==5.15.2" },
+    { name = "pyqtwebengine-qt5", marker = "sys_platform == 'win32'", specifier = "==5.15.2" },
+]
 
 [[manifest.dependency-metadata]]
 name = "pyabf"
@@ -318,7 +325,7 @@ name = "build"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "os_name == 'nt' or (extra == 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')" },
+    { name = "colorama", marker = "(os_name == 'nt' and platform_machine != 'arm64') or (os_name == 'nt' and sys_platform != 'darwin') or (os_name == 'nt' and extra == 'extra-11-sanpy-ephys-dandi') or (os_name == 'nt' and extra != 'extra-11-sanpy-ephys-zarr-export') or (os_name != 'nt' and extra == 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')" },
     { name = "packaging" },
     { name = "pyproject-hooks" },
 ]
@@ -2018,7 +2025,8 @@ version = "0.16.5"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "sys_platform == 'win32'",
-    "sys_platform != 'win32'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'win32')",
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
 dependencies = [
     { name = "numpy" },
@@ -2620,7 +2628,10 @@ name = "pyqt5-qt5"
 version = "5.15.19"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "sys_platform != 'win32'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export') or (sys_platform != 'darwin' and sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')",
+    "platform_machine == 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/06/af/c0e00d353cad261ee9ccd5f6039b7ef4e09a1cb9a22c6a4b233854f6fa30/pyqt5_qt5-5.15.19-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:cac6b78e4805848c25979a0622660251070781b6b4f810688a960cb44d1ae5a2", size = 39777655, upload-time = "2026-05-21T09:12:43.94Z" },
@@ -2662,6 +2673,55 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/32/36/4c242f81fdcbfa4fb62a5645f6af79191f4097a0577bd5460c24f19cc4ef/pyqtgraph-0.14.0-py3-none-any.whl", hash = "sha256:7abb7c3e17362add64f8711b474dffac5e7b0e9245abdf992e9a44119b7aa4f5", size = 1924755, upload-time = "2025-11-16T19:43:22.251Z" },
+]
+
+[[package]]
+name = "pyqtwebengine"
+version = "5.15.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyqt5" },
+    { name = "pyqt5-sip" },
+    { name = "pyqtwebengine-qt5", version = "5.15.2", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'arm64' and extra == 'extra-11-sanpy-ephys-zarr-export') or sys_platform == 'win32' or (sys_platform != 'darwin' and extra == 'extra-11-sanpy-ephys-zarr-export') or (extra == 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')" },
+    { name = "pyqtwebengine-qt5", version = "5.15.19", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine == 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'win32' and extra == 'extra-11-sanpy-ephys-dandi') or (sys_platform != 'darwin' and sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-zarr-export') or (sys_platform == 'darwin' and extra == 'extra-11-sanpy-ephys-dandi') or (sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-zarr-export') or (sys_platform == 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/18/e8/19a00646866e950307f8cd73841575cdb92800ae14837d5821bcbb91392c/PyQtWebEngine-5.15.7.tar.gz", hash = "sha256:f121ac6e4a2f96ac289619bcfc37f64e68362f24a346553f5d6c42efa4228a4d", size = 32223, upload-time = "2024-07-19T08:44:48.6Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/3d/8961b3bb00c0979280a1a160c745e1d543b4d5823f8a71dfa370898b5699/PyQtWebEngine-5.15.7-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:e17187d9a3db3bab041f31385ed72832312557fefc5bd63ae4692df306dc1572", size = 181029, upload-time = "2024-07-19T08:44:31.266Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/c7/82bdc50b44f505a87e6a9d7f4a4d017c8e2f06b9f3ab8f661adff00b95c6/PyQtWebEngine-5.15.7-cp38-abi3-macosx_11_0_x86_64.whl", hash = "sha256:021814af1ff7d8be447c5314891cd4ddc931deae393dc2d38a816569aa0eb8cd", size = 187313, upload-time = "2024-07-19T08:44:43.002Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/a0/b36e7d6f0cd69b7dd58f0d733188e100115c5fce1c0606ad84bf35ef7ceb/PyQtWebEngine-5.15.7-cp38-abi3-manylinux_2_17_x86_64.whl", hash = "sha256:965461ca0cf414e03bd510a9a0e2ea36dc21deaa7fc4a631be4a1f2aa0327179", size = 227640, upload-time = "2024-07-19T08:44:44.236Z" },
+    { url = "https://files.pythonhosted.org/packages/54/b9/0e68e30cec6a02d8d27c7663de77460156c5342848e2f72424e577c66eaf/PyQtWebEngine-5.15.7-cp38-abi3-win32.whl", hash = "sha256:c0680527b1af3e0145ce5e0f2ba2156ff0b4b38844392cf0ddd37ede6a9edeab", size = 160980, upload-time = "2024-07-19T08:44:45.482Z" },
+    { url = "https://files.pythonhosted.org/packages/39/67/0dead50889d905fc99f40e61e5ab7f73746605ce8f74c4fa7fb3fc1d6c5e/PyQtWebEngine-5.15.7-cp38-abi3-win_amd64.whl", hash = "sha256:bd5e8c426d6f6b352cd15800d64a89b2a4a11e098460b818c7bdcf5e5612e44f", size = 184657, upload-time = "2024-07-19T08:44:47.066Z" },
+]
+
+[[package]]
+name = "pyqtwebengine-qt5"
+version = "5.15.2"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "sys_platform == 'win32'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'win32')",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/14/df/ff7c2e08a1458423ffaf8f50c26202b6fbe1a55315baa1062b34f0176c44/PyQtWebEngine_Qt5-5.15.2-py3-none-macosx_10_13_intel.whl", hash = "sha256:bc7b1fd1f4f8138d59b0b0245d601fb2c5c0aa1e1e7e853b713e52a3165d147e", size = 77943087, upload-time = "2021-03-10T14:23:32.928Z" },
+    { url = "https://files.pythonhosted.org/packages/48/62/117c9c96837287b181fce6da481065ddda68b3a8c0fa5f00ea62cc08b877/PyQtWebEngine_Qt5-5.15.2-py3-none-manylinux2014_x86_64.whl", hash = "sha256:ec2acb1780c0124ef060c310e00ca701f388d8b6c35bba9127f7a6f0dc536f77", size = 67510109, upload-time = "2021-03-10T14:28:57.413Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/25/42925450ba25cc8a2748cbb602f9ccca6c01c45bf23810c3b3219e917962/PyQtWebEngine_Qt5-5.15.2-py3-none-win32.whl", hash = "sha256:9e80b408d8de09d4e708d5d84c3ceaf3603292ff8f5e566ae44bb0320fa59c33", size = 50193245, upload-time = "2021-03-10T14:32:58.905Z" },
+    { url = "https://files.pythonhosted.org/packages/e0/db/0f29bd882aee8b5754f3e1ab104d2d09cdd9138a889558b43badcd81ce11/PyQtWebEngine_Qt5-5.15.2-py3-none-win_amd64.whl", hash = "sha256:24231f19e1595018779977de6722b5c69f3d03f34a5f7574ff21cd1e764ef76d", size = 60001343, upload-time = "2021-03-10T14:37:38.384Z" },
+]
+
+[[package]]
+name = "pyqtwebengine-qt5"
+version = "5.15.19"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "platform_machine == 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9d/e9/7523de0122699b8019e10942921fccbe06d3dc4f2f50aec2d1f232bfe208/pyqtwebengine_qt5-5.15.19-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:f267eca7e5db7341a97e8dada244a74cb5e1ea0b41feff8efd10c93395f29729", size = 74876066, upload-time = "2026-05-21T09:14:03.523Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/a0/119d8be390b561539dccedc7135ddac8ac303c54dad8ea45fd163f58d288/pyqtwebengine_qt5-5.15.19-py3-none-macosx_11_0_arm64.whl", hash = "sha256:0b164a7de87a6c1abcf920dd155c9494f2a9b7ecd54d05ca4aaa1ebc157634c4", size = 66611267, upload-time = "2026-05-21T09:14:22.125Z" },
+    { url = "https://files.pythonhosted.org/packages/34/d1/a796d0e3931d2744e56a01bf048b0e1908472da9f92bf4236f28eea5ae3e/pyqtwebengine_qt5-5.15.19-py3-none-manylinux2014_x86_64.whl", hash = "sha256:2e3d9809076919ee2b4751be55e67882b3e86e06928ab6bb0d581a1342da0fda", size = 90634763, upload-time = "2026-05-21T09:14:47.189Z" },
 ]
 
 [[package]]
@@ -3015,6 +3075,7 @@ gui = [
     { name = "pyqt5" },
     { name = "pyqtdarktheme-fork" },
     { name = "pyqtgraph" },
+    { name = "pyqtwebengine" },
     { name = "qtawesome" },
     { name = "qtpy" },
     { name = "seaborn" },
@@ -3076,6 +3137,7 @@ requires-dist = [
     { name = "pyqt5", marker = "extra == 'gui'", specifier = "==5.15.11" },
     { name = "pyqtdarktheme-fork", marker = "extra == 'gui'", specifier = "==2.3.6" },
     { name = "pyqtgraph", marker = "extra == 'gui'", specifier = ">=0.13.7,<1" },
+    { name = "pyqtwebengine", marker = "extra == 'gui'", specifier = "==5.15.7" },
     { name = "qtawesome", marker = "extra == 'gui'", specifier = ">=1.4.2,<2" },
     { name = "qtpy", marker = "extra == 'gui'", specifier = ">=2.4,<3" },
     { name = "scikit-image", specifier = ">=0.25,<1" },
@@ -3531,7 +3593,10 @@ name = "wcwidth"
 version = "0.9.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "sys_platform != 'win32'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export') or (sys_platform != 'darwin' and sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export')",
+    "platform_machine == 'arm64' and sys_platform == 'darwin' and extra != 'extra-11-sanpy-ephys-dandi' and extra == 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra == 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
+    "sys_platform != 'win32' and extra != 'extra-11-sanpy-ephys-dandi' and extra != 'extra-11-sanpy-ephys-zarr-export'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f0/b4/7830542634bb2d3e62aa3b586a72d5b3b6c91c3168929e7000ef3fed041d/wcwidth-0.9.2.tar.gz", hash = "sha256:ae0ef90b90f6af38b54f1fe6d58662ec33b3cb4b8391958a62416d654231727b", size = 955039, upload-time = "2026-10-05T00:24:05.521Z" }
 wheels = [
@@ -3684,7 +3749,8 @@ version = "3.1.5"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "sys_platform == 'win32'",
-    "sys_platform != 'win32'",
+    "(platform_machine != 'arm64' and sys_platform == 'darwin') or (sys_platform != 'darwin' and sys_platform != 'win32')",
+    "platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
 dependencies = [
     { name = "donfig" },

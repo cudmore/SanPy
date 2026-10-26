@@ -1,5 +1,9 @@
 $PackagingDir = $PSScriptRoot
 $RepoRoot = (Resolve-Path (Join-Path $PackagingDir "..\..")).Path
+$MapManagerRepo = Join-Path $RepoRoot "..\cs_project\mapmanager-web-components"
+$NicePoolProject = Join-Path $MapManagerRepo "integrations\nicepool-pyqt5"
+$NicePoolStatic = Join-Path $NicePoolProject "src\nicepool_pyqt5\static"
+$NicePoolBuildInfo = Join-Path $NicePoolStatic "nicepool-build-info.json"
 
 $AppName = "SanPy"
 $Architecture = "AMD64"

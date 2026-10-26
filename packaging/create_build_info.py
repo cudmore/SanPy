@@ -14,6 +14,8 @@ from pathlib import Path
 
 PACKAGE_DISTRIBUTIONS = (
     "PyQt5",
+    "PyQtWebEngine",
+    "nicepool-pyqt5",
     "pyqtgraph",
     "numpy",
     "pandas",
@@ -58,11 +60,17 @@ def _run(repo_root: Path, *command: str) -> str:
     ).stdout.strip()
 
 
-def create_build_info(repo_root: Path) -> dict[str, object]:
+def create_build_info(
+    repo_root: Path,
+    mapmanager_commit: str,
+    nicepool_frontend_version: str,
+) -> dict[str, object]:
     """Collect metadata from the interpreter and source tree doing the build.
 
     Args:
         repo_root: Root of the committed SanPy source tree.
+        mapmanager_commit: Commit used to build the NicePool frontend assets.
+        nicepool_frontend_version: Version of the bundled NicePool frontend.
 
     Returns:
         Nested build, Git, platform, package, and contact metadata.
@@ -79,7 +87,7 @@ def create_build_info(repo_root: Path) -> dict[str, object]:
     uv_version = _run(repo_root, "uv", "--version").removeprefix("uv ")
 
     return {
-        "schema_version": 3,
+        "schema_version": 4,
         "build": {
             "timestamp_local": now.isoformat(timespec="seconds"),
             "sanpy_version": version("sanpy-ephys"),
@@ -90,6 +98,10 @@ def create_build_info(repo_root: Path) -> dict[str, object]:
         "git": {
             "commit": commit,
             "dirty": bool(git_status),
+        },
+        "mapmanager_web_components": {
+            "commit": mapmanager_commit,
+            "nicepool_frontend_version": nicepool_frontend_version,
         },
         "platform": {
             "system": platform.system(),
@@ -112,10 +124,16 @@ def main() -> None:
     """Write build metadata to the requested JSON file."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--mapmanager-commit", required=True)
+    parser.add_argument("--nicepool-frontend-version", required=True)
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parent.parent
-    build_info = create_build_info(repo_root)
+    build_info = create_build_info(
+        repo_root,
+        args.mapmanager_commit,
+        args.nicepool_frontend_version,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(build_info, indent=2) + "\n", encoding="utf-8"

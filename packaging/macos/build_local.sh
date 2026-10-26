@@ -23,6 +23,42 @@ if ! command -v uv >/dev/null 2>&1; then
   echo "error: uv not found on PATH" >&2
   exit 1
 fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "error: npm not found on PATH; install Node.js/npm first" >&2
+  exit 1
+fi
+if [[ ! -d "${NICEPOOL_PROJECT}" ]]; then
+  echo "error: NicePool project not found: ${NICEPOOL_PROJECT}" >&2
+  exit 1
+fi
+if [[ ! -f "${MAPMANAGER_REPO}/package-lock.json" ]]; then
+  echo "error: npm lock file not found: ${MAPMANAGER_REPO}/package-lock.json" >&2
+  exit 1
+fi
+
+MAPMANAGER_STATUS="$(git -C "${MAPMANAGER_REPO}" status --porcelain --untracked-files=normal)"
+if [[ -n "${MAPMANAGER_STATUS}" ]]; then
+  echo "error: refusing to build because mapmanager-web-components is not clean:" >&2
+  printf '%s\n' "${MAPMANAGER_STATUS}" >&2
+  echo "Commit or remove those changes, then rebuild the NicePool frontend." >&2
+  exit 1
+fi
+MAPMANAGER_COMMIT="$(git -C "${MAPMANAGER_REPO}" rev-parse HEAD)"
+
+echo "==> building NicePool frontend"
+npm --prefix "${MAPMANAGER_REPO}" run build \
+  --workspace @mapmanager/nicepool-pyqt5-frontend
+
+for NICEPOOL_ASSET in \
+  "${NICEPOOL_STATIC}/index.html" \
+  "${NICEPOOL_STATIC}/nicepool-pyqt5.js" \
+  "${NICEPOOL_STATIC}/nicepool-pyqt5.css" \
+  "${NICEPOOL_BUILD_INFO}"; do
+  if [[ ! -f "${NICEPOOL_ASSET}" ]]; then
+    echo "error: NicePool frontend asset not found: ${NICEPOOL_ASSET}" >&2
+    exit 1
+  fi
+done
 
 if [[ -x "${PYTHON}" ]]; then
   VENV_PYTHON_VERSION="$("${PYTHON}" -c 'import platform; print(platform.python_version())')"
@@ -48,6 +84,20 @@ print(sys.version)
 print('machine', machine)
 "
 
+NICEPOOL_FRONTEND_VERSION="$("${PYTHON}" -c "
+import json
+from pathlib import Path
+
+build_info = json.loads(Path('${NICEPOOL_BUILD_INFO}').read_text(encoding='utf-8'))
+if build_info.get('schema_version') != 1:
+    raise SystemExit('error: unsupported NicePool build information schema')
+if build_info.get('repository_commit') != '${MAPMANAGER_COMMIT}':
+    raise SystemExit('error: NicePool frontend assets do not match mapmanager-web-components HEAD')
+if build_info.get('frontend_package') != '@mapmanager/nicepool-pyqt5-frontend':
+    raise SystemExit('error: unexpected NicePool frontend package in build information')
+print(build_info['frontend_version'])
+")"
+
 echo "==> syncing locked build environment"
 UV_PROJECT_ENVIRONMENT="${VENV}" uv sync \
   --project "${REPO_ROOT}" \
@@ -58,12 +108,18 @@ UV_PROJECT_ENVIRONMENT="${VENV}" uv sync \
   --python "${PYTHON_VERSION}" \
   --reinstall-package sanpy-ephys
 
+echo "==> installing NicePool adapter"
+uv pip install --python "${PYTHON}" --no-deps "${NICEPOOL_PROJECT}"
+
 echo "==> dependency compatibility gate"
 uv pip check --python "${PYTHON}"
 
 echo "==> import gate"
 "${PYTHON}" -c "
 from PyQt5 import QtCore
+from PyQt5 import QtWebEngineWidgets
+from importlib.metadata import version
+from pathlib import Path
 import numpy
 import pandas
 import scipy
@@ -71,7 +127,15 @@ import tables
 import skimage
 import h5py
 import sanpy
+import nicepool_pyqt5
+static_directory = Path(nicepool_pyqt5.__file__).resolve().parent / 'static'
+for filename in ('index.html', 'nicepool-pyqt5.js', 'nicepool-pyqt5.css', 'nicepool-build-info.json'):
+    path = static_directory / filename
+    if not path.is_file():
+        raise SystemExit(f'error: installed NicePool asset not found: {path}')
 print('PyQt5', QtCore.PYQT_VERSION_STR)
+print('PyQtWebEngine', version('PyQtWebEngine'))
+print('nicepool-pyqt5', version('nicepool-pyqt5'))
 print('numpy', numpy.__version__)
 print('pandas', pandas.__version__)
 print('scipy', scipy.__version__)
@@ -101,7 +165,10 @@ ENVIRONMENT_PATH="${RUN_DIR}/environment.txt"
 SOURCE_ARCHIVE="${RUN_DIR}/source-${GIT_COMMIT}.zip"
 
 echo "==> recording build info"
-"${PYTHON}" ../create_build_info.py --output "${BUILD_INFO_PATH}"
+"${PYTHON}" ../create_build_info.py \
+  --output "${BUILD_INFO_PATH}" \
+  --mapmanager-commit "${MAPMANAGER_COMMIT}" \
+  --nicepool-frontend-version "${NICEPOOL_FRONTEND_VERSION}"
 
 RECORDED_SANPY_VERSION="$("${PYTHON}" -c \
   'import json, sys; print(json.load(open(sys.argv[1]))["build"]["sanpy_version"])' \

@@ -36,6 +36,62 @@ try {
     if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
         throw "uv was not found on PATH"
     }
+    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+        throw "npm was not found on PATH; install Node.js/npm first"
+    }
+    if (-not (Test-Path -LiteralPath $NicePoolProject -PathType Container)) {
+        throw "NicePool project was not found: $NicePoolProject"
+    }
+    $NpmLock = Join-Path $MapManagerRepo "package-lock.json"
+    if (-not (Test-Path -LiteralPath $NpmLock -PathType Leaf)) {
+        throw "npm lock file was not found: $NpmLock"
+    }
+
+    $MapManagerStatus = git -C $MapManagerRepo status --porcelain --untracked-files=normal
+    if ($LASTEXITCODE -ne 0) {
+        throw "git status failed for mapmanager-web-components"
+    }
+    if ($MapManagerStatus) {
+        [Console]::Error.WriteLine(
+            "error: refusing to build because mapmanager-web-components is not clean:"
+        )
+        $MapManagerStatus | ForEach-Object { [Console]::Error.WriteLine($_) }
+        throw "Commit or remove those changes, then rebuild the NicePool frontend"
+    }
+    $MapManagerCommit = (git -C $MapManagerRepo rev-parse HEAD).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        throw "git rev-parse failed for mapmanager-web-components"
+    }
+
+    Write-Host "==> building NicePool frontend"
+    npm --prefix $MapManagerRepo run build `
+        --workspace "@mapmanager/nicepool-pyqt5-frontend"
+    if ($LASTEXITCODE -ne 0) {
+        throw "NicePool frontend build failed"
+    }
+
+    $NicePoolAssets = @(
+        (Join-Path $NicePoolStatic "index.html"),
+        (Join-Path $NicePoolStatic "nicepool-pyqt5.js"),
+        (Join-Path $NicePoolStatic "nicepool-pyqt5.css"),
+        $NicePoolBuildInfo
+    )
+    foreach ($NicePoolAsset in $NicePoolAssets) {
+        if (-not (Test-Path -LiteralPath $NicePoolAsset -PathType Leaf)) {
+            throw "NicePool frontend asset was not found: $NicePoolAsset"
+        }
+    }
+    $NicePoolBuild = Get-Content $NicePoolBuildInfo -Raw | ConvertFrom-Json
+    if ($NicePoolBuild.schema_version -ne 1) {
+        throw "Unsupported NicePool build information schema"
+    }
+    if ($NicePoolBuild.repository_commit -ne $MapManagerCommit) {
+        throw "NicePool frontend assets do not match mapmanager-web-components HEAD"
+    }
+    if ($NicePoolBuild.frontend_package -ne "@mapmanager/nicepool-pyqt5-frontend") {
+        throw "Unexpected NicePool frontend package in build information"
+    }
+    $NicePoolFrontendVersion = $NicePoolBuild.frontend_version
 
     $VenvPythonVersion = ""
     if (Test-Path $Python) {
@@ -86,6 +142,12 @@ print('machine', machine)
         throw "uv failed to synchronize the build environment"
     }
 
+    Write-Host "==> installing NicePool adapter"
+    uv pip install --python $Python --no-deps $NicePoolProject
+    if ($LASTEXITCODE -ne 0) {
+        throw "failed to install the NicePool adapter"
+    }
+
     Write-Host "==> dependency compatibility gate"
     uv pip check --python $Python
     if ($LASTEXITCODE -ne 0) {
@@ -95,6 +157,9 @@ print('machine', machine)
     Write-Host "==> import gate"
     $ImportCheck = @"
 from PyQt5 import QtCore
+from PyQt5 import QtWebEngineWidgets
+from importlib.metadata import version
+from pathlib import Path
 import numpy
 import pandas
 import scipy
@@ -102,7 +167,15 @@ import tables
 import skimage
 import h5py
 import sanpy
+import nicepool_pyqt5
+static_directory = Path(nicepool_pyqt5.__file__).resolve().parent / 'static'
+for filename in ('index.html', 'nicepool-pyqt5.js', 'nicepool-pyqt5.css', 'nicepool-build-info.json'):
+    path = static_directory / filename
+    if not path.is_file():
+        raise SystemExit(f'error: installed NicePool asset not found: {path}')
 print('PyQt5', QtCore.PYQT_VERSION_STR)
+print('PyQtWebEngine', version('PyQtWebEngine'))
+print('nicepool-pyqt5', version('nicepool-pyqt5'))
 print('numpy', numpy.__version__)
 print('pandas', pandas.__version__)
 print('scipy', scipy.__version__)
@@ -135,7 +208,10 @@ print('sanpy', sanpy.__version__)
     $SourceArchive = Join-Path $RunDir "source-$GitCommit.zip"
 
     Write-Host "==> recording build info"
-    & $Python ..\create_build_info.py --output $BuildInfoPath
+    & $Python ..\create_build_info.py `
+        --output $BuildInfoPath `
+        --mapmanager-commit $MapManagerCommit `
+        --nicepool-frontend-version $NicePoolFrontendVersion
     if ($LASTEXITCODE -ne 0) {
         throw "failed to create build_info.json"
     }

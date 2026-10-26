@@ -2,6 +2,10 @@
 
 PACKAGING_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${PACKAGING_DIR}/../.." && pwd)"
+MAPMANAGER_REPO="${REPO_ROOT}/../cs_project/mapmanager-web-components"
+NICEPOOL_PROJECT="${MAPMANAGER_REPO}/integrations/nicepool-pyqt5"
+NICEPOOL_STATIC="${NICEPOOL_PROJECT}/src/nicepool_pyqt5/static"
+NICEPOOL_BUILD_INFO="${NICEPOOL_STATIC}/nicepool-build-info.json"
 
 APP_NAME="SanPy"
 ARCH="arm64"

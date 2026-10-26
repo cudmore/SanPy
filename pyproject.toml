@@ -62,6 +62,7 @@ gui = [
     "seaborn>=0.13,<1",
     "mplcursors>=0.6,<1",
     "PyQt5==5.15.11",
+    "PyQtWebEngine==5.15.7",
     "pyqtdarktheme-fork==2.3.6",
     "pyqtgraph>=0.13.7,<1",
     "qtawesome>=1.4.2,<2",
@@ -131,11 +132,11 @@ conflicts = [
 ]
 required-environments = [
     "sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
     "sys_platform == 'win32' and platform_machine == 'AMD64'",
 ]
 constraint-dependencies = [
     "PyQt5-Qt5==5.15.2; sys_platform == 'win32'",
+    "PyQtWebEngine-Qt5==5.15.2; sys_platform == 'win32'",
 ]
 
 # pyabf 2.3.8 declares matplotlib and pytest. Its installed code imports neither.
