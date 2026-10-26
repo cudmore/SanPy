@@ -1026,9 +1026,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         )
         # self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)
 
-        # file list as a widget
-        #_mainVLayout.addWidget(self._fileListWidget)
-
         # file list as a dock
         self.fileDock = QtWidgets.QDockWidget('Files',self)
         self.fileDock.setWidget(self._fileListWidget)

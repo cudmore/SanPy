@@ -1420,7 +1420,7 @@ class Highlighter(object):
             pass
 
     def on_button_release(self, event):
-        logger.info(f'Highlighter')
+        # logger.info(f'Highlighter')
 
         # don't take action on right-click
         if event.button != 1:

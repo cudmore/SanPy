@@ -945,7 +945,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # todo: make this a signal, with slot in main window
         if self.myMainWindow is not None:
             # currently, this will just update scatte plot
-            logger.info('calling myMainWindow "set full x axis"')
+            # logger.info('calling myMainWindow "set full x axis"')
             self.myMainWindow.mySignal("set full x axis")
 
     def setAxis(self, start, stop, set_xyBoth="xAxis", whichPlot="vm"):
@@ -2893,31 +2893,10 @@ class bDetectionWidget(QtWidgets.QWidget):
             stopSec: Optional end of the displayed time range in seconds.
             userUpdate: Deprecated flag retained for existing callers.
         """
-        logger.info(f"startSec:{startSec} stopSec:{stopSec} userUpdate:{userUpdate}")
+        # logger.info(f"startSec:{startSec} stopSec:{stopSec} userUpdate:{userUpdate}")
 
         if startSec is None or stopSec is None:
             startSec, stopSec = self.getXRange()
-
-        # remove vm/dvdt/clip items (even when abf file is corrupt)
-        # if self.dvdtLines is not None:
-        #    self.derivPlot.removeItem(self.dvdtLines)
-        # if self.dvdtLinesFiltered is not None:
-        #     self.derivPlot.removeItem(self.dvdtLinesFiltered)
-        # if self.dacLines is not None:
-        #     self.dacPlot.removeItem(self.dacLines)
-        # was this june 4
-        # if self.vmLinesFiltered is not None:
-        #     self.vmPlot.removeItem(self.vmLinesFiltered)
-        # if self.vmLinesFiltered2 is not None:
-        #     self.vmPlotGlobal.removeItem(self.vmLinesFiltered2)
-        # if self.linearRegionItem2 is not None:
-        #     self.vmPlotGlobal.removeItem(self.linearRegionItem2)
-        # if self.clipLines is not None:
-        #    self.clipPlot.removeItem(self.clipLines)
-
-        # update lines
-        # self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
-        #                    self, type='dvdt')
 
         if self.ba is None:
             return
@@ -2936,51 +2915,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.derivPlot_.setData(sweepX, filteredDeriv, connect="finite")
         # A new sweep can have a different derivative range. Fit y only.
         self.derivPlot.enableAutoRange(axis="y")
-        # self.dvdtLinesFiltered = MultiLine(
-        #     sweepX,
-        #     filteredDeriv,
-        #     self,
-        #     forcePenColor=None,
-        #     type="dvdtFiltered",
-        #     columnOrder=True,
-        # )
-        # # self.derivPlot.addItem(self.dvdtLines)
-        # self.derivPlot.addItem(self.dvdtLinesFiltered)
+
 
         self.dacPlot_.setData(sweepX, sweepC, connect="finite")
         # A new sweep can have a different command range. Fit y only.
         self.dacPlot.enableAutoRange(axis="y")
-        # self.dacLines = MultiLine(
-        #     sweepX, sweepC, self, forcePenColor=None, type="dac", columnOrder=True
-        # )
-        # self.dacPlot.addItem(self.dacLines)
-
-        # self.vmLinesFiltered = MultiLine(
-        #     sweepX,
-        #     sweepY,
-        #     self,
-        #     forcePenColor=None,
-        #     type="vmFiltered",
-        #     allowXAxisDrag=True,  #default is True
-        #     columnOrder=True,
-        # )
-        # self.vmPlot.addItem(self.vmLinesFiltered)
         self.vmPlot_.setData(sweepX, sweepY, connect="finite")
         # A new sweep can have a different voltage range. Re-enable only the
         # vertical auto-range so the user's current time range is preserved.
         self.vmPlot.enableAutoRange(axis="y")
         self._update_vm_right_curve()
 
-        # vmPlot_ is PlotDataItem
-        # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
-
-        # pg.setConfigOption('leftButtonPan', False)
-
-        # can't add a multi line to 2 different plots???
-        # self.vmLinesFiltered2 = MultiLine(
-        #     sweepX, sweepY, self, forcePenColor="b", type="vmFiltered", columnOrder=True
-        # )
-        # self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
         self.vmPlotGlobal_.setData(sweepX, sweepY, connect="finite", pen='b')
         # Keep the overview fitted to the selected sweep without changing its
         # full-recording time range.
@@ -2997,23 +2942,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             self.linearRegionItem2.setBounds((0, self.ba.fileLoader.recordingDur))
 
-
-
-        # Kymograph
-        # isKymograph = self.ba.fileLoader.isKymograph()
-        # self.myKymWidget.setVisible(isKymograph)
-        # self.kymographPlot.hide()
-
-        #
         # remove and re-add plot overlays
         for idx, plot in enumerate(self.myPlots):
             plotItem = self.myPlotList[idx]
             
-            # moved to rpelotOverlays
-            # adjust symbol size
-            # plotItem.setSymbolSize(self._pgPointSize)
-            # plotItem.setSymbol(_pg_symbols)
-
             if plot["plotOn"] == "vm":
                 self.vmPlot.removeItem(plotItem)
                 self.vmPlot.addItem(plotItem, ignorBounds=True)
@@ -3024,80 +2956,9 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.derivPlot.removeItem(plotItem)
                 self.derivPlot.addItem(plotItem, ignorBounds=True)
 
-        # single spike selection
-        """
-        self.vmPlotGlobal.removeItem(self.mySingleSpikeScatterPlot)
-        self.vmPlotGlobal.addItem(self.mySingleSpikeScatterPlot)
-        self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
-        self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
-        """
-
-        # set full axis
-        # setAxisFull was causing start/stop to get over-written
-        # self.setAxisFull()
-        # 20221003 was this
-        # self.setAxis_OnFileChange(startSec, stopSec)
-        
-        # was this june 4
-        # 20240118 removed
-        # self.setAxisFull()
-        
-        # self.detectToolbarWidget.on_start_stop()
-        
-        # was this june 4
-        # self._setAxis(start=startSec, stop=stopSec)
-
-        #
         # critical, replot() is inherited
         self.replotOverlays()
 
-
-# class kymographImage(pg.ImageItem):
-#     def mouseClickEvent(self, event):
-#         # print("Click", event.pos())
-#         x = event.pos().x()
-#         y = event.pos().y()
-
-#     def mouseDragEvent(self, event):
-#         return
-
-#         if event.isStart():
-#             print("Start drag", event.pos())
-#         elif event.isFinish():
-#             print("Stop drag", event.pos())
-#         else:
-#             print("Drag", event.pos())
-
-#     def hoverEvent(self, event):
-#         if not event.isExit():
-#             # the mouse is hovering over the image; make sure no other items
-#             # will receive left click/drag events from here.
-#             event.acceptDrags(pg.QtCore.Qt.LeftButton)
-#             event.acceptClicks(pg.QtCore.Qt.LeftButton)
-
-
-# class myImageExporter(ImageExporter):
-#     def __init__(self, item):
-#         pg.exporters.ImageExporter.__init__(self, item)
-#         print(
-#             "QtGui.QImageWriter.supportedImageFormats():",
-#             QtGui.QImageWriter.supportedImageFormats(),
-#         )
-
-#     def widthChanged(self):
-#         sr = self.getSourceRect()
-#         ar = float(sr.height()) / sr.width()
-#         myHeight = int(self.params["width"] * ar)
-#         self.params.param("height").setValue(myHeight, blockSignal=self.heightChanged)
-
-#     def heightChanged(self):
-#         sr = self.getSourceRect()
-#         ar = float(sr.width()) / sr.height()
-#         myWidth = int(self.params["height"] * ar)
-#         self.params.param("width").setValue(myWidth, blockSignal=self.widthChanged)
-
-
-# class MultiLine(pg.QtGui.QGraphicsPathItem):
 class MultiLine(QtWidgets.QGraphicsPathItem):
     def __init__(
         self,

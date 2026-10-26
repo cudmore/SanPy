@@ -516,6 +516,10 @@ class bTableView(QtWidgets.QTableView):
     def select_row_silently(self, real_row: int) -> None:
         """Select a source row without emitting the file-click signal.
 
+        A row that is already selected keeps the current cell and the
+        horizontal scroll position from the click. A newly selected row is
+        scrolled into view vertically, and the horizontal scrollbar is restored.
+
         Args:
             real_row: Dataframe index identifying the recording row.
         """
@@ -526,14 +530,15 @@ class bTableView(QtWidgets.QTableView):
         row_is_selected = any(
             index.row() == visual_row for index in self.selectionModel().selectedRows()
         )
-        if row_is_selected:
-            self.setCurrentIndex(self.model().index(visual_row, 0))
-        else:
+        if not row_is_selected:
+            horizontal = self.horizontalScrollBar().value()
             self.selectRow(visual_row)
-        # Bypass this class's scrollTo override, which ignores column 0.
-        super().scrollTo(
-            self.currentIndex(), QtWidgets.QAbstractItemView.EnsureVisible
-        )
+            # Bypass this class's scrollTo override, which ignores column 0,
+            # so the selected row can scroll into view vertically.
+            super().scrollTo(
+                self.currentIndex(), QtWidgets.QAbstractItemView.EnsureVisible
+            )
+            self.horizontalScrollBar().setValue(horizontal)
         self.lastSeletedRow = real_row
 
     def _onLeftClick(self, realRow):
