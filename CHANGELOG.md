@@ -3,6 +3,40 @@
 
 SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
 
+## Recent changes - 2026-10-26
+
+### Desktop GUI
+
+#### Added
+
+- With more than one file selected, detection asks for confirmation, then detects every selected file over its full duration using the current preset and thresholds. Existing analysis on those files is replaced. A progress dialog can stop the rest of the batch. Failures are listed, and later files still run.
+- Setting one experimental metadata value with more than one file selected asks to apply it to every selected file, with the same cancelable progress and a failure list. The edits stay unsaved until the usual folder save. A single selected file is still updated immediately.
+
+#### Changed
+
+- The file table can reveal a recording in the file manager and show or hide optional columns. Hidden columns are remembered and applied to open file tables. Required columns stay visible.
+- The detection-parameter editor groups parameters by category. Start and stop seconds are not shown there. Single-file detection still takes that interval from the visible x-range.
+- Opening a folder selects the first visible recording. The launcher and File menu show only recent paths that are still on disk.
+- Export Spike Report no longer writes an Excel workbook. It writes a full spike CSV and a mean-clip CSV. The human-readable spike summary uses analysis-result display names for a fixed column set, including the width columns.
+
+### Added
+
+- `sanpy/io/nwb` writes and reads one intracellular NWB recording. SanPy state is stored as a versioned JSON payload in NWB scratch: experimental metadata, sweep conditions, epochs, detection parameters, and analysis results. `write_recording` refuses to replace an existing file, runs PyNWB validation, and refuses spike analysis for voltage clamp.
+- `write_dandiset` and `read_dandiset` export selected analysis-directory rows as a local Dandiset and load those NWB assets back. This requires the `dandi` extra and does not upload.
+- `open_remote_dandiset` and `read_remote_recording` stream one NWB asset from an explicit published DANDI version into a SanPy analysis. Draft versions are rejected. This requires the `dandi` extra.
+- The NWB loader reads regularly sampled single-electrode current-clamp and voltage-clamp recordings, including an already-open NWB object, and applies a saved SanPy payload when one is present.
+- `tests/test_examples.py` runs the three root example scripts, `load_data.py`, `load_folder.py`, and `load_and_analyze.py`. Plotting examples need the `plot` or `gui` extra and do not open a window.
+- `tests/io/nwb/` covers local Dandiset export and remote NWB loading.
+- `scripts/nwb`, `scripts/nwb_io`, and `scripts/nwb_ts` are standalone DANDI and NWB development tools: a Python streaming demo, a local export workflow, and a TypeScript reader.
+
+### Changed
+
+- `pynwb` and `pydantic` are required. The `nwb` extra is gone. Zarr and numcodecs are the `zarr-export` extra. TIFF support left the core install with the kymograph loader. The `dandi` extra cannot be installed together with `zarr-export`.
+- The `dev` group no longer includes `test-gui`. The GUI CI job installs that group itself.
+- Detection parameters and per-spike results are pydantic models. Unknown fields are rejected. Nonfinite numeric measurements are stored as missing values.
+- Kymograph analysis, TIFF and CZI loading, the kymograph plugins, the user-analysis plugin base, and `vClampAnalysis` are removed, along with their docs and the bundled kymograph example. Removed detection presets are Ca Kymograph, Ca Spikes, Sub Threshold, and Wu-iPSC. The remaining presets are Default, Fast Neuron, Neuron, SA Node, and Ventricular.
+- `examples/legacy` is removed. `sanpy.sanpyPaths` is now `sanpy.sanpy_paths`. `detectionUtils` and `bAbfText` are in `_retired/`.
+
 ## Recent changes - 2026-10-14
 
 ### Desktop GUI
