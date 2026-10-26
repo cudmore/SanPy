@@ -105,6 +105,95 @@ def test_file_switch_applies_one_complete_state_without_nested_request(
     assert state_changes.call_args.args == (expected,)
 
 
+def test_multi_selection_preserves_active_file_until_it_is_deselected(
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: Any,
+    qtbot: Any,
+    tmp_path: Path,
+) -> None:
+    """Keep the active file selected and promote the first remaining row.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+        tmp_path: Temporary directory supplied by pytest.
+    """
+    data_path = Path(__file__).resolve().parents[1] / "data"
+    for source_name, target_name in (
+        ("2021_07_20_0010.abf", "first.abf"),
+        ("19114001.abf", "second.abf"),
+        ("19114000.abf", "third.abf"),
+    ):
+        (tmp_path / target_name).write_bytes((data_path / source_name).read_bytes())
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(tmp_path))
+    qtbot.addWidget(window)
+    table = window._fileListWidget.getTableView()
+    model = table.model()
+    first_key = window.state.file_key
+    selection = table.selectionModel()
+    row_flag = QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Rows
+    selection.select(model.index(1, 0), row_flag)
+    selection.select(model.index(2, 0), row_flag)
+
+    assert window.selected_file_keys == tuple(
+        window.myAnalysisDir.get_file_key(model._data.index[row])
+        for row in range(3)
+    )
+    assert window.state.file_key == first_key
+    assert window.myDetectionWidget.detectToolbarWidget.detectDvDtButton.text() == (
+        "Batch dV/dt"
+    )
+
+    deselect_flag = (
+        QtCore.QItemSelectionModel.Deselect | QtCore.QItemSelectionModel.Rows
+    )
+    selection.select(model.index(0, 0), deselect_flag)
+    expected_key = window.myAnalysisDir.get_file_key(model._data.index[1])
+
+    assert window.state.file_key == expected_key
+    assert expected_key in window.selected_file_keys
+    assert window.myDetectionWidget.ba is window.myAnalysisDir.get_analysis_for_file_key(
+        expected_key
+    )
+
+
+def test_file_table_refresh_resolves_visual_row_after_sort(
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: Any,
+    qtbot: Any,
+    tmp_path: Path,
+) -> None:
+    """Emit a repaint for the current visual row after table sorting.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+        tmp_path: Temporary directory supplied by pytest.
+    """
+    data_path = Path(__file__).resolve().parents[1] / "data"
+    for filename in ("2021_07_20_0010.abf", "19114001.abf"):
+        (tmp_path / filename).write_bytes((data_path / filename).read_bytes())
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(tmp_path))
+    qtbot.addWidget(window)
+    model = window.myModel
+    file_column = model._data.columns.index("File")
+    model.sort(file_column, QtCore.Qt.DescendingOrder)
+    row_label = model._data.index[-1]
+    file_key = window.myAnalysisDir.get_file_key(row_label)
+    expected_visual_row = model._data.index.get_loc(row_label)
+    changed = Mock()
+    model.dataChanged.connect(changed)
+
+    model.refresh_file_key(file_key)
+
+    assert changed.call_count == 1
+    assert changed.call_args.args[0].row() == expected_visual_row
+
+
 def test_applied_sweep_and_spike_state_do_not_request_nested_state(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:

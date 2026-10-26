@@ -228,6 +228,8 @@ class _LeftToolbar(QtWidgets.QWidget):
 
 class bDetectionWidget(QtWidgets.QWidget):
     signalDetect = QtCore.pyqtSignal(object)  # ba
+    signalDetectionRequest = QtCore.pyqtSignal(object)
+    """Request single- or multi-file detection from the owning window."""
     signalStateRequest = QtCore.pyqtSignal(object, bool)
     """Request a complete window state and optional one-shot zoom."""
     # signalUpdateKymographROI = QtCore.pyqtSignal([])  # list of [left, top, right, bottom] in image pixels
@@ -581,14 +583,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         detectionType: "sanpy.bDetection.detectionTypes",
         dvdtThreshold: float,
         mvThreshold: float,
-        startSec: float = None,
-        stopSec: float = None,
-    ):
+        startSec: float | None = None,
+        stopSec: float | None = None,
+    ) -> None:
         """Detect spikes.
 
         Args:
-            detectionPreset (str) corresponds to Enum sanpy.bDetection.detectionPresets_
-            detectionType (sanpy.bDetection.detectionTypes): The type of detection (dvdt, vm)
+            detectionPresetStr: Name of the selected detection preset.
+            detectionType: Detection threshold mode.
+            dvdtThreshold: Derivative threshold in mV/ms.
+            mvThreshold: Membrane-potential threshold in mV.
+            startSec: Optional start of the detection interval.
+            stopSec: Optional end of the detection interval.
         """
 
         _startSec = time.time()
@@ -612,16 +618,12 @@ class bDetectionWidget(QtWidgets.QWidget):
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
 
-        # TODO: replace with a member function
-        _selectedDetection = self.detectToolbarWidget._selectedDetection
-        detectionDict = self.getMainWindowDetectionClass().getDetectionDict(
-            _selectedDetection
+        detectionDict = self.build_detection_dict(
+            detectionPresetStr,
+            detectionType,
+            dvdtThreshold,
+            mvThreshold,
         )
-        detectionDict[
-            "detectionType"
-        ] = detectionType.value  # set detection type to ('dvdt', 'vm')
-        detectionDict["dvdtThreshold"] = dvdtThreshold
-        detectionDict["mvThreshold"] = mvThreshold
 
         # TODO: pass this function detection params and call from sanpy_app ???
         if self.myMainWindow is not None:
@@ -674,6 +676,40 @@ class bDetectionWidget(QtWidgets.QWidget):
         _elapsedSec = round(_stopSec - _startSec, 2)
         updateStr = f"Detected {numSpikes} in {_elapsedSec} seconds"
         self.updateStatusBar(updateStr)
+
+    def build_detection_dict(
+        self,
+        detection_preset: str,
+        detection_type: "sanpy.bDetection.detectionTypes",
+        dvdt_threshold: float,
+        mv_threshold: float,
+    ) -> dict[str, object]:
+        """Build one independent detection specification from the controls.
+
+        Args:
+            detection_preset: Name of the selected detection preset.
+            detection_type: Detection threshold mode.
+            dvdt_threshold: Derivative threshold in mV/ms.
+            mv_threshold: Membrane-potential threshold in mV.
+
+        Returns:
+            Detection parameters suitable for one or many analyses.
+        """
+        detection = self.getMainWindowDetectionClass().getDetectionDict(
+            detection_preset
+        )
+        detection["detectionType"] = detection_type.value
+        detection["dvdtThreshold"] = dvdt_threshold
+        detection["mvThreshold"] = mv_threshold
+        return detection
+
+    def slot_file_selection_changed(self, file_keys: tuple[str, ...]) -> None:
+        """Update detection controls for the current file-selection scope.
+
+        Args:
+            file_keys: Selected recording keys in visual-row order.
+        """
+        self.detectToolbarWidget.set_batch_file_count(len(file_keys))
 
     def setPlotTheme(self, is_dark: bool) -> None:
         """Apply a light or dark theme to existing recording plots and toolbar icons.
@@ -3532,8 +3568,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
     def on_plot_every(self):
         logger.info("TODO: update plots with plot every.")
 
-    def _on_button_click(self, name):
-        """User clicked a button.
+    def _on_button_click(self, name: str) -> None:
+        """Handle one toolbar button click.
+
+        Args:
+            name: Stable action name captured when the button was created.
         """
         logger.info(f'User clicked button "{name}"')
 
@@ -3546,18 +3585,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             dvdtThreshold = self.dvdtThreshold.value()
             mvThreshold = self.mvThreshold.value()
 
-            if dvdtThreshold == 0:
-                # 0 is special value shown as 'None'
-                str = "Please set a threshold greater than 0"
-                self.detectionWidget.updateStatusBar(str)
-                return
-            
             startSec = self._startSec
             stopSec = self._stopSec
 
-            #
             detectionType = sanpy.bDetection.detectionTypes.dvdt
-            self.detectionWidget.detect(
+            self._request_detection(
                 detectionPreset,
                 detectionType,
                 dvdtThreshold,
@@ -3574,9 +3606,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             startSec = self._startSec
             stopSec = self._stopSec
 
-            #
             detectionType = sanpy.bDetection.detectionTypes.mv
-            self.detectionWidget.detect(
+            self._request_detection(
                 detectionPreset,
                 detectionType,
                 dvdtThreshold,
@@ -3619,6 +3650,66 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         else:
             logger.warning(f'Did not understand button: "{name}"')
+
+    def _request_detection(
+        self,
+        detection_preset: str,
+        detection_type: "sanpy.bDetection.detectionTypes",
+        dvdt_threshold: float,
+        mv_threshold: float,
+        start_sec: float | None,
+        stop_sec: float | None,
+    ) -> None:
+        """Send a detection request to the owning window.
+
+        Args:
+            detection_preset: Name of the selected detection preset.
+            detection_type: Detection threshold mode.
+            dvdt_threshold: Derivative threshold in mV/ms.
+            mv_threshold: Membrane-potential threshold in mV.
+            start_sec: Visible interval start for single-file detection.
+            stop_sec: Visible interval end for single-file detection.
+        """
+        if self.detectionWidget.myMainWindow is None:
+            if (
+                detection_type == sanpy.bDetection.detectionTypes.dvdt
+                and dvdt_threshold == 0
+            ):
+                self.detectionWidget.updateStatusBar(
+                    "Please set a threshold greater than 0"
+                )
+                return
+            self.detectionWidget.detect(
+                detection_preset,
+                detection_type,
+                dvdt_threshold,
+                mv_threshold,
+                start_sec,
+                stop_sec,
+            )
+            return
+        request = {
+            "detection_preset": detection_preset,
+            "detection_type": detection_type,
+            "dvdt_threshold": dvdt_threshold,
+            "mv_threshold": mv_threshold,
+            "start_sec": start_sec,
+            "stop_sec": stop_sec,
+        }
+        self.detectionWidget.signalDetectionRequest.emit(request)
+
+    def set_batch_file_count(self, file_count: int) -> None:
+        """Show whether detection will target one or many recordings.
+
+        Args:
+            file_count: Number of selected recording keys.
+        """
+        if file_count > 1:
+            self.detectDvDtButton.setText(f"Batch dV/dt")
+            self.detectMvButton.setText(f"Batch mV")
+            return
+        self.detectDvDtButton.setText("Detect dV/dt")
+        self.detectMvButton.setText("Detect mV")
 
     def _old_on_crosshair_clicked(self, value):
         # print('on_crosshair_clicked() value:', value)
@@ -3708,14 +3799,18 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         #
         buttonName = "Detect dV/dt"
-        button = QtWidgets.QPushButton(buttonName)
-        button.setToolTip("Detect spikes using dV/dt threshold.")
-        button.clicked.connect(partial(self._on_button_click, buttonName))
+        self.detectDvDtButton = QtWidgets.QPushButton(buttonName)
+        self.detectDvDtButton.setToolTip("Detect spikes using dV/dt threshold.")
+        self.detectDvDtButton.clicked.connect(
+            partial(self._on_button_click, buttonName)
+        )
 
         # row = 0
         rowSpan = 1
         columnSpan = 2
-        detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
+        detectionGridLayout.addWidget(
+            self.detectDvDtButton, row, 0, rowSpan, columnSpan
+        )
 
         self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
         self.dvdtThreshold.setToolTip("dV/dt threshold.")
@@ -3731,10 +3826,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         rowSpan = 1
         columnSpan = 2
         buttonName = "Detect mV"
-        button = QtWidgets.QPushButton(buttonName)
-        button.setToolTip("Detect spikes using mV threshold.")
-        button.clicked.connect(partial(self._on_button_click, buttonName))
-        detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
+        self.detectMvButton = QtWidgets.QPushButton(buttonName)
+        self.detectMvButton.setToolTip("Detect spikes using mV threshold.")
+        self.detectMvButton.clicked.connect(
+            partial(self._on_button_click, buttonName)
+        )
+        detectionGridLayout.addWidget(
+            self.detectMvButton, row, 0, rowSpan, columnSpan
+        )
 
         # Vm Threshold (mV)
         # mvThresholdLabel = QtWidgets.QLabel('Vm Threshold (mV)')

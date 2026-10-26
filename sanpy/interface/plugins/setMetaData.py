@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
@@ -26,6 +26,7 @@ class SetMetaData(sanpyPlugin):
         super().__init__(**kwargs)
         self._widgetDict: dict[str, QtWidgets.QWidget] = {}
         self._sweepConditionEdits: dict[int, QtWidgets.QLineEdit] = {}
+        self._storing_meta_data = False
         self._buildUI()
         self.replot()
 
@@ -60,14 +61,56 @@ class SetMetaData(sanpyPlugin):
     def _store_meta_data(self, key: str, value: str) -> None:
         """Ask the window to store one experimental metadata value.
 
+        A nested call is ignored. The edited line edit then gives up keyboard
+        focus so a later click does not emit ``editingFinished`` again.
+
         Args:
             key: Canonical experimental-metadata key.
             value: New string value.
         """
+        if self._storing_meta_data:
+            return
         window = self.getSanPyWindow()
         if window is None or self.ba is None:
             return
-        window.slot_setMetaData(self.ba, key, value)
+        self._storing_meta_data = True
+        try:
+            window.request_set_metadata(key, value)
+            self.replot()
+            edited = self._widgetDict.get(key)
+            if isinstance(edited, QtWidgets.QLineEdit):
+                edited.clearFocus()
+        finally:
+            self._storing_meta_data = False
+
+    def eventFilter(self, watched: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        """Commit a metadata line edit on Tab without moving focus.
+
+        Args:
+            watched: Object receiving the event.
+            event: Event delivered to that object.
+
+        Returns:
+            True when Tab or Shift+Tab is accepted by a metadata line edit.
+        """
+        if (
+            event.type() == QtCore.QEvent.KeyPress
+            and isinstance(watched, QtWidgets.QLineEdit)
+            and isinstance(event, QtGui.QKeyEvent)
+            and event.key() in (QtCore.Qt.Key_Tab, QtCore.Qt.Key_Backtab)
+        ):
+            key = next(
+                (
+                    name
+                    for name, widget in self._widgetDict.items()
+                    if widget is watched
+                ),
+                None,
+            )
+            if key is not None:
+                self._on_text_edit(watched, key)
+                return True
+        return super().eventFilter(watched, event)
 
     def _on_text_edit(self, widget: QtWidgets.QLineEdit, key: str) -> None:
         """Store one edited free-text value.
@@ -164,6 +207,7 @@ class SetMetaData(sanpyPlugin):
                 )
             else:
                 widget = QtWidgets.QLineEdit("")
+                widget.installEventFilter(self)
                 widget.editingFinished.connect(
                     partial(self._on_text_edit, widget, key)
                 )

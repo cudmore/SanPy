@@ -10,7 +10,7 @@ import copy  # For copy.deepcopy() of bAnalysis
 # import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import List, Optional
 
 import numpy as np
@@ -372,6 +372,117 @@ class analysisDir:
         if row_index is None:
             return None
         return self.getAnalysis(row_index, allowAutoLoad=allow_auto_load)
+
+    def detect_file_keys(
+        self,
+        file_keys: Sequence[str],
+        detection: Mapping[str, object],
+        *,
+        should_continue: Callable[[int, int, str], bool] | None = None,
+        after_file: Callable[[str], None] | None = None,
+    ) -> tuple[int, tuple[str, ...]]:
+        """Detect spikes across recordings identified by stable file keys.
+
+        Each recording receives an independent detection dictionary covering
+        its complete duration. Failures do not prevent later recordings from
+        being processed.
+
+        Args:
+            file_keys: Recording identities relative to this analysis directory.
+            detection: Detection preset and threshold values to apply.
+            should_continue: Optional callback before each recording. Arguments
+                are one-based position, total count, and file key. Returning
+                ``False`` cancels before that recording.
+            after_file: Optional callback after one recording finishes.
+
+        Returns:
+            Number of detected recordings and the keys that failed.
+        """
+        detected = 0
+        failed: list[str] = []
+        total = len(file_keys)
+        for position, file_key in enumerate(file_keys, start=1):
+            if should_continue is not None and not should_continue(
+                position, total, file_key
+            ):
+                break
+            row = self.get_row_for_file_key(file_key)
+            analysis = self.get_analysis_for_file_key(file_key)
+            if row is None or analysis is None or analysis.loadError:
+                failed.append(file_key)
+                continue
+            try:
+                detection_for_file = copy.deepcopy(dict(detection))
+                detection_for_file["startSeconds"] = 0
+                detection_for_file["stopSeconds"] = analysis.fileLoader.recordingDur
+                analysis.spikeDetect(detection_for_file)
+                self._updateLoadedAnalyzed(row)
+            except Exception:
+                logger.exception(f'Batch detection failed for "{file_key}"')
+                failed.append(file_key)
+                continue
+            detected += 1
+            if after_file is not None:
+                after_file(file_key)
+        return detected, tuple(failed)
+
+    def set_metadata_for_file_keys(
+        self,
+        file_keys: Sequence[str],
+        key: str,
+        value: str,
+        *,
+        should_continue: Callable[[int, int, str], bool] | None = None,
+        after_file: Callable[[str], None] | None = None,
+    ) -> tuple[int, tuple[str, ...]]:
+        """Set one experimental metadata value across recordings.
+
+        Analyses are loaded when necessary and left dirty for the existing save
+        workflow. This method never persists changes.
+
+        Args:
+            file_keys: Recording identities relative to this analysis directory.
+            key: Canonical experimental-metadata key.
+            value: New string value.
+            should_continue: Optional callback before each recording. Arguments
+                are one-based position, total count, and file key. Returning
+                ``False`` cancels before that recording.
+            after_file: Optional callback after one recording is processed.
+
+        Returns:
+            Number of changed recordings and the keys that failed.
+
+        Raises:
+            ValueError: If ``key`` is not canonical experimental metadata.
+        """
+        if key not in MetaData.getMetaDataDict():
+            raise ValueError(f'Unknown experimental metadata key: "{key}"')
+        changed = 0
+        failed: list[str] = []
+        total = len(file_keys)
+        for position, file_key in enumerate(file_keys, start=1):
+            if should_continue is not None and not should_continue(
+                position, total, file_key
+            ):
+                break
+            row = self.get_row_for_file_key(file_key)
+            analysis = self.get_analysis_for_file_key(file_key)
+            if row is None or analysis is None or analysis.loadError:
+                failed.append(file_key)
+                continue
+            try:
+                previous = analysis.metaData.getMetaData(key)
+                analysis.metaData.setMetaData(key, value)
+                self._updateLoadedAnalyzed(row)
+            except Exception:
+                logger.exception(f'Batch metadata update failed for "{file_key}"')
+                failed.append(file_key)
+                continue
+            if previous != value:
+                changed += 1
+            if after_file is not None:
+                after_file(file_key)
+        return changed, tuple(failed)
 
     @property
     def theseFileTypes(self) -> list[str]:

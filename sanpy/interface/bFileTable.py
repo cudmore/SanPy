@@ -653,12 +653,37 @@ class pandasModel(QtCore.QAbstractTableModel):
             self._data.syncDfWithPath()
             self.endResetModel()
 
-    def myUpdateLoadedAnalyzed(self, ba, rowIdx):
-        if self.isAnalysisDir:
-            rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-            self._data._updateLoadedAnalyzed(rowIdx)
+    def refresh_file_key(self, file_key: str) -> None:
+        """Refresh one analysis row identified by its stable recording key.
 
-            # we changed the model, we need to emit dataChanged
-            indexStart = self.createIndex(rowIdx, 0)
-            indexStop = self.createIndex(rowIdx + 1, 0)
-            self.dataChanged.emit(indexStart, indexStop)
+        Args:
+            file_key: Recording identity relative to the analysis directory.
+        """
+        if not self.isAnalysisDir:
+            return
+        row_label = self._data.get_row_for_file_key(file_key)
+        if row_label is None:
+            return
+        self._data._updateLoadedAnalyzed(row_label)
+        location = self._data.index.get_loc(row_label)
+        if not isinstance(location, (int, np.integer)):
+            return
+        visual_row = int(location)
+        index_start = self.index(visual_row, 0)
+        index_stop = self.index(visual_row, self.columnCount() - 1)
+        self.dataChanged.emit(index_start, index_stop)
+
+    def myUpdateLoadedAnalyzed(self, ba: object, rowIdx: int) -> None:
+        """Refresh the analysis row at one current visual position.
+
+        Args:
+            ba: Analysis that was updated. Retained for signal compatibility.
+            rowIdx: Visual row in the current sort order.
+        """
+        del ba
+        if not self.isAnalysisDir:
+            return
+        if rowIdx < 0 or rowIdx >= len(self._data.index):
+            return
+        row_label = self._data.index[rowIdx]
+        self.refresh_file_key(self._data.get_file_key(row_label))

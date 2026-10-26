@@ -133,7 +133,7 @@ class bAnalysis:
 
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
 
-        self._metaData = sanpy.metaData.MetaData()  # experimental metadata
+        self._metaData = sanpy.metaData.MetaData(self)  # experimental metadata
 
         # only assign when fileloader data is loaded
         self._sweep_conditions: Dict[int, str] = {}

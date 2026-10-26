@@ -18,6 +18,68 @@ from sanpy.interface.window_state import WindowState
 logger = get_logger(__name__)
 
 
+class _SelectedFileProgressDialog(QtWidgets.QProgressDialog):
+    """Cancelable progress dialog for one selected-file batch."""
+
+    def __init__(self, parent: QtWidgets.QWidget, total: int, action: str) -> None:
+        """Show progress for a batch over the current file selection.
+
+        Args:
+            parent: Window that owns the dialog.
+            total: Number of selected files.
+            action: Verb used in the progress label, such as ``"Analyzing"``.
+        """
+        super().__init__(
+            f"{action} selected files...",
+            "Cancel",
+            0,
+            total,
+            parent,
+        )
+        self._action = action
+        self._accepted_count = 0
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.setMinimumDuration(0)
+        self.setValue(0)
+
+    @property
+    def accepted_count(self) -> int:
+        """Return how many files were allowed to start.
+
+        Returns:
+            Count of ``should_continue`` calls that returned true.
+        """
+        return self._accepted_count
+
+    def should_continue(self, position: int, total: int, file_key: str) -> bool:
+        """Update the label and report whether the next file may start.
+
+        Args:
+            position: One-based position about to be processed.
+            total: Total selected-file count.
+            file_key: Recording key about to be processed.
+
+        Returns:
+            False when the user has canceled the dialog.
+        """
+        self.setLabelText(
+            f'{self._action} file {position} of {total}: "{file_key}"'
+        )
+        QtWidgets.QApplication.processEvents()
+        if self.wasCanceled():
+            return False
+        self._accepted_count += 1
+        return True
+
+    def advance(self) -> None:
+        """Move the bar forward by one completed file."""
+        self.setValue(self.value() + 1)
+
+    def finish(self) -> None:
+        """Fill the bar and close the dialog."""
+        self.setValue(self.maximum())
+
+
 class _PluginDockWidget(QtWidgets.QDockWidget):
     """Dock widget that reports an explicit Qt close request."""
 
@@ -47,6 +109,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     signalMetaDataChanged = QtCore.Signal(object)
     """Emit after experimental metadata is stored on an analysis."""
+
+    signalFileSelectionChanged = QtCore.Signal(object)
+    """Emit selected recording keys in current visual-row order."""
 
     def __init__(
         self,
@@ -108,6 +173,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         
         self.myAnalysisDir = None
         self._state: WindowState | None = None
+        self._selectedFileKeys: tuple[str, ...] = ()
         # lastPath = self.configDict.getMostRecentFolder()
 
         # 20231229 turning off loading last path
@@ -438,6 +504,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         return self._state
 
+    @property
+    def selected_file_keys(self) -> tuple[str, ...]:
+        """Return selected recording keys in current visual-row order.
+
+        Returns:
+            Immutable snapshot of the file-table selection.
+        """
+        return self._selectedFileKeys
+
     def request_state(self, state: WindowState, do_zoom: bool = False) -> None:
         """Validate and atomically apply a requested window state.
 
@@ -590,12 +665,39 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     pass
                 else:
                     self.slot_updateStatus(
-                        f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename}'
+                        f'File Selection: {rowDict["parent1"]}/{ba.fileLoader.filename}'
                     )
             else:
                 self.slot_updateStatus(
                     f'Unable to load "{rowDict["File"]}"; see the SanPy log for details.'
                 )
+
+    def slot_file_selection_changed(self, file_keys: tuple[str, ...]) -> None:
+        """Store table selection and choose an active file when required.
+
+        The displayed recording remains unchanged while it belongs to a
+        multi-selection. If it is removed from a nonempty selection, the first
+        visually selected recording becomes active. Empty-selection behavior
+        is intentionally left unchanged for a later UX decision.
+
+        Args:
+            file_keys: Selected recording keys in visual-row order.
+        """
+        self._selectedFileKeys = tuple(file_keys)
+        self.signalFileSelectionChanged.emit(self._selectedFileKeys)
+        if not self._selectedFileKeys or self.myAnalysisDir is None:
+            return
+        if self._state is not None and self._state.file_key in self._selectedFileKeys:
+            return
+        file_key = self._selectedFileKeys[0]
+        row = self.myAnalysisDir.get_row_for_file_key(file_key)
+        if row is None:
+            return
+        self.slot_fileTableClicked(
+            row,
+            self.myAnalysisDir.getRowDict(row),
+            selectingAgain=False,
+        )
 
     def _buildMenus(self) -> None:
         """Build menus for an analysis window."""
@@ -913,6 +1015,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self._fileListWidget.getTableView().signalSelectRow.connect(
             self.slot_fileTableClicked
         )
+        self._fileListWidget.getTableView().signalFileSelectionChanged.connect(
+            self.slot_file_selection_changed
+        )
         # self._fileListWidget.getTableView().signalSetDefaultDetection.connect(self.slot_setDetectionParams)
 
         # update dvdtThreshold, mvThreshold Start(s), Stop(s)
@@ -967,6 +1072,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self listens to myDetectionWidget
         self.myDetectionWidget.signalStateRequest.connect(self.request_state)
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
+        self.myDetectionWidget.signalDetectionRequest.connect(
+            self.slot_detection_request
+        )
+        self.signalFileSelectionChanged.connect(
+            self.myDetectionWidget.slot_file_selection_changed
+        )
 
         # (2) detection widget as a dock
         #  detection widget has left panel of controls and right panel of plots
@@ -1189,6 +1300,173 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
         ba.metaData.setMetaData(key, value)
         self.signalMetaDataChanged.emit({"ba": ba, "key": key, "value": value})
+
+    def request_set_metadata(self, key: str, value: str) -> bool:
+        """Confirm and apply one metadata value at the current file scope.
+
+        Args:
+            key: Canonical experimental-metadata key.
+            value: Proposed string value.
+
+        Returns:
+            True when the request was accepted or was already satisfied.
+        """
+        analysis = self.get_bAnalysis()
+        if analysis is None or key not in sanpy.MetaData.getMetaDataDict():
+            return False
+        file_keys = self.selected_file_keys
+
+        if len(file_keys) <= 1:
+            self.slot_setMetaData(analysis, key, value)
+            return True
+
+        definition = sanpy.MetaData.getMetaDataDefinitions()[key]
+        display_name = str(definition["display_name"])
+        response = QtWidgets.QMessageBox.question(
+            self,
+            "Set Metadata for Selected Files",
+            f'Set {display_name} to "{value}" for {len(file_keys)} selected files?',
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No,
+        )
+        if response != QtWidgets.QMessageBox.Yes:
+            return False
+        if self.myAnalysisDir is None:
+            return False
+        progress = _SelectedFileProgressDialog(self, len(file_keys), "Updating")
+
+        def after_file(file_key: str) -> None:
+            """Refresh and notify views after one metadata update.
+
+            Args:
+                file_key: Recording key that was processed.
+            """
+            progress.advance()
+            updated = self.myAnalysisDir.get_analysis_for_file_key(file_key)
+            if updated is None:
+                return
+            self.myModel.refresh_file_key(file_key)
+            self.signalMetaDataChanged.emit(
+                {"ba": updated, "key": key, "value": value}
+            )
+
+        changed, failed = self.myAnalysisDir.set_metadata_for_file_keys(
+            file_keys,
+            key,
+            value,
+            should_continue=progress.should_continue,
+            after_file=after_file,
+        )
+        progress.finish()
+        if progress.accepted_count < len(file_keys):
+            self.slot_updateStatus(
+                f"Metadata update stopped after {progress.accepted_count} "
+                "selected files"
+            )
+        else:
+            self.slot_updateStatus(
+                f"Updated {display_name} for {changed} selected files"
+            )
+        if failed:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Metadata Update Incomplete",
+                f"Could not update {len(failed)} selected files:\n"
+                + "\n".join(failed),
+            )
+        return True
+
+    def slot_detection_request(self, request: dict[str, object]) -> None:
+        """Run a single- or multi-file detection request.
+
+        Args:
+            request: Preset, detection mode, thresholds, and visible interval
+                supplied by the detection controls.
+        """
+        detection_preset = request.get("detection_preset")
+        detection_type = request.get("detection_type")
+        dvdt_threshold = request.get("dvdt_threshold")
+        mv_threshold = request.get("mv_threshold")
+        start_sec = request.get("start_sec")
+        stop_sec = request.get("stop_sec")
+        if (
+            not isinstance(detection_preset, str)
+            or not isinstance(detection_type, sanpy.bDetection.detectionTypes)
+            or not isinstance(dvdt_threshold, (int, float))
+            or not isinstance(mv_threshold, (int, float))
+        ):
+            return
+        file_keys = self.selected_file_keys
+        if len(file_keys) <= 1:
+            if (
+                detection_type == sanpy.bDetection.detectionTypes.dvdt
+                and float(dvdt_threshold) == 0
+            ):
+                self.slot_updateStatus("Please set a threshold greater than 0")
+                return
+            self.myDetectionWidget.detect(
+                detection_preset,
+                detection_type,
+                float(dvdt_threshold),
+                float(mv_threshold),
+                start_sec if isinstance(start_sec, (int, float)) else None,
+                stop_sec if isinstance(stop_sec, (int, float)) else None,
+            )
+            return
+
+        response = QtWidgets.QMessageBox.question(
+            self,
+            "Batch Detection",
+            f"This will analyze all {len(file_keys)} files. IF you do this, "
+            "you will lose pre-existing analysis. Are you sure?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.No,
+        )
+        if response != QtWidgets.QMessageBox.Yes or self.myAnalysisDir is None:
+            return
+        detection = self.myDetectionWidget.build_detection_dict(
+            detection_preset,
+            detection_type,
+            float(dvdt_threshold),
+            float(mv_threshold),
+        )
+        progress = _SelectedFileProgressDialog(self, len(file_keys), "Analyzing")
+
+        def after_file(file_key: str) -> None:
+            """Refresh one completed row and the displayed analysis if needed.
+
+            Args:
+                file_key: Recording key that completed detection.
+            """
+            progress.advance()
+            self.myModel.refresh_file_key(file_key)
+            if self._state is None or self._state.file_key != file_key:
+                return
+            updated = self.myAnalysisDir.get_analysis_for_file_key(file_key)
+            if updated is not None:
+                self.slot_detect(updated)
+
+        detected, failed = self.myAnalysisDir.detect_file_keys(
+            file_keys,
+            detection,
+            should_continue=progress.should_continue,
+            after_file=after_file,
+        )
+        progress.finish()
+        if progress.accepted_count < len(file_keys):
+            self.slot_updateStatus(
+                f"Batch detection stopped after {progress.accepted_count} "
+                "selected files"
+            )
+        else:
+            self.slot_updateStatus(f"Batch detected {detected} selected files")
+        if failed:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Batch Detection Incomplete",
+                f"Could not analyze {len(failed)} selected files:\n"
+                + "\n".join(failed),
+            )
 
     def slot_fileTableDataChanged(
         self, columnName: object, value: object, rowDict: object

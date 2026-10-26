@@ -187,6 +187,9 @@ class bTableView(QtWidgets.QTableView):
         object, object, object
     )  # (row, rowDict, selectingAgain)
 
+    signalFileSelectionChanged = QtCore.pyqtSignal(object)
+    """Emit selected recording keys in current visual-row order."""
+
     signalUpdateStatus = QtCore.pyqtSignal(object)
     """Update status in main SanPy app."""
 
@@ -206,6 +209,8 @@ class bTableView(QtWidgets.QTableView):
         # self.setDropIndicatorShown(True)
 
         self.lastSeletedRow = None
+        self._mousePressActive = False
+        self._selectionChangedDuringMousePress = False
         self.clicked.connect(self.onLeftClick)
 
         self.mySetModel(model)
@@ -256,6 +261,7 @@ class bTableView(QtWidgets.QTableView):
         self.setAlternatingRowColors(True)
 
         self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+        self.setSelectionMode(QtWidgets.QTableView.ExtendedSelection)
 
         # TODO: add font size to options
         """
@@ -382,23 +388,67 @@ class bTableView(QtWidgets.QTableView):
         return rowDict
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        """Emit row selection when keyboard navigation changes the current row.
+        """Let the Qt selection model handle keyboard navigation.
 
         Args:
             event: Key event forwarded to the base table view.
         """
-        previousRow = self.currentIndex().row()
         super().keyPressEvent(event)
-        currentIndex = self.currentIndex()
-        if currentIndex.isValid() and currentIndex.row() != previousRow:
-            self.onLeftClick(currentIndex)
-            
-    def onLeftClick(self, item):
-        """Hanlde user left-click on a row.
 
-        Keep track of lastSelected row to differentiate between
-        switch-file and click again.
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        """Track whether a mouse press changed the row selection.
+
+        Args:
+            event: Mouse event forwarded to the base table view.
         """
+        self._mousePressActive = event.button() == QtCore.Qt.LeftButton
+        self._selectionChangedDuringMousePress = False
+        try:
+            super().mousePressEvent(event)
+        finally:
+            self._mousePressActive = False
+
+    def selectionChanged(
+        self,
+        selected: QtCore.QItemSelection,
+        deselected: QtCore.QItemSelection,
+    ) -> None:
+        """Emit stable file keys after the Qt row selection changes.
+
+        Args:
+            selected: Newly selected model indexes.
+            deselected: Newly deselected model indexes.
+        """
+        super().selectionChanged(selected, deselected)
+        if self._mousePressActive:
+            self._selectionChangedDuringMousePress = True
+        selection_model = self.selectionModel()
+        model = self.model()
+        if selection_model is None or model is None:
+            self.signalFileSelectionChanged.emit(())
+            return
+        visual_rows = sorted(index.row() for index in selection_model.selectedRows())
+        file_keys = tuple(
+            model._data.get_file_key(model._data.index[visual_row])
+            for visual_row in visual_rows
+        )
+        self.signalFileSelectionChanged.emit(file_keys)
+
+    def onLeftClick(self, item: QtCore.QModelIndex) -> None:
+        """Refresh an unchanged single-row selection.
+
+        Selection changes are handled by :meth:`selectionChanged`. This path
+        preserves the existing behavior where clicking the only selected row
+        again refreshes that displayed recording.
+
+        Args:
+            item: Clicked model index.
+        """
+        if self._selectionChangedDuringMousePress:
+            self._selectionChangedDuringMousePress = False
+            return
+        if len(self.selectionModel().selectedRows()) != 1:
+            return
         row = item.row()
         realRow = self.model()._data.index[row]  # sort order
         # logger.info(f'User clicked row:{row} realRow:{realRow}')
@@ -423,7 +473,14 @@ class bTableView(QtWidgets.QTableView):
         indexes = list(self.model()._data.index)
         if real_row not in indexes:
             return
-        self.selectRow(indexes.index(real_row))
+        visual_row = indexes.index(real_row)
+        row_is_selected = any(
+            index.row() == visual_row for index in self.selectionModel().selectedRows()
+        )
+        if row_is_selected:
+            self.setCurrentIndex(self.model().index(visual_row, 0))
+        else:
+            self.selectRow(visual_row)
         # Bypass this class's scrollTo override, which ignores column 0.
         super().scrollTo(
             self.currentIndex(), QtWidgets.QAbstractItemView.EnsureVisible
@@ -509,12 +566,6 @@ class bTableView(QtWidgets.QTableView):
                 self.setColumnHidden(columnIdx, True)
             except ValueError as e:
                 logger.error(f"Called setColumnHidden() but did not find column {hiddenColumn}")
-
-        """
-        self.frozenTableView.setModel(self.model())
-        # this is required otherwise selections become disconnected
-        self.frozenTableView.setSelectionModel(self.selectionModel())
-        """
 
     def mySelectRow(self, rowIdx):
         """Needed to connect main and frozen table."""
@@ -748,9 +799,16 @@ class bTableView(QtWidgets.QTableView):
             self.viewport().height() + self.horizontalHeader().height())
         """
 
-    def slot_detect(self, ba):
-        """Find row of _ba and update model"""
-        tmp = self.selectedIndexes()
-        if len(tmp) > 0:
-            selectedRow = tmp[0].row()  # not in sort order
-            self.model().myUpdateLoadedAnalyzed(ba, selectedRow)
+    def slot_detect(self, ba: object) -> None:
+        """Refresh the file-table row that owns a detected analysis.
+
+        Args:
+            ba: Analysis whose detection results changed.
+        """
+        model = self.model()
+        if model is None or not model.isAnalysisDir:
+            return
+        for row_label in model._data.index:
+            if model._data.loc[row_label, "_ba"] is ba:
+                model.refresh_file_key(model._data.get_file_key(row_label))
+                return
