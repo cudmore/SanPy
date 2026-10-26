@@ -6,6 +6,8 @@ import re
 import os
 from importlib.metadata import version
 
+from PyInstaller.utils.hooks import collect_data_files
+
 SANPY_VERSION = version('sanpy-ephys')
 ARCH = os.environ.get('SANPY_ARCH', 'arm64')
 BUNDLE_ID = os.environ.get('SANPY_BUNDLE_ID', 'org.sanpy.SanPy')
@@ -19,16 +21,21 @@ if version_match is None:
 SHORT_VERSION = '.'.join(version_match.groups())
 BUILD_VERSION = '.'.join(re.findall(r'\d+', SANPY_VERSION))
 
+datas = [
+    ('../../sanpy/interface/icons/sanpy_transparent.png', '.'),
+    ('../../sanpy/detection-presets', 'detection-presets'),
+    ('../../sanpy/user_files', 'user_files'),
+    (BUILD_INFO_PATH, 'sanpy'),
+]
+# hdmf and pynwb load schema YAML with os.path.exists at import time.
+datas += collect_data_files('hdmf', includes=['**/*.yaml', '**/*.json'])
+datas += collect_data_files('pynwb', includes=['**/*.yaml', '**/*.json'])
+
 a = Analysis(
     ['../../sanpy/interface/sanpy_app.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('../../sanpy/interface/icons/sanpy_transparent.png', '.'),
-        ('../../sanpy/detection-presets', 'detection-presets'),
-        ('../../sanpy/user_files', 'user_files'),
-        (BUILD_INFO_PATH, 'sanpy'),
-    ],
+    datas=datas,
     hiddenimports=['numpy.core.multiarray'],
     hookspath=[],
     hooksconfig={},
