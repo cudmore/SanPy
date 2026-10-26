@@ -5,7 +5,7 @@ SanPy is software to perform analysis of whole-cell curent clamp recordings. It 
 If you find SanPy interesting, please email Robert Cudmore at robert.cudmore@gmail.com and we can get you started. We are always looking for users and collaborators.
 
 !!! note
-    As of the fall of 2026, I am back to improving SanPy. Stay tuned for some big and exciting changes.
+    As of the Fall/Winter of 2026, I am back to improving SanPy. Stay tuned for some big and exciting changes.
 
     - Load and save Neurodata Without Borders (nwb) files, then upload your data to the DANDI archive.
     - Publish your results and figure on the web. See [SanPy-Web](https://mapmanager.github.io/sanpy-web) for a taste.

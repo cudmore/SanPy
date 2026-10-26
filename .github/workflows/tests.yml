@@ -53,7 +53,7 @@ jobs:
       - name: Install Python and dependencies
         run: |
           uv python install
-          uv sync --locked --group dev --extra gui
+          uv sync --locked --group dev --group test-gui --extra gui
 
       - name: Lint
         run: uv run --no-sync ruff check sanpy

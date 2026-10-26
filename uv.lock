@@ -2999,7 +2999,6 @@ dependencies = [
     { name = "scikit-image" },
     { name = "scipy" },
     { name = "tables" },
-    { name = "tifffile" },
 ]
 
 [package.optional-dependencies]
@@ -3084,7 +3083,6 @@ requires-dist = [
     { name = "seaborn", marker = "extra == 'gui'", specifier = ">=0.13,<1" },
     { name = "seaborn", marker = "extra == 'plot'", specifier = ">=0.13,<1" },
     { name = "tables", specifier = ">=3.10,<4" },
-    { name = "tifffile", specifier = ">=2025.1,<2027" },
     { name = "zarr", marker = "extra == 'zarr-export'", specifier = ">=3.1,<4" },
 ]
 provides-extras = ["dandi", "zarr-export", "plot", "gui"]

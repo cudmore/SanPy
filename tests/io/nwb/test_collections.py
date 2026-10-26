@@ -10,6 +10,7 @@ from typing import Any
 
 import h5py
 import numpy as np
+import pytest
 
 import sanpy
 from sanpy.io.nwb.dandiset import (
@@ -130,6 +131,10 @@ def test_local_dandiset_round_trip(
         tmp_path: Pytest-managed output directory.
         test_data_dir: Stable SanPy test-data directory.
     """
+    pytest.importorskip(
+        "dandi",
+        reason="Install the dandi extra to run local Dandiset tests",
+    )
     first = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
     second = sanpy.bAnalysis(str(test_data_dir / "19114001.abf"))
     analyses = _AnalysisDirectory({2: first, 5: second})

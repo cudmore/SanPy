@@ -116,9 +116,5 @@ nav:
             - fileLoader_abf: api/fileloader/fileLoader_abf.md
             - fileLoader_sanpy: api/fileloader/fileLoader_sanpy.md
         # - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
-        - interface:
-            - sanp_app: api/interface/sanpy_app.md
-            - plugins:
-                - sanpyPlugin: api/interface/plugins/sanpyPlugin.md
     - Methods: methods.md
     - About SanPy: about.md

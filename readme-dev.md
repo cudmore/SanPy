@@ -14,6 +14,17 @@ uv run --extra gui sanpy
 - After changing NicePool frontend code, rebuild it first:
   `(cd ../cs_project/mapmanager-web-components && npm run build --workspace @mapmanager/nicepool-pyqt5-frontend)`
 
+## run mkdocs locally
+
+From the repository root:
+
+```
+uv sync --locked --group docs
+uv run mkdocs serve
+```
+
+A later `uv sync` without `--group docs` removes these packages. Repeat the sync command after that.
+
 ## 20230726
 
 - file loaders

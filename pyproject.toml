@@ -38,7 +38,6 @@ dependencies = [
     "scikit-image>=0.25,<1",
     "scipy>=1.15,<2",
     "tables>=3.10,<4",
-    "tifffile>=2025.1,<2027",
     "pynwb>=4.2,<5",
 ]
 

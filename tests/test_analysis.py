@@ -117,6 +117,10 @@ def test_plot_phase_plot_uses_one_spike_clip(
     Args:
         detected_analysis: Analysis prepared with the SA Node preset.
     """
+    pytest.importorskip(
+        "matplotlib",
+        reason="Install the plot or gui extra to run Matplotlib tests",
+    )
     import matplotlib
 
     matplotlib.use("Agg")

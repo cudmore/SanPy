@@ -76,5 +76,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # main()
-    analyze_folder()
+    main()
+    # analyze_folder()
