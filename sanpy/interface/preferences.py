@@ -14,6 +14,31 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 
+def _normalize_hidden_columns(config: dict) -> None:
+    """Keep only known optional file-table keys in ``fileList.hiddenColumns``.
+
+    A missing ``hiddenColumns`` value, or a value that is not a list, becomes
+    the default hidden columns. Unknown keys, required columns, and
+    non-strings are dropped. This does not write the preferences file.
+
+    Args:
+        config: Preference dictionary loaded from JSON or built from defaults.
+    """
+    from sanpy.analysisDir import analysisDir
+    from sanpy.interface.bTableView import hidden_file_column_keys
+
+    file_list = config.get("fileList")
+    if file_list is None:
+        file_list = {}
+        config["fileList"] = file_list
+    if not isinstance(file_list, dict):
+        return
+    file_list["hiddenColumns"] = hidden_file_column_keys(
+        file_list.get("hiddenColumns"),
+        analysisDir.sanpyColumns.keys(),
+    )
+
+
 class preferences:
     """Class to hold GUI preferences.
 
@@ -187,10 +212,17 @@ class preferences:
         """
         return self._sanpyApp.sanpy_paths.preferences_dir / "sanpy_preferences.json"
 
-    def load(self):
-        """
-        Always load preferences from:
-            <user>/Documents/SanPy/preferences/sanpy_preferences.json
+    def load(self) -> dict:
+        """Load preferences and normalize hidden file-table columns.
+
+        Preferences are read from
+        ``<user>/Documents/SanPy/preferences/sanpy_preferences.json``.
+        A missing file or an older preferences version returns defaults.
+        Hidden file-table columns are normalized in memory and are not
+        written back here.
+
+        Returns:
+            The loaded preference dictionary.
         """
 
         preferencesFile = self.getPreferencesFile()
@@ -214,6 +246,7 @@ class preferences:
                         )
                         pass
                     else:
+                        _normalize_hidden_columns(loadedJson)
                         return loadedJson
             except JSONDecodeError as e:
                 logger.error(e)
@@ -278,6 +311,7 @@ class preferences:
         
         # 20240124 changed from 1 to 3 (don't use for load file !!!)
         configDict['fileList']['Folder Depth'] = 3
+        _normalize_hidden_columns(configDict)
 
         return configDict
 

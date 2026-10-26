@@ -188,6 +188,7 @@ class SanPyApp(QtWidgets.QApplication):
         self._configDict: preferences = preferences(
             self, first_time_running=first_time_running
         )
+        self.aboutToQuit.connect(self._configDict.save)
         self._currentWindowGeometry = {
             'x': self._configDict['windowGeometry']['x'],
             'y': self._configDict['windowGeometry']['y'],

@@ -1135,6 +1135,15 @@ def test_cancelled_analysis_close_keeps_plugins_and_window_open():
     assert event.accepted is False
 
 
+def test_about_to_quit_is_connected_to_preference_save(qapp: SanPyApp) -> None:
+    """Save preferences when Qt emits ``aboutToQuit``.
+
+    Args:
+        qapp: Session SanPy application.
+    """
+    assert qapp.receivers(qapp.aboutToQuit) >= 1
+
+
 def test_application_quit_does_not_restore_launcher_or_prompt_again() -> None:
     """Accept app-driven closure without restoring or prompting again."""
     calls = []

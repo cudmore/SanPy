@@ -4,6 +4,7 @@ import math
 import os
 import platform
 import subprocess
+from collections.abc import Iterable
 from pathlib import Path
 
 import numpy as np
@@ -20,6 +21,54 @@ import sanpy.bDetection
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
+
+REQUIRED_FILE_COLUMNS: frozenset[str] = frozenset({"L", "A", "S", "N", "E", "File"})
+"""File-table columns that stay visible and do not appear in the Columns menu."""
+
+DEFAULT_HIDDEN_FILE_COLUMNS: tuple[str, ...] = (
+    "Epochs",
+    "kHz",
+    "Mode",
+    "animal_id",
+    "species",
+    "region",
+    "cell_type",
+    "age",
+    "sex",
+    "experiment",
+    "parent3",
+    "relPath",
+    "uuid",
+)
+"""Optional file-table columns hidden until the user shows them."""
+
+
+def hidden_file_column_keys(
+    stored: object,
+    known_columns: Iterable[str],
+) -> list[str]:
+    """Return optional file-table columns that should be hidden.
+
+    Args:
+        stored: Saved hidden-column value. A missing value or a non-list uses
+            ``DEFAULT_HIDDEN_FILE_COLUMNS``. An empty list hides nothing.
+        known_columns: Column keys currently defined for the file table.
+
+    Returns:
+        Hidden column keys that are known and not required, in stored order.
+    """
+    candidates = stored if isinstance(stored, list) else DEFAULT_HIDDEN_FILE_COLUMNS
+    known = {str(column) for column in known_columns}
+    hidden: list[str] = []
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        if candidate not in known or candidate in REQUIRED_FILE_COLUMNS:
+            continue
+        if candidate in hidden:
+            continue
+        hidden.append(candidate)
+    return hidden
 
 
 def file_manager_reveal_label() -> str:
@@ -529,43 +578,16 @@ class bTableView(QtWidgets.QTableView):
 
         self.signalSelectRow.emit(realRow, rowDict)
 
-    def mySetModel(self, model):
-        """
-        Set the model. Needed so we can show/hide columns
+    def mySetModel(self, model: QtCore.QAbstractItemModel) -> None:
+        """Set the model and apply saved column visibility.
+
+        An empty dataframe is the startup model and is left unchanged.
 
         Args:
-            model: sanpy.interface.bFileTable.pandasModel
+            model: ``sanpy.interface.bFileTable.pandasModel`` for the file table.
         """
-
         self.setModel(model)
-
-        # when we are created, we are given an empty dataframe
-        if isinstance(model._data, pd.DataFrame):
-            if model._data.empty:
-                return
-
-        # hide some columns, needed each time we set the model
-        hiddenColumns = [
-            # "kLeft",
-            # "kTop",
-            # "kRight",
-            # "kBottom",
-            # "Channels",
-            "species",
-            "cell_type",
-            # "Sex",
-            # "Condition",
-            # "Notes",
-            "relPath",
-            "uuid",
-        ]
-        for hiddenColumn in hiddenColumns:
-            try:
-                columnIdx = model._data.columns.index(hiddenColumn)
-                # print('xxx hiding column', hiddenColumn, columnIdx)
-                self.setColumnHidden(columnIdx, True)
-            except ValueError as e:
-                logger.error(f"Called setColumnHidden() but did not find column {hiddenColumn}")
+        self._apply_hidden_columns()
 
     def mySelectRow(self, rowIdx):
         """Needed to connect main and frozen table."""
@@ -582,6 +604,134 @@ class bTableView(QtWidgets.QTableView):
         logger.info('')
         return True
     """
+
+    def _preferences(self) -> "sanpy.interface.preferences | None":
+        """Return the application preferences object when SanPy is running.
+
+        Returns:
+            The application preferences, or ``None`` when the current
+            ``QApplication`` does not own them.
+        """
+        app = QtWidgets.QApplication.instance()
+        getter = getattr(app, "getConfigDict", None)
+        if not callable(getter):
+            return None
+        return getter()
+
+    def _stored_hidden_columns(self) -> object:
+        """Return the hidden-column value stored in preferences.
+
+        Returns:
+            The stored value, or ``None`` when preferences have no file-list
+            entry. ``None`` selects the default hidden columns.
+        """
+        preferences = self._preferences()
+        if preferences is None:
+            return None
+        file_list = preferences.configDict.get("fileList")
+        if not isinstance(file_list, dict) or "hiddenColumns" not in file_list:
+            return None
+        return file_list["hiddenColumns"]
+
+    def _write_hidden_columns(self, hidden: list[str]) -> None:
+        """Store hidden column keys in memory.
+
+        Args:
+            hidden: Optional column keys that should be hidden.
+        """
+        preferences = self._preferences()
+        if preferences is None:
+            return
+        file_list = preferences.configDict.get("fileList")
+        if not isinstance(file_list, dict):
+            return
+        file_list["hiddenColumns"] = list(hidden)
+
+    def _apply_hidden_columns(self) -> None:
+        """Show or hide columns from the saved hidden-column list."""
+        model = self.model()
+        if model is None or not hasattr(model, "_data"):
+            return
+        data = model._data
+        if isinstance(data, pd.DataFrame) and data.empty:
+            return
+        columns = [str(column) for column in data.columns]
+        hidden = set(hidden_file_column_keys(self._stored_hidden_columns(), columns))
+        for index, column_name in enumerate(columns):
+            self.setColumnHidden(
+                index,
+                column_name not in REQUIRED_FILE_COLUMNS and column_name in hidden,
+            )
+
+    def _refresh_open_file_tables(self) -> None:
+        """Apply the saved hidden columns to every open file table."""
+        app = QtWidgets.QApplication.instance()
+        views: list[bTableView] = []
+        for window in getattr(app, "_windowList", ()):
+            file_list = getattr(window, "_fileListWidget", None)
+            if file_list is None:
+                continue
+            view = file_list.getTableView()
+            if isinstance(view, bTableView):
+                views.append(view)
+        if self not in views:
+            views.append(self)
+        for view in views:
+            view._apply_hidden_columns()
+
+    def _set_column_hidden(self, column_key: str, hidden: bool) -> None:
+        """Remember one optional column's visibility and refresh open tables.
+
+        Args:
+            column_key: File-table column key.
+            hidden: Whether the column should be hidden.
+        """
+        if column_key in REQUIRED_FILE_COLUMNS:
+            return
+        known = [str(column) for column in sanpy.analysisDir.sanpyColumns.keys()]
+        current = hidden_file_column_keys(self._stored_hidden_columns(), known)
+        if hidden:
+            if column_key not in current:
+                current.append(column_key)
+        else:
+            current = [key for key in current if key != column_key]
+        self._write_hidden_columns(current)
+        self._refresh_open_file_tables()
+
+    def _add_column_visibility_actions(
+        self, menu: QtWidgets.QMenu
+    ) -> dict[QtWidgets.QAction, str]:
+        """Add checkable actions for the optional file-table columns.
+
+        A checked action means the column is visible. Required columns are
+        omitted.
+
+        Args:
+            menu: Context menu that receives the Columns submenu.
+
+        Returns:
+            Pairs of submenu action and column key, in table order.
+        """
+        model = self.model()
+        if model is None or not hasattr(model, "_data"):
+            return {}
+        data = model._data
+        if isinstance(data, pd.DataFrame) and data.empty:
+            return {}
+        columns = [str(column) for column in data.columns]
+        hidden = set(hidden_file_column_keys(self._stored_hidden_columns(), columns))
+        menu.addSeparator()
+        column_menu = menu.addMenu("Columns")
+        actions: list[tuple[QtWidgets.QAction, str]] = []
+        for index, column_name in enumerate(columns):
+            if column_name in REQUIRED_FILE_COLUMNS:
+                continue
+            label = model.headerData(index, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole)
+            action = column_menu.addAction(str(label))
+            action.setCheckable(True)
+            action.setChecked(column_name not in hidden)
+            actions.append((action, column_name))
+        return actions
 
     def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
         """Open the file-table context menu.
@@ -612,6 +762,7 @@ class bTableView(QtWidgets.QTableView):
         # contextMenu.addSeparator()
 
         copyTable = contextMenu.addAction("Copy Table")
+        column_actions = self._add_column_visibility_actions(contextMenu)
 
         # contextMenu.addSeparator()
         # saNodeParams = contextMenu.addAction('SA Node Params')
@@ -662,6 +813,13 @@ class bTableView(QtWidgets.QTableView):
             if reveal_path is not None:
                 self._reveal_recording(reveal_path)
 
+        else:
+            for column_action, column_key in column_actions:
+                if action == column_action:
+                    self._set_column_hidden(column_key, not action.isChecked())
+                    return
+            logger.warning(f'Action not taken "{action.text()}"')
+
         # elif action == saveAllAnalysis:
         #     # self.signalSaveFileTable.emit()
         #     self.model().mySave()
@@ -671,13 +829,6 @@ class bTableView(QtWidgets.QTableView):
         #     #print(action, action.text())
         #     if selectedRow is not None:
         #         self.signalSetDefaultDetection.emit(selectedRow, action.text())
-
-        elif action is not None:
-            logger.warning(f'Action not taken "{action.text()}"')
-
-        else:
-            # user did not select action
-            pass
 
     def _recording_path_for_event(self, event: QtGui.QContextMenuEvent) -> str | None:
         """Return the recording path under a context-menu click.
